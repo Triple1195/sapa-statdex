@@ -9,7 +9,6 @@
             --bg-color: #0f172a;
             --card-bg: #1e293b;
             --accent-blue: #38bdf8;
-            --accent-hover: #0284c7;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border-color: #334155;
@@ -45,7 +44,7 @@
         }
 
         .container {
-            max-width: 1300px;
+            max-width: 1450px;
             margin: 1.5rem auto;
             padding: 0 1rem;
         }
@@ -115,7 +114,7 @@
             padding: 12px;
             color: #000;
             font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 13px;
+            font-size: 12px;
             margin-bottom: 2rem;
             border-radius: 4px;
             overflow-x: auto;
@@ -191,11 +190,11 @@
             justify-content: space-between;
         }
         .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 2px; }
-        .game-summary-winner { font-weight: bold; font-size: 15px; padding: 4px; }
+        .game-summary-winner { font-weight: bold; font-size: 14px; padding: 4px; }
 
         .sheet-main-grid {
             display: grid;
-            grid-template-columns: 480px 1fr 1fr 1fr;
+            grid-template-columns: 560px 1fr 1fr 1fr;
             gap: 12px;
         }
 
@@ -208,7 +207,7 @@
         .roster-header {
             background: #000;
             color: #fff;
-            padding: 4px 8px;
+            padding: 5px 8px;
             font-weight: bold;
             display: flex;
             justify-content: space-between;
@@ -222,15 +221,18 @@
 
         .mon-summary-tile {
             border-right: 1px solid #000;
-            padding: 4px;
+            padding: 3px;
             text-align: center;
-            font-size: 11px;
+            font-size: 10px;
             background: #fff;
         }
         .mon-summary-tile:last-child { border-right: none; }
-        .mon-sprite { width: 44px; height: 44px; object-fit: contain; }
+        .mon-sprite { width: 42px; height: 42px; object-fit: contain; }
         .mon-name { font-weight: bold; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .stat-row { display: flex; justify-content: space-between; border-top: 1px dashed #ccc; padding: 1px 2px; font-size: 10px; }
+        .mon-nickname { font-size: 9px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+        
+        .stat-section-title { background: #e5e7eb; font-weight: bold; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 1px 2px; font-size: 10px; text-align: center; }
+        .stat-row { display: flex; justify-content: space-between; border-top: 1px dashed #ddd; padding: 1px 2px; font-size: 10px; }
 
         .game-detail-column {
             display: flex;
@@ -246,7 +248,7 @@
         .game-player-header {
             display: flex;
             justify-content: space-between;
-            padding: 3px 6px;
+            padding: 4px 8px;
             font-weight: bold;
             border-bottom: 1px solid #000;
         }
@@ -266,14 +268,15 @@
             padding: 4px;
             display: flex;
             gap: 4px;
-            font-size: 11px;
-            align-items: center;
+            font-size: 10px;
+            align-items: flex-start;
         }
 
         .cell-sprite { width: 32px; height: 32px; object-fit: contain; }
-        .cell-info { flex: 1; }
-        .faint-badge { background: #ef4444; color: white; padding: 1px 3px; font-size: 9px; font-weight: bold; border-radius: 2px; }
-        .survived-badge { background: #e5e7eb; color: #000; padding: 1px 3px; font-size: 9px; border-radius: 2px; }
+        .cell-info { flex: 1; line-height: 1.2; }
+        .faint-badge { background: #ef4444; color: white; padding: 1px 3px; font-size: 9px; font-weight: bold; border-radius: 2px; display: inline-block; margin-top: 1px; }
+        .survived-badge { background: #e5e7eb; color: #000; padding: 1px 3px; font-size: 9px; border-radius: 2px; display: inline-block; margin-top: 1px; }
+        .death-by { font-size: 8.5px; color: #c2410c; margin-top: 2px; word-break: break-word; }
 
         .playerdex-grid {
             display: grid;
@@ -496,7 +499,9 @@
                         args: [season]
                     },
                     {
-                        sql: `SELECT s.stat_id, s.game_id, s.player, s.pokemon, s.direct_kos, s.indirect_kos, s.self_kos, s.survived, s.battle_won
+                        sql: `SELECT s.stat_id, s.game_id, s.player, s.pokemon, s.nickname, s.faint_type, s.faint_source, s.faint_move,
+                                     s.direct_kos, s.indirect_kos, s.self_kos, s.total_damage, s.direct_damage, s.indirect_damage,
+                                     s.hazard_damage, s.hits_taken, s.damage_taken, s.damage_healed, s.active_turns, s.survived, s.fainted, s.battle_won
                               FROM match_pokemon_stats s
                               JOIN match_games g ON s.game_id = g.game_id
                               JOIN matches m ON g.match_id = m.match_id
@@ -583,6 +588,10 @@
                 const p1IsSetWinner = p1Wins > p2Wins;
                 const p2IsSetWinner = p2Wins > p1Wins;
 
+                // Calculate total hazard damage across games for overview section
+                const p1HazardTotal = calculateTotalHazardDamage(info.player_1, games);
+                const p2HazardTotal = calculateTotalHazardDamage(info.player_2, games);
+
                 const gameHeadersHTML = [1, 2, 3].map(gNum => {
                     const gameData = games.find(g => Number(g.game_number) === gNum);
                     if (!gameData) {
@@ -621,11 +630,11 @@
                         <div class="sheet-main-grid">
                             <div>
                                 <div class="player-roster-card">
-                                    <div class="roster-header"><span>Player: ${p1Display}</span></div>
+                                    <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
                                     <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
                                 </div>
                                 <div class="player-roster-card">
-                                    <div class="roster-header"><span>Player: ${p2Display}</span></div>
+                                    <div class="roster-header"><span>Player: ${p2Display}</span> <span>${p2HazardTotal} Hazard Damage</span></div>
                                     <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
                                 </div>
                             </div>
@@ -634,6 +643,23 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        function calculateTotalHazardDamage(rawPlayerName, games) {
+            const gameIds = games.map(g => String(g.game_id));
+            const showdownTag = getShowdownTag(rawPlayerName).toLowerCase();
+            const displayName = getDisplayName(rawPlayerName).toLowerCase();
+            
+            const playerStats = rawStats.filter(s => {
+                const statPlayer = (s.player || '').trim().toLowerCase();
+                return (statPlayer === showdownTag || statPlayer === displayName || getDisplayName(s.player).toLowerCase() === displayName) && gameIds.includes(String(s.game_id));
+            });
+
+            let total = 0;
+            playerStats.forEach(s => {
+                total += Number(s.hazard_damage || 0);
+            });
+            return total;
         }
 
         function renderPlayerMonSummaries(rawPlayerName, games) {
@@ -649,11 +675,23 @@
             const aggregated = {};
             playerStats.forEach(s => {
                 if (!aggregated[s.pokemon]) {
-                    aggregated[s.pokemon] = { species: s.pokemon, directKos: 0, indirectKos: 0, teamKos: 0 };
+                    aggregated[s.pokemon] = { 
+                        species: s.pokemon, 
+                        nickname: s.nickname || s.pokemon,
+                        directKos: 0, 
+                        indirectKos: 0, 
+                        teamKos: 0,
+                        totalDmg: 0,
+                        takenDmg: 0,
+                        healedDmg: 0
+                    };
                 }
                 aggregated[s.pokemon].directKos += Number(s.direct_kos || 0);
                 aggregated[s.pokemon].indirectKos += Number(s.indirect_kos || 0);
                 aggregated[s.pokemon].teamKos += Number(s.self_kos || 0);
+                aggregated[s.pokemon].totalDmg += Number(s.total_damage || 0);
+                aggregated[s.pokemon].takenDmg += Number(s.damage_taken || 0);
+                aggregated[s.pokemon].healedDmg += Number(s.damage_healed || 0);
             });
 
             const mons = Object.values(aggregated).slice(0, 6);
@@ -669,9 +707,15 @@
                     <div class="mon-summary-tile">
                         <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://play.pokemonshowdown.com/sprites/dex/0.png'" />
                         <div class="mon-name">${m.species}</div>
+                        <div class="mon-nickname">${m.nickname}</div>
+                        <div class="stat-section-title">Knock Outs</div>
                         <div class="stat-row"><span>Direct:</span> <strong>${m.directKos}</strong></div>
                         <div class="stat-row"><span>Indirect:</span> <strong>${m.indirectKos}</strong></div>
                         <div class="stat-row"><span>Team:</span> <strong>${m.teamKos}</strong></div>
+                        <div class="stat-section-title">Stats</div>
+                        <div class="stat-row"><span>Dealt:</span> <strong>${m.totalDmg}%</strong></div>
+                        <div class="stat-row"><span>Taken:</span> <strong>${m.takenDmg}%</strong></div>
+                        <div class="stat-row"><span>Healed:</span> <strong>${m.healedDmg}%</strong></div>
                     </div>
                 `;
             }).join('');
@@ -686,25 +730,45 @@
             const isP1Winner = gameWinnerDisplay.toLowerCase() === p1Display.toLowerCase();
             const isP2Winner = gameWinnerDisplay.toLowerCase() === p2Display.toLowerCase();
 
+            // Calculate game hazard damage
+            const p1GameHazards = calculateGameHazardDamage(gameData.game_id, matchInfo.player_1);
+            const p2GameHazards = calculateGameHazardDamage(gameData.game_id, matchInfo.player_2);
+
             return `
                 <div class="game-detail-column">
                     <div class="game-player-block">
                         <div class="game-player-header ${isP1Winner ? 'status-winner' : 'status-loser'}">
-                            <span>${p1Display}</span>
-                            <span>${isP1Winner ? 'Winner' : 'Loser'}</span>
+                            <span>${p1Display} ${isP1Winner ? 'Winner' : 'Loser'}</span>
+                            <span>${p1GameHazards} Hazard Damage</span>
                         </div>
                         <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, matchInfo.player_1)}</div>
                     </div>
 
                     <div class="game-player-block">
                         <div class="game-player-header ${isP2Winner ? 'status-winner' : 'status-loser'}">
-                            <span>${p2Display}</span>
-                            <span>${isP2Winner ? 'Winner' : 'Loser'}</span>
+                            <span>${p2Display} ${isP2Winner ? 'Winner' : 'Loser'}</span>
+                            <span>${p2GameHazards} Hazard Damage</span>
                         </div>
                         <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, matchInfo.player_2)}</div>
                     </div>
                 </div>
             `;
+        }
+
+        function calculateGameHazardDamage(gameId, rawPlayerName) {
+            const showdownTag = getShowdownTag(rawPlayerName).toLowerCase();
+            const displayName = getDisplayName(rawPlayerName).toLowerCase();
+
+            const gameStats = rawStats.filter(s => {
+                const statPlayer = (s.player || '').trim().toLowerCase();
+                return (statPlayer === showdownTag || statPlayer === displayName || getDisplayName(s.player).toLowerCase() === displayName) && String(s.game_id) === String(gameId);
+            });
+
+            let total = 0;
+            gameStats.forEach(s => {
+                total += Number(s.hazard_damage || 0);
+            });
+            return total;
         }
 
         function renderGameMonCells(gameId, rawPlayerName) {
@@ -725,15 +789,21 @@
                 const formattedName = formatSpriteName(m.pokemon);
                 const spriteUrl = `https://play.pokemonshowdown.com/sprites/gen5/${formattedName}.png`;
                 const isFainted = Number(m.survived) === 0;
+                const totalKos = Number(m.direct_kos || 0) + Number(m.indirect_kos || 0) + Number(m.self_kos || 0);
+                const deathByText = (isFainted && m.faint_source && m.faint_source !== "N/A" && m.faint_source !== "Unknown") 
+                    ? `${m.faint_source}${m.faint_move && m.faint_move !== "Unknown" ? ': ' + m.faint_move : ''}` 
+                    : (isFainted ? 'Fainted' : '');
 
                 return `
                     <div class="game-mon-cell">
                         <img src="${spriteUrl}" class="cell-sprite" onerror="this.style.display='none'" />
                         <div class="cell-info">
-                            <div><strong>KOs:</strong> ${m.direct_kos || 0}</div>
-                            <div style="margin-top:2px;">
+                            <div><strong>KOs:</strong> ${totalKos}</div>
+                            <div><strong>Active ${m.active_turns || 0} Turns</strong></div>
+                            <div>
                                 ${isFainted ? '<span class="faint-badge">Faint</span>' : '<span class="survived-badge">Survived</span>'}
                             </div>
+                            ${deathByText ? `<div class="death-by">Death By: ${deathByText}</div>` : ''}
                         </div>
                     </div>
                 `;
