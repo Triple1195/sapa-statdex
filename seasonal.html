@@ -55,38 +55,6 @@
             padding: 0 1rem;
         }
 
-        /* Config Bar for Turso Credentials */
-        .config-banner {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 0.8rem 1.2rem;
-            margin-bottom: 1.5rem;
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            font-size: 0.9rem;
-        }
-
-        .config-banner input {
-            flex: 1;
-            padding: 0.4rem 0.6rem;
-        }
-
-        .config-banner button {
-            background-color: var(--accent-blue);
-            color: var(--bg-color);
-            border: none;
-            padding: 0.4rem 1rem;
-            font-weight: bold;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .config-banner button:hover {
-            background-color: var(--accent-hover);
-        }
-
         /* Top Filter Bar */
         .filter-bar {
             background-color: var(--card-bg);
@@ -291,14 +259,6 @@
     </header>
 
     <div class="container">
-        <!-- Turso Credentials Banner -->
-        <div class="config-banner">
-            <span><strong>Turso DB:</strong></span>
-            <input type="text" id="tursoUrl" placeholder="Database URL (libsql://...)">
-            <input type="password" id="tursoToken" placeholder="Auth Token">
-            <button onclick="saveCredentials()">Save & Connect</button>
-        </div>
-
         <!-- Top Filter Bar -->
         <div class="filter-bar">
             <div class="filter-group">
@@ -331,14 +291,14 @@
         <!-- Tab 1: Statdex (Matches & Replays) -->
         <div id="statdex" class="tab-content active">
             <div id="matchGrid" class="match-grid">
-                <div class="status-msg">Select a season to view match replays.</div>
+                <div class="status-msg">Loading seasonal data...</div>
             </div>
         </div>
 
         <!-- Tab 2: Playerdex (Player & Pokémon Cards) -->
         <div id="playerdex" class="tab-content">
             <div id="playerdexGrid" class="playerdex-grid">
-                <div class="status-msg">Select a season to view player performance cards.</div>
+                <div class="status-msg">Loading player cards...</div>
             </div>
         </div>
 
@@ -349,4 +309,233 @@
     </div>
 
     <script>
-        let raw
+        // HARDCODED READ-ONLY TURSO CREDENTIALS FOR PUBLIC GITHUB PAGES
+        const TURSO_DB_URL = "libsql://pokemon-draft-league-triple1195.aws-us-east-2.turso.io";
+        const TURSO_READONLY_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicm8iLCJpYXQiOjE3OTMwMzUzMTksImlkIjoiMDFhMTc4NDMtYzQwMS03NTlhLWIzMmMtMTVlMGYxYWJlMDk4Iiwia2lkIjoiTzJTeHFzSmRxNGNXbnVGZkJoV2dHLUx6RVVEUVdSakxiZ3g2endqRWFFUSIsInJpZCI6IjBhNzQ4ZmIzLWJiNTAtNDMyMC1hN2FhLTg0NjI5NjM0ZGE2ZCJ9.CzhhhnATxbJ__bOMPHPXUckuEnHSAxlS5I25jlQEC-zHSrGPQW2hgW1Ngv3UT4xtIRmfAz6tkf3ZSvWaNLY2Aw";
+
+        let rawMatches = [];
+        let rawStats = [];
+
+        window.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        async function tursoQuery(statements) {
+            if (!TURSO_DB_URL || !TURSO_READONLY_TOKEN || TURSO_READONLY_TOKEN.includes("YOUR_READ_ONLY_TOKEN")) {
+                console.error('Turso DB credentials not configured in seasonal.html');
+                document.getElementById('matchGrid').innerHTML = '<div class="status-msg" style="color:#ef4444;">Please replace TURSO_DB_URL and TURSO_READONLY_TOKEN with your read-only database credentials in seasonal.html.</div>';
+                return null;
+            }
+
+            const httpUrl = TURSO_DB_URL.replace('libsql://', 'https://');
+            const response = await fetch(`${httpUrl}/v2/pipeline`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${TURSO_READONLY_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    requests: statements.map(s => ({
+                        type: 'execute',
+                        stmt: { 
+                            sql: s.sql, 
+                            args: s.args ? s.args.map(arg => ({ 
+                                type: typeof arg === 'number' ? 'integer' : 'text', 
+                                value: String(arg) 
+                            })) : [] 
+                        }
+                    }))
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Database query failed');
+            
+            return data.results.map(res => {
+                if (res.type === 'error') throw new Error(res.error.message);
+                const cols = res.response.result.cols.map(c => c.name);
+                return res.response.result.rows.map(row => {
+                    let obj = {};
+                    cols.forEach((col, idx) => {
+                        obj[col] = row[idx].value;
+                    });
+                    return obj;
+                });
+            });
+        }
+
+        async function initApp() {
+            try {
+                const results = await tursoQuery([{ sql: "SELECT season FROM seasons ORDER BY season DESC" }]);
+                if (!results) return;
+
+                const seasons = results[0];
+                const seasonSelect = document.getElementById('seasonSelect');
+                seasonSelect.innerHTML = '';
+
+                if (!seasons || seasons.length === 0) {
+                    seasonSelect.innerHTML = '<option value="">No seasons found</option>';
+                    return;
+                }
+
+                seasons.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.season;
+                    opt.innerText = `Season ${s.season}`;
+                    seasonSelect.appendChild(opt);
+                });
+
+                loadSeasonalData();
+            } catch (err) {
+                console.error("Initialization error:", err);
+            }
+        }
+
+        async function loadSeasonalData() {
+            const season = document.getElementById('seasonSelect').value;
+            if (!season) return;
+
+            try {
+                // Fetch matches and games
+                const results = await tursoQuery([
+                    {
+                        sql: `SELECT m.match_id, m.conference, m.week, m.player_1, m.player_2, 
+                                     g.game_number, g.replay_url, g.winner, g.turns 
+                              FROM matches m 
+                              LEFT JOIN match_games g ON m.match_id = g.match_id 
+                              WHERE m.season = ? 
+                              ORDER BY m.week ASC, m.match_id ASC, g.game_number ASC`,
+                        args: [season]
+                    },
+                    {
+                        sql: `SELECT s.player, s.pokemon, s.survived, s.battle_won, s.direct_kos, g.match_id, m.week
+                              FROM match_pokemon_stats s
+                              JOIN match_games g ON s.game_id = g.game_id
+                              JOIN matches m ON g.match_id = m.match_id
+                              WHERE m.season = ?`,
+                        args: [season]
+                    }
+                ]);
+
+                if (!results) return;
+
+                rawMatches = results[0];
+                rawStats = results[1];
+
+                // Populate Week Filter
+                const weeks = [...new Set(rawMatches.map(m => m.week))].sort((a, b) => a - b);
+                const weekSelect = document.getElementById('weekSelect');
+                weekSelect.innerHTML = '<option value="all">All Weeks</option>';
+                weeks.forEach(w => {
+                    const opt = document.createElement('option');
+                    opt.value = w;
+                    opt.innerText = `Week ${w}`;
+                    weekSelect.appendChild(opt);
+                });
+
+                renderMatches();
+                renderPlayerdex();
+            } catch (err) {
+                console.error("Error loading seasonal data:", err);
+            }
+        }
+
+        function renderMatches() {
+            const weekFilter = document.getElementById('weekSelect').value;
+            const playerFilter = document.getElementById('playerSearch').value.toLowerCase();
+            const grid = document.getElementById('matchGrid');
+
+            let filtered = rawMatches.filter(m => {
+                const matchWeek = String(m.week);
+                const p1 = (m.player_1 || '').toLowerCase();
+                const p2 = (m.player_2 || '').toLowerCase();
+
+                const matchesWeek = (weekFilter === 'all' || matchWeek === weekFilter);
+                const matchesPlayer = (!playerFilter || p1.includes(playerFilter) || p2.includes(playerFilter));
+                return matchesWeek && matchesPlayer;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div class="status-msg">No matches found matching filters.</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(m => {
+                const isP1Winner = m.winner && m.winner.toLowerCase() === m.player_1.toLowerCase();
+                const isP2Winner = m.winner && m.winner.toLowerCase() === m.player_2.toLowerCase();
+
+                return `
+                    <div class="match-card">
+                        <div class="match-header">
+                            <span>${m.conference || 'Conference'} • Week ${m.week}</span>
+                            <span>Game ${m.game_number || 1} (${m.turns || 0} Turns)</span>
+                        </div>
+                        <div class="match-players">
+                            <span class="${isP1Winner ? 'winner-tag' : ''}">${m.player_1}</span>
+                            <span>vs</span>
+                            <span class="${isP2Winner ? 'winner-tag' : ''}">${m.player_2}</span>
+                        </div>
+                        ${m.replay_url ? `<a href="${m.replay_url}" target="_blank" class="replay-link-btn">Watch Replay &rarr;</a>` : '<span style="font-size:0.85rem; color:var(--text-muted);">Replay pending</span>'}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPlayerdex() {
+            const playerFilter = document.getElementById('playerSearch').value.toLowerCase();
+            const grid = document.getElementById('playerdexGrid');
+
+            const playerMap = {};
+            rawStats.forEach(st => {
+                if (!playerMap[st.player]) {
+                    playerMap[st.player] = { pokemon: {} };
+                }
+                if (!playerMap[st.player].pokemon[st.pokemon]) {
+                    playerMap[st.player].pokemon[st.pokemon] = { kos: 0, wins: 0, battles: 0 };
+                }
+                playerMap[st.player].pokemon[st.pokemon].kos += Number(st.direct_kos || 0);
+                playerMap[st.player].pokemon[st.pokemon].wins += Number(st.battle_won || 0);
+                playerMap[st.player].pokemon[st.pokemon].battles += 1;
+            });
+
+            const players = Object.keys(playerMap).filter(p => !playerFilter || p.toLowerCase().includes(playerFilter));
+
+            if (players.length === 0) {
+                grid.innerHTML = '<div class="status-msg">No player statistics found for this season.</div>';
+                return;
+            }
+
+            grid.innerHTML = players.map(player => {
+                const pokeEntries = Object.entries(playerMap[player].pokemon);
+                
+                const pokemonTiles = pokeEntries.map(([poke, data]) => `
+                    <div class="pokemon-tile">
+                        <strong>${poke}</strong>
+                        <span>${data.kos} KOs | ${data.wins} Ws</span>
+                    </div>
+                `).join('');
+
+                return `
+                    <div class="player-card">
+                        <div class="player-card-header">
+                            <h3>${player}</h3>
+                            <div class="metrics-badge">Mon Count: <strong>${pokeEntries.length}</strong></div>
+                        </div>
+                        <div class="pokemon-tile-grid">
+                            ${pokemonTiles || '<span style="color:var(--text-muted); font-size:0.85rem;">No Pokémon logged yet.</span>'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
