@@ -964,16 +964,19 @@ async function runIngest() {
             const gameNumber = i + 1;
             const gameId = `${match_id}_g${gameNumber}`;
             const replayUrl = `https://replay.pokemonshowdown.com/${battleId}`;
-
-            const existingStats = await db.execute({
-              sql: "SELECT COUNT(*) as count FROM match_pokemon_stats WHERE game_id = ?",
-              args: [gameId]
-            });
-
-            if (existingStats.rows[0].count > 0) {
-              console.log(`    [Game ${gameNumber}] Stats already populated for (${gameId}). Skipping.`);
-              continue;
-            }
+			  
+			// REMOVE OR COMMENT OUT THIS CHECK SO IT CAN ALWAYS RE-INGEST & UPDATE:
+			/*
+			const existingStats = await db.execute({
+			  sql: "SELECT COUNT(*) as count FROM match_pokemon_stats WHERE game_id = ?",
+			  args: [gameId]
+			});
+			
+			if (existingStats.rows[0].count > 0) {
+			  console.log(`    [Game ${gameNumber}] Stats already populated for (${gameId}). Skipping.`);
+			  continue;
+			}
+			*/
 
             console.log(`    [Game ${gameNumber}] Ingesting & analyzing ${battleId}...`);
             const logRes = await fetch(`${replayUrl}.json`);
