@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seasonal Hub - Pokémon Draft League</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-blue: #38bdf8;
+            --accent-hover: #0284c7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --card-hover: #26334d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--accent-blue);
+        }
+
+        .nav-back {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .nav-back:hover {
+            color: var(--text-main);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Top Filter Bar */
+        .filter-bar {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .filter-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: bold;
+        }
+
+        select, input {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.5rem 0.8rem;
+            font-size: 0.95rem;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        /* Navigation Tabs */
+        .tabs-container {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+
+        .tab-button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: color 0.2s, border-color 0.2s;
+        }
+
+        .tab-button:hover {
+            color: var(--text-main);
+        }
+
+        .tab-button.active {
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Match Cards Layout (Statdex) */
+        .match-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1rem;
+        }
+
+        .match-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+        }
+
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.4rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .match-players {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.8rem;
+        }
+
+        .winner-tag {
+            color: #4ade80;
+        }
+
+        .replay-link-btn {
+            display: inline-block;
+            background-color: var(--border-color);
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            transition: background-color 0.2s;
+        }
+
+        .replay-link-btn:hover {
+            background-color: var(--accent-blue);
+        }
+
+        /* Playerdex Cards */
+        .playerdex-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .player-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.2rem;
+        }
+
+        .player-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.6rem;
+            margin-bottom: 1rem;
+        }
+
+        .player-card-header h3 {
+            margin: 0;
+            color: var(--accent-blue);
+        }
+
+        .metrics-badge {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .pokemon-tile-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.6rem;
+        }
+
+        .pokemon-tile {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .pokemon-tile strong {
+            display: block;
+            color: var(--text-main);
+        }
+
+        .pokemon-tile span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Seasonal Analytics Hub</h1>
+        <a href="index.html" class="nav-back">&larr; Back to Main Hub</a>
+    </header>
+
+    <div class="container">
+        <!-- Top Filter Bar -->
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label for="seasonSelect">Select Season:</label>
+                <select id="seasonSelect" onchange="onSeasonChange()">
+                    <option value="16">Season 16</option>
+                    <option value="13">Season 13</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="weekSelect">Filter Week:</label>
+                <select id="weekSelect" onchange="applyFilters()">
+                    <option value="all">All Weeks</option>
+                    <option value="1">Week 1</option>
+                    <option value="2">Week 2</option>
+                    <option value="3">Week 3</option>
+                    <option value="4">Week 4</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="playerSearch">Search Player:</label>
+                <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="applyFilters()">
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="tabs-container">
+            <button class="tab-button active" onclick="switchTab('statdex')">Seasonal Statdex (Matches)</button>
+            <button class="tab-button" onclick="switchTab('playerdex')">Seasonal Playerdex (Rosters & TVR/PVR)</button>
+            <button class="tab-button" onclick="switchTab('draftboard')">Draft Board & Budgets</button>
+        </div>
+
+        <!-- Tab 1: Statdex (Matches & Replays) -->
+        <div id="statdex" class="tab-content active">
+            <div id="matchGrid" class="match-grid">
+                <!-- Example Match Card Structure (Populated dynamically) -->
+                <div class="match-card">
+                    <div class="match-header">
+                        <span>Conference Alpha • Week 1</span>
+                        <span>Game 1 (34 Turns)</span>
+                    </div>
+                    <div class="match-players">
+                        <span class="winner-tag">JT (W)</span>
+                        <span>vs</span>
+                        <span>Frank</span>
+                    </div>
+                    <a href="#" target="_blank" class="replay-link-btn">Watch Replay &rarr;</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2: Playerdex (Player & Pokémon Cards) -->
+        <div id="playerdex" class="tab-content">
+            <div id="playerdexGrid" class="playerdex-grid">
+                <!-- Example Player Card Structure (Populated dynamically) -->
+                <div class="player-card">
+                    <div class="player-card-header">
+                        <h3>JT</h3>
+                        <div class="metrics-badge">TVR: <strong>1.24</strong> | PVR: <strong>84.5</strong></div>
+                    </div>
+                    <div class="pokemon-tile-grid">
+                        <div class="pokemon-tile">
+                            <strong>Great Tusk</strong>
+                            <span>4 KOs | 2 Ws</span>
+                        </div>
+                        <div class="pokemon-tile">
+                            <strong>Kingambit</strong>
+                            <span>6 KOs | 3 Ws</span>
+                        </div>
+                        <div class="pokemon-tile">
+                            <strong>Gengar</strong>
+                            <span>1 KO | 1 W</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 3: Draft Board -->
+        <div id="draftboard" class="tab-content">
+            <p style="color: var(--text-muted);">Draft board and point allocation breakdown for the selected season will render here.</p>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        function onSeasonChange() {
+            // Trigger database refresh for selected season
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const season = document.getElementById('seasonSelect').value;
+            const week = document.getElementById('weekSelect').value;
+            const player = document.getElementById('playerSearch').value.toLowerCase();
+            
+            console.log(`Filtering for Season: ${season}, Week: ${week}, Player: ${player}`);
+            // SQL Query dispatch to Turso will happen here
+        }
+    </script>
+</body>
+</html>
