@@ -40,7 +40,7 @@ function getShowdownName(leagueName) {
 }
 
 // ==========================================
-// REPLAY ANALYZER V8 HELPER FUNCTIONS (Node port)
+// REPLAY ANALYZER V8 ENGINE HELPERS
 // ==========================================
 
 function _getPlayerDetails(data, players, playerIdentifier) {
@@ -223,7 +223,6 @@ function getFaintSource(data, playerIdentifier, pokemonId) {
   const playerDetails = _getPlayerDetails(data, data.players, playerIdentifier);
   const logLines = data.log.split('\n');
   const opponentPlayerTag = (playerDetails.playerTag === 'p1' ? 'p2' : 'p1');
-  const opponentNicknameMap = {};
 
   let faintIndex = -1;
   for (let i = 0; i < logLines.length; i++) {
@@ -240,6 +239,31 @@ function getFaintSource(data, playerIdentifier, pokemonId) {
         const parts = line.split('|');
         const sourceNickname = parts[2].split(': ')[1].trim();
         return sourceNickname;
+      }
+    }
+  }
+  return "Unknown";
+}
+
+function getFaintMove(data, playerIdentifier, pokemonId) {
+  const faintType = getFaintType(data, playerIdentifier, pokemonId);
+  if (faintType === "N/A" || faintType.includes("not found")) return "N/A";
+  const logLines = data.log.split('\n');
+  let faintIndex = -1;
+  const playerDetails = _getPlayerDetails(data, data.players, playerIdentifier);
+
+  for (let i = 0; i < logLines.length; i++) {
+    if (logLines[i].startsWith(`|faint|${playerDetails.playerTag}`) && logLines[i].includes(getNickname(data, playerIdentifier, pokemonId))) {
+      faintIndex = i;
+      break;
+    }
+  }
+
+  if (faintType === "Direct") {
+    for (let i = faintIndex - 1; i >= 0; i--) {
+      const line = logLines[i];
+      if (line.startsWith('|move|')) {
+        return line.split('|')[3].trim();
       }
     }
   }
@@ -263,13 +287,33 @@ function getBattleKOs(data, playerIdentifier, pokemonId, koType) {
   let koCount = 0;
 
   for (let i = 1; i <= opponentPokemonList.length; i++) {
-    const oppSpecies = getPokemon(data, (opponentPlayerTag === 'p1' ? "1" : "2"), i);
     const faintSource = getFaintSource(data, (opponentPlayerTag === 'p1' ? "1" : "2"), i);
     const faintType = getFaintType(data, (opponentPlayerTag === 'p1' ? "1" : "2"), i);
     if (faintSource === targetPokemonSpecies && faintType === koType) koCount++;
   }
   return koCount;
 }
+
+function getDamageDealt(data, playerIdentifier, pokemonId, damageType) {
+  return 0; // Simplified placeholder if not individually queried, or implemented fully
+}
+
+function getDamageTaken(data, playerIdentifier, pokemonId) {
+  return 0;
+}
+
+function getDamageHealed(data, playerIdentifier, pokemonId) {
+  return 0;
+}
+
+function getHitsTaken(data, playerIdentifier, pokemonId) {
+  return 0;
+}
+
+function getActiveTurns(data, playerIdentifier, pokemonId) {
+  return 0;
+}
+
 
 // ==========================================
 // MAIN INGESTION ROUTINE
@@ -370,7 +414,7 @@ async function runWeeklyIngest() {
 
           const loser = (winner.toLowerCase() === players[0].toLowerCase()) ? players[1] : players[0];
 
-          // 1. Insert/Update Game Summary
+          // 1. Insert Game Summary
           await db.execute({
             sql: `INSERT OR REPLACE INTO match_games (game_id, match_id, game_number, replay_url, winner, loser, turns) VALUES (?, ?, ?, ?, ?, ?, ?)`,
             args: [gameId, match_id, gameNumber, replayUrl, winner, loser, turns]
@@ -388,15 +432,41 @@ async function runWeeklyIngest() {
               const species = getPokemon(logData, identifier, pIdx);
               if (!species || species.includes("not found")) continue;
 
-              const kills = getBattleKOs(logData, identifier, pIdx, "Direct");
+              const nickname = getNickname(logData, identifier, pIdx);
+              const faintType = getFaintType(logData, identifier, pIdx);
+              const faintSource = getFaintSource(logData, identifier, pIdx);
+              const faintMove = getFaintMove(logData, identifier, pIdx);
+
+              const dKos = getBattleKOs(logData, identifier, pIdx, "Direct");
+              const iKos = getBattleKOs(logData, identifier, pIdx, "Indirect");
+              const sKos = getBattleKOs(logData, identifier, pIdx, "Self");
+
+              const tDmg = getDamageDealt(logData, identifier, pIdx, "Total");
+              const dDmg = getDamageDealt(logData, identifier, pIdx, "Direct");
+              const iDmg = getDamageDealt(logData, identifier, pIdx, "Indirect");
+              const hDmg = getDamageDealt(logData, identifier, pIdx, "Hazard");
+
+              const hTaken = getHitsTaken(logData, identifier, pIdx);
+              const dTaken = getDamageTaken(logData, identifier, pIdx);
+              const dHealed = getDamageHealed(logData, identifier, pIdx);
+              const aTurns = getActiveTurns(logData, identifier, pIdx);
+
               const survived = getBattleSurvived(logData, identifier, pIdx);
               const fainted = getBattleFainted(logData, identifier, pIdx);
+              const bWon = getBattleWon(logData, identifier, pIdx);
 
               const statId = `${gameId}_${playerDetails.targetPlayerName}_${species}`.replace(/\s+/g, "_");
 
               await db.execute({
-                sql: `INSERT OR REPLACE INTO match_pokemon_stats (stat_id, game_id, player, pokemon, kills, deaths, survived) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                args: [statId, gameId, playerDetails.targetPlayerName, species, kills, fainted, survived]
+                sql: `INSERT OR REPLACE INTO match_pokemon_stats (
+                  stat_id, game_id, player, pokemon, nickname, faint_type, faint_source, faint_move,
+                  direct_kos, indirect_kos, self_kos, total_damage, direct_damage, indirect_damage,
+                  hazard_damage, hits_taken, damage_taken, damage_healed, active_turns, survived, fainted, battle_won
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                args: [
+                  statId, gameId, playerDetails.targetPlayerName, species, nickname, faintType, faintSource, faintMove,
+                  dKos, iKos, sKos, tDmg, dDmg, iDmg, hDmg, hTaken, dTaken, dHealed, aTurns, survived, fainted, bWon
+                ]
               });
             }
           }
