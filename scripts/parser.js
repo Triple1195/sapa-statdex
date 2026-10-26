@@ -859,8 +859,12 @@ function getHitsTaken(data, playerIdentifier, pokemonId) {
   return hitsTaken;
 }
 
+function getShowdownName(leagueName, aliases) {
+  return aliases[leagueName] || leagueName.trim();
+}
+
 export {
-  getShowdownName: (leagueName, aliases) => aliases[leagueName] || leagueName.trim(),
+  getShowdownName,
   getWinner,
   getLoser,
   getTurns,
