@@ -50,7 +50,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 1.5rem auto;
             padding: 0 1rem;
         }
@@ -130,57 +130,138 @@
             display: block;
         }
 
-        /* Match Cards Layout (Statdex) */
-        .match-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 1rem;
-        }
-
-        .match-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1rem 1.2rem;
-        }
-
-        .match-header {
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.4rem;
-            margin-bottom: 0.8rem;
-        }
-
-        .match-players {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 1.1rem;
-            font-weight: bold;
-            margin-bottom: 0.8rem;
-        }
-
-        .winner-tag {
-            color: #4ade80;
-        }
-
-        .replay-link-btn {
-            display: inline-block;
-            background-color: var(--border-color);
-            color: var(--text-main);
-            text-decoration: none;
-            padding: 0.4rem 0.8rem;
+        /* Spreadsheet-Style Grid Theme */
+        .sheet-match-container {
+            background-color: #a3a3a3;
+            border: 2px solid #333;
+            padding: 12px;
+            color: #000;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 13px;
+            margin-bottom: 2rem;
             border-radius: 4px;
-            font-size: 0.85rem;
-            transition: background-color 0.2s;
+            overflow-x: auto;
         }
 
-        .replay-link-btn:hover {
-            background-color: var(--accent-blue);
+        /* Top Scoreboard */
+        .sheet-scoreboard {
+            display: grid;
+            grid-template-columns: 180px 1fr 1fr 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 12px;
         }
+
+        .sheet-box {
+            background: #fff;
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: center;
+        }
+
+        .score-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            background: #fff;
+            border: 2px solid #000;
+        }
+
+        .player-banner-left { background-color: #3b82f6; color: white; padding: 10px 16px; width: 35%; text-align: center; }
+        .player-banner-right { background-color: #ef4444; color: white; padding: 10px 16px; width: 35%; text-align: center; }
+        .vs-divider { font-size: 14px; color: #333; padding: 0 10px; }
+
+        .game-summary-box {
+            background: #fff;
+            border: 2px solid #000;
+            text-align: center;
+        }
+        .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 2px; }
+        .game-summary-winner { font-weight: bold; font-size: 15px; padding: 4px; }
+
+        /* Main Match Layout: Left Roster Summaries + Right Game Breakdown Matrix */
+        .sheet-main-grid {
+            display: grid;
+            grid-template-columns: 480px 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        /* Brought Team Overview Cards (Left Column) */
+        .player-roster-card {
+            background: #fff;
+            border: 2px solid #000;
+            margin-bottom: 12px;
+        }
+
+        .roster-header {
+            background: #000;
+            color: #fff;
+            padding: 4px 8px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .roster-mon-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            border-top: 1px solid #000;
+        }
+
+        .mon-summary-tile {
+            border-right: 1px solid #000;
+            padding: 4px;
+            text-align: center;
+            font-size: 11px;
+        }
+        .mon-summary-tile:last-child { border-right: none; }
+        .mon-sprite { width: 48px; height: 48px; object-fit: contain; }
+        .mon-name { font-weight: bold; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .stat-row { display: flex; justify-content: space-between; border-top: 1px dashed #ccc; padding: 1px 2px; }
+
+        /* Game Detail Columns (Right Side) */
+        .game-detail-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .game-player-block {
+            background: #fff;
+            border: 2px solid #000;
+        }
+
+        .game-player-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 6px;
+            font-weight: bold;
+            border-bottom: 1px solid #000;
+        }
+        .status-winner { background-color: #3b82f6; color: white; }
+        .status-loser { background-color: #ef4444; color: white; }
+
+        .game-mon-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2px;
+            background: #000;
+            padding: 1px;
+        }
+
+        .game-mon-cell {
+            background: #fff;
+            padding: 4px;
+            display: flex;
+            gap: 4px;
+            font-size: 11px;
+        }
+
+        .cell-sprite { width: 32px; height: 32px; object-fit: contain; }
+        .cell-info { flex: 1; }
+        .faint-badge { background: #ef4444; color: white; padding: 1px 3px; font-size: 9px; font-weight: bold; border-radius: 2px; }
+        .survived-badge { background: #e5e7eb; color: #000; padding: 1px 3px; font-size: 9px; border-radius: 2px; }
 
         /* Playerdex Cards */
         .playerdex-grid {
@@ -270,14 +351,14 @@
 
             <div class="filter-group">
                 <label for="weekSelect">Filter Week:</label>
-                <select id="weekSelect" onchange="renderMatches()">
+                <select id="weekSelect" onchange="renderMatchesSheetUI()">
                     <option value="all">All Weeks</option>
                 </select>
             </div>
 
             <div class="filter-group">
                 <label for="playerSearch">Search Player:</label>
-                <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="renderMatches(); renderPlayerdex();">
+                <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="renderMatchesSheetUI(); renderPlayerdex();">
             </div>
         </div>
 
@@ -288,9 +369,9 @@
             <button class="tab-button" onclick="switchTab('draftboard')">Draft Board & Budgets</button>
         </div>
 
-        <!-- Tab 1: Statdex (Matches & Replays) -->
+        <!-- Tab 1: Statdex (Spreadsheet Match View) -->
         <div id="statdex" class="tab-content active">
-            <div id="matchGrid" class="match-grid">
+            <div id="matchGrid">
                 <div class="status-msg">Loading seasonal data...</div>
             </div>
         </div>
@@ -396,11 +477,10 @@
             if (!season) return;
 
             try {
-                // Fetch matches and games
                 const results = await tursoQuery([
                     {
                         sql: `SELECT m.match_id, m.conference, m.week, m.player_1, m.player_2, 
-                                     g.game_number, g.replay_url, g.winner, g.turns 
+                                     g.game_number, g.game_id, g.replay_url, g.winner, g.turns 
                               FROM matches m 
                               LEFT JOIN match_games g ON m.match_id = g.match_id 
                               WHERE m.season = ? 
@@ -408,7 +488,9 @@
                         args: [season]
                     },
                     {
-                        sql: `SELECT s.player, s.pokemon, s.survived, s.battle_won, s.direct_kos, g.match_id, m.week
+                        sql: `SELECT s.stat_id, s.game_id, s.player, s.pokemon, s.nickname, s.faint_type, s.faint_source, s.faint_move,
+                                     s.direct_kos, s.indirect_kos, s.self_kos, s.total_damage, s.direct_damage, s.indirect_damage,
+                                     s.hazard_damage, s.hits_taken, s.damage_taken, s.damage_healed, s.active_turns, s.survived, s.fainted, s.battle_won
                               FROM match_pokemon_stats s
                               JOIN match_games g ON s.game_id = g.game_id
                               JOIN matches m ON g.match_id = m.match_id
@@ -422,7 +504,6 @@
                 rawMatches = results[0];
                 rawStats = results[1];
 
-                // Populate Week Filter
                 const weeks = [...new Set(rawMatches.map(m => m.week))].sort((a, b) => a - b);
                 const weekSelect = document.getElementById('weekSelect');
                 weekSelect.innerHTML = '<option value="all">All Weeks</option>';
@@ -433,49 +514,205 @@
                     weekSelect.appendChild(opt);
                 });
 
-                renderMatches();
+                renderMatchesSheetUI();
                 renderPlayerdex();
             } catch (err) {
                 console.error("Error loading seasonal data:", err);
             }
         }
 
-        function renderMatches() {
+        function renderMatchesSheetUI() {
             const weekFilter = document.getElementById('weekSelect').value;
             const playerFilter = document.getElementById('playerSearch').value.toLowerCase();
             const grid = document.getElementById('matchGrid');
 
-            let filtered = rawMatches.filter(m => {
+            const matchGroups = {};
+            rawMatches.forEach(m => {
                 const matchWeek = String(m.week);
                 const p1 = (m.player_1 || '').toLowerCase();
                 const p2 = (m.player_2 || '').toLowerCase();
 
                 const matchesWeek = (weekFilter === 'all' || matchWeek === weekFilter);
                 const matchesPlayer = (!playerFilter || p1.includes(playerFilter) || p2.includes(playerFilter));
-                return matchesWeek && matchesPlayer;
+
+                if (matchesWeek && matchesPlayer) {
+                    if (!matchGroups[m.match_id]) {
+                        matchGroups[m.match_id] = { info: m, games: [] };
+                    }
+                    if (m.game_number) {
+                        matchGroups[m.match_id].games.push(m);
+                    }
+                }
             });
 
-            if (filtered.length === 0) {
+            const matchIds = Object.keys(matchGroups);
+
+            if (matchIds.length === 0) {
                 grid.innerHTML = '<div class="status-msg">No matches found matching filters.</div>';
                 return;
             }
 
-            grid.innerHTML = filtered.map(m => {
-                const isP1Winner = m.winner && m.winner.toLowerCase() === m.player_1.toLowerCase();
-                const isP2Winner = m.winner && m.winner.toLowerCase() === m.player_2.toLowerCase();
+            grid.innerHTML = matchIds.map(matchId => {
+                const match = matchGroups[matchId];
+                const info = match.info;
+                const games = match.games;
+
+                let p1Wins = 0;
+                let p2Wins = 0;
+                games.forEach(g => {
+                    if (g.winner && g.winner.toLowerCase() === info.player_1.toLowerCase()) p1Wins++;
+                    if (g.winner && g.winner.toLowerCase() === info.player_2.toLowerCase()) p2Wins++;
+                });
+
+                const gameHeadersHTML = [1, 2, 3].map(gNum => {
+                    const gameData = games.find(g => Number(g.game_number) === gNum);
+                    if (!gameData) {
+                        return `
+                            <div class="game-summary-box">
+                                <div class="game-summary-header">Game ${gNum}</div>
+                                <div class="game-summary-winner" style="color:#94a3b8; font-size:12px;">N/A</div>
+                            </div>
+                        `;
+                    }
+                    return `
+                        <div class="game-summary-box">
+                            <div class="game-summary-header">Game ${gNum} (${gameData.turns || 0}T)</div>
+                            <div class="game-summary-winner">${gameData.winner || 'Pending'}</div>
+                            ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:11px;">Replay</a>` : ''}
+                        </div>
+                    `;
+                }).join('');
 
                 return `
-                    <div class="match-card">
-                        <div class="match-header">
-                            <span>${m.conference || 'Conference'} • Week ${m.week}</span>
-                            <span>Game ${m.game_number || 1} (${m.turns || 0} Turns)</span>
+                    <div class="sheet-match-container">
+                        <div class="sheet-scoreboard">
+                            <div class="sheet-box">
+                                <div><strong>Week:</strong> ${info.week}</div>
+                                <div><strong>Conf:</strong> ${info.conference || 1}</div>
+                            </div>
+                            <div class="score-header">
+                                <div class="player-banner-left">${info.player_1} <span style="margin-left:8px;">${p1Wins}</span></div>
+                                <span class="vs-divider">VS</span>
+                                <div class="player-banner-right"><span style="margin-right:8px;">${p2Wins}</span> ${info.player_2}</div>
+                            </div>
+                            ${gameHeadersHTML}
                         </div>
-                        <div class="match-players">
-                            <span class="${isP1Winner ? 'winner-tag' : ''}">${m.player_1}</span>
-                            <span>vs</span>
-                            <span class="${isP2Winner ? 'winner-tag' : ''}">${m.player_2}</span>
+
+                        <div class="sheet-main-grid">
+                            <div>
+                                <div class="player-roster-card">
+                                    <div class="roster-header">
+                                        <span>Player: ${info.player_1}</span>
+                                    </div>
+                                    <div class="roster-mon-grid">
+                                        ${renderPlayerMonSummaries(info.player_1, games)}
+                                    </div>
+                                </div>
+
+                                <div class="player-roster-card">
+                                    <div class="roster-header">
+                                        <span>Player: ${info.player_2}</span>
+                                    </div>
+                                    <div class="roster-mon-grid">
+                                        ${renderPlayerMonSummaries(info.player_2, games)}
+                                    </div>
+                                </div>
+                            </div>
+
+                            ${[1, 2, 3].map(gNum => renderGameDetailColumn(games.find(g => Number(g.game_number) === gNum), info)).join('')}
                         </div>
-                        ${m.replay_url ? `<a href="${m.replay_url}" target="_blank" class="replay-link-btn">Watch Replay &rarr;</a>` : '<span style="font-size:0.85rem; color:var(--text-muted);">Replay pending</span>'}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPlayerMonSummaries(playerName, games) {
+            const gameIds = games.map(g => g.game_id);
+            const playerStats = rawStats.filter(s => s.player && s.player.toLowerCase() === playerName.toLowerCase() && gameIds.includes(s.game_id));
+            
+            const aggregated = {};
+            playerStats.forEach(s => {
+                if (!aggregated[s.pokemon]) {
+                    aggregated[s.pokemon] = { species: s.pokemon, directKos: 0, indirectKos: 0, teamKos: 0 };
+                }
+                aggregated[s.pokemon].directKos += Number(s.direct_kos || 0);
+                aggregated[s.pokemon].indirectKos += Number(s.indirect_kos || 0);
+                aggregated[s.pokemon].teamKos += Number(s.self_kos || 0);
+            });
+
+            const mons = Object.values(aggregated).slice(0, 6);
+            if (mons.length === 0) {
+                return '<div style="padding:10px; grid-column:span 6; text-align:center;">No Pokémon data logged</div>';
+            }
+
+            return mons.map(m => {
+                const formattedName = m.species.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const spriteUrl = `https://play.pokemonshowdown.com/sprites/gen5/${formattedName}.png`;
+
+                return `
+                    <div class="mon-summary-tile">
+                        <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png'" />
+                        <div class="mon-name">${m.species}</div>
+                        <div class="stat-row"><span>Direct:</span> <strong>${m.directKos}</strong></div>
+                        <div class="stat-row"><span>Indirect:</span> <strong>${m.indirectKos}</strong></div>
+                        <div class="stat-row"><span>Team:</span> <strong>${m.teamKos}</strong></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderGameDetailColumn(gameData, matchInfo) {
+            if (!gameData) {
+                return `<div class="game-detail-column"><div style="background:#fff; border:2px solid #000; padding:20px; text-align:center; color:#666;">Game Not Played</div></div>`;
+            }
+
+            return `
+                <div class="game-detail-column">
+                    <div class="game-player-block">
+                        <div class="game-player-header ${gameData.winner === matchInfo.player_1 ? 'status-winner' : 'status-loser'}">
+                            <span>${matchInfo.player_1}</span>
+                            <span>${gameData.winner === matchInfo.player_1 ? 'Winner' : 'Loser'}</span>
+                        </div>
+                        <div class="game-mon-grid">
+                            ${renderGameMonCells(gameData.game_id, matchInfo.player_1)}
+                        </div>
+                    </div>
+
+                    <div class="game-player-block">
+                        <div class="game-player-header ${gameData.winner === matchInfo.player_2 ? 'status-winner' : 'status-loser'}">
+                            <span>${matchInfo.player_2}</span>
+                            <span>${gameData.winner === matchInfo.player_2 ? 'Winner' : 'Loser'}</span>
+                        </div>
+                        <div class="game-mon-grid">
+                            ${renderGameMonCells(gameData.game_id, matchInfo.player_2)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderGameMonCells(gameId, playerName) {
+            const gameStats = rawStats.filter(s => s.player && s.player.toLowerCase() === playerName.toLowerCase() && s.game_id === gameId);
+            const mons = gameStats.slice(0, 6);
+
+            if (mons.length === 0) {
+                return '<div style="padding:10px; grid-column:span 2; background:#fff; text-align:center;">No log stats</div>';
+            }
+
+            return mons.map(m => {
+                const formattedName = m.pokemon.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const spriteUrl = `https://play.pokemonshowdown.com/sprites/gen5/${formattedName}.png`;
+                const isFainted = Number(m.survived) === 0;
+
+                return `
+                    <div class="game-mon-cell">
+                        <img src="${spriteUrl}" class="cell-sprite" onerror="this.style.display='none'" />
+                        <div class="cell-info">
+                            <div><strong>KOs:</strong> ${m.direct_kos || 0}</div>
+                            <div style="margin-top:2px;">
+                                ${isFainted ? '<span class="faint-badge">Faint</span>' : '<span class="survived-badge">Survived</span>'}
+                            </div>
+                        </div>
                     </div>
                 `;
             }).join('');
