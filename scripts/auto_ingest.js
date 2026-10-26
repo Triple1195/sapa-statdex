@@ -326,6 +326,7 @@ async function runIngest() {
     const format = activeSeason.format || "";
     const startDateStr = activeSeason.week_one_start_date;
     const startDate = new Date(startDateStr);
+    const seasonStartTime = Math.floor(startDate.getTime() / 1000);
     
     const maxWeekRes = await db.execute({
       sql: "SELECT MAX(week) as max_week FROM matches WHERE season = ?",
@@ -354,9 +355,6 @@ async function runIngest() {
         continue;
       }
 
-      const weekStartTime = Math.floor((startDate.getTime() + (w - 1) * 7 * 86400000) / 1000);
-      const weekEndTime = Math.floor((startDate.getTime() + w * 7 * 86400000) / 1000);
-
       for (const match of matchesRes.rows) {
         const { match_id, player_1, player_2 } = match;
         
@@ -377,9 +375,10 @@ async function runIngest() {
             continue;
           }
 
+          // Filter only for replays that occurred on or after the season start date
           const filteredJson = json.filter(battle => {
             const t = Number(battle.uploadtime);
-            return t > weekStartTime && t <= weekEndTime;
+            return t >= seasonStartTime;
           });
           filteredJson.sort((a, b) => Number(a.uploadtime) - Number(b.uploadtime));
 
