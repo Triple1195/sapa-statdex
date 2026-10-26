@@ -627,8 +627,8 @@
         }
 
         function renderPlayerMonSummaries(playerName, games) {
-            const gameIds = games.map(g => g.game_id);
-            const playerStats = rawStats.filter(s => s.player && s.player.toLowerCase() === playerName.toLowerCase() && gameIds.includes(s.game_id));
+            const gameIds = games.map(g => String(g.game_id));
+            const playerStats = rawStats.filter(s => s.player && s.player.toLowerCase() === playerName.toLowerCase() && gameIds.includes(String(s.game_id)));
             
             const aggregated = {};
             playerStats.forEach(s => {
@@ -646,12 +646,13 @@
             }
 
             return mons.map(m => {
-                const formattedName = m.species.toLowerCase().replace(/[^a-z0-9]/g, '');
+                // Keep hyphens for forms like mega/gmax/regional (e.g., sableye-mega)
+                const formattedName = m.species.toLowerCase().replace(/[^a-z0-9-]/g, '');
                 const spriteUrl = `https://play.pokemonshowdown.com/sprites/gen5/${formattedName}.png`;
 
                 return `
                     <div class="mon-summary-tile">
-                        <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png'" />
+                        <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://play.pokemonshowdown.com/sprites/dex/0.png'" />
                         <div class="mon-name">${m.species}</div>
                         <div class="stat-row"><span>Direct:</span> <strong>${m.directKos}</strong></div>
                         <div class="stat-row"><span>Indirect:</span> <strong>${m.indirectKos}</strong></div>
@@ -692,7 +693,7 @@
         }
 
         function renderGameMonCells(gameId, playerName) {
-            const gameStats = rawStats.filter(s => s.player && s.player.toLowerCase() === playerName.toLowerCase() && s.game_id === gameId);
+            const gameStats = rawStats.filter(s => s.player && s.player.toLowerCase() === playerName.toLowerCase() && String(s.game_id) === String(gameId));
             const mons = gameStats.slice(0, 6);
 
             if (mons.length === 0) {
@@ -700,7 +701,8 @@
             }
 
             return mons.map(m => {
-                const formattedName = m.pokemon.toLowerCase().replace(/[^a-z0-9]/g, '');
+                // Keep hyphens for sprite paths
+                const formattedName = m.pokemon.toLowerCase().replace(/[^a-z0-9-]/g, '');
                 const spriteUrl = `https://play.pokemonshowdown.com/sprites/gen5/${formattedName}.png`;
                 const isFainted = Number(m.survived) === 0;
 
