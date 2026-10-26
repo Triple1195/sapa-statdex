@@ -1,0 +1,3 @@
+// config.js - Turso Read-Only Credentials
+const TURSO_DB_URL = "libsql://pokemon-draft-league-triple1195.aws-us-east-2.turso.io";
+const TURSO_READONLY_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicm8iLCJpYXQiOjE3OTMwMzUzMTksImlkIjoiMDFhMTc4NDMtYzQwMS03NTlhLWIzMmMtMTVlMGYxYWJlMDk4Iiwia2lkIjoiTzJTeHFzSmRxNGNXbnVGZkJoV2dHLUx6RVVEUVdSakxiZ3g2endqRWFFUSIsInJpZCI6IjBhNzQ4ZmIzLWJiNTAtNDMyMC1hN2FhLTg0NjI5NjM0ZGE2ZCJ9.CzhhhnATxbJ__bOMPHPXUckuEnHSAxlS5I25jlQEC-zHSrGPQW2hgW1Ngv3UT4xtIRmfAz6tkf3ZSvWaNLY2Aw";
