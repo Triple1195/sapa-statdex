@@ -7,7 +7,9 @@ const db = createClient({
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
-// Load showdown aliases from CSV file dynamically
+// Helper for polite delay between Showdown API calls
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function loadAliases() {
   const aliases = {};
   try {
@@ -39,10 +41,7 @@ function getShowdownName(leagueName) {
   return showdownAliases[leagueName] || leagueName.trim();
 }
 
-// ==========================================
-// REPLAY ANALYZER V8 ENGINE HELPERS
-// ==========================================
-
+// Replay Analyzer V8 Engine Helpers
 function _getPlayerDetails(data, players, playerIdentifier) {
   let targetPlayerName;
   let playerTag; 
@@ -294,33 +293,19 @@ function getBattleKOs(data, playerIdentifier, pokemonId, koType) {
   return koCount;
 }
 
-function getDamageDealt(data, playerIdentifier, pokemonId, damageType) {
-  return 0; // Simplified placeholder if not individually queried, or implemented fully
-}
-
-function getDamageTaken(data, playerIdentifier, pokemonId) {
-  return 0;
-}
-
-function getDamageHealed(data, playerIdentifier, pokemonId) {
-  return 0;
-}
-
-function getHitsTaken(data, playerIdentifier, pokemonId) {
-  return 0;
-}
-
-function getActiveTurns(data, playerIdentifier, pokemonId) {
-  return 0;
-}
+function getDamageDealt(data, playerIdentifier, pokemonId, damageType) { return 0; }
+function getDamageTaken(data, playerIdentifier, pokemonId) { return 0; }
+function getDamageHealed(data, playerIdentifier, pokemonId) { return 0; }
+function getHitsTaken(data, playerIdentifier, pokemonId) { return 0; }
+function getActiveTurns(data, playerIdentifier, pokemonId) { return 0; }
 
 
 // ==========================================
-// MAIN INGESTION ROUTINE
+// MAIN INGESTION ROUTINE WITH BATCHING
 // ==========================================
 
 async function runWeeklyIngest() {
-  console.log("Starting automated historical & weekly replay fetch with ReplayAnalyzerV8 stats...");
+  console.log("Starting automated historical & weekly replay fetch with batching...");
 
   const seasonRes = await db.execute("SELECT * FROM seasons ORDER BY season DESC LIMIT 1");
   if (seasonRes.rows.length === 0) {
@@ -362,8 +347,6 @@ async function runWeeklyIngest() {
       const sdPlayer1 = getShowdownName(player_1);
       const sdPlayer2 = getShowdownName(player_2);
 
-      console.log(`Checking match: ${player_1} (${sdPlayer1}) vs ${player_2} (${sdPlayer2})`);
-
       let searchUrl = `https://replay.pokemonshowdown.com/search.json?user=${encodeURIComponent(sdPlayer1)}&user2=${encodeURIComponent(sdPlayer2)}`;
       if (format) {
         searchUrl += `&format=${encodeURIComponent(format)}`;
@@ -372,9 +355,11 @@ async function runWeeklyIngest() {
       try {
         const response = await fetch(searchUrl);
         const json = await response.json();
+        
+        // Polite delay to avoid hitting Showdown rate limits during heavy season imports
+        await sleep(150);
 
         if (!json || json.length === 0) {
-          console.log(` -> No replays found.`);
           continue;
         }
 
@@ -384,15 +369,12 @@ async function runWeeklyIngest() {
         });
         filteredJson.sort((a, b) => Number(a.uploadtime) - Number(b.uploadtime));
 
-        console.log(` -> Found ${filteredJson.length} valid game(s) for Week ${w}.`);
-
         for (let i = 0; i < Math.min(filteredJson.length, 3); i++) {
           const battleId = filteredJson[i].id;
           const gameNumber = i + 1;
           const gameId = `${match_id}_g${gameNumber}`;
           const replayUrl = `https://replay.pokemonshowdown.com/${battleId}`;
 
-          // Check if stats are already populated for this game in match_pokemon_stats
           const existingStats = await db.execute({
             sql: "SELECT COUNT(*) as count FROM match_pokemon_stats WHERE game_id = ?",
             args: [gameId]
@@ -406,12 +388,12 @@ async function runWeeklyIngest() {
           console.log(`    [Game ${gameNumber}] Ingesting & analyzing ${battleId}...`);
           const logRes = await fetch(`${replayUrl}.json`);
           const logData = await logRes.json();
+          await sleep(100); // Polite delay between replay log fetches
 
           const logText = logData.log || "";
           const players = logData.players || [sdPlayer1, sdPlayer2];
           let winner = getWinner(logData);
           let turns = getTurns(logData);
-
           const loser = (winner.toLowerCase() === players[0].toLowerCase()) ? players[1] : players[0];
 
           // 1. Insert Game Summary
@@ -420,8 +402,10 @@ async function runWeeklyIngest() {
             args: [gameId, match_id, gameNumber, replayUrl, winner, loser, turns]
           });
 
-          // 2. Extract Detailed Stats using ReplayAnalyzerV8 Engine
+          // 2. Prepare statements for Batch Insert (Sending all Pokémon stats in one Turso call)
+          const batchStatements = [];
           const identifiers = ['Winner', 'Loser'];
+
           for (const identifier of identifiers) {
             const playerDetails = _getPlayerDetails(logData, logData.players || [sdPlayer1, sdPlayer2], identifier);
             if (!playerDetails) continue;
@@ -457,7 +441,7 @@ async function runWeeklyIngest() {
 
               const statId = `${gameId}_${playerDetails.targetPlayerName}_${species}`.replace(/\s+/g, "_");
 
-              await db.execute({
+              batchStatements.push({
                 sql: `INSERT OR REPLACE INTO match_pokemon_stats (
                   stat_id, game_id, player, pokemon, nickname, faint_type, faint_source, faint_move,
                   direct_kos, indirect_kos, self_kos, total_damage, direct_damage, indirect_damage,
@@ -471,7 +455,12 @@ async function runWeeklyIngest() {
             }
           }
 
-          console.log(`    [Game ${gameNumber}] Detailed stats successfully written to match_pokemon_stats!`);
+          // Execute batch write for this game's stats
+          if (batchStatements.length > 0) {
+            await db.batch(batchStatements);
+          }
+
+          console.log(`    [Game ${gameNumber}] Successfully processed and batched stats for ${battleId}!`);
         }
 
       } catch (e) {
@@ -479,7 +468,7 @@ async function runWeeklyIngest() {
       }
     }
   }
-  console.log("\n✅ Ingestion run complete across all active weeks!");
+  console.log("\n✅ Ingestion run complete!");
 }
 
 runWeeklyIngest();
