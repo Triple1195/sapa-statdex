@@ -1,0 +1,31 @@
+name: Historical Season Import
+
+on:
+  workflow_dispatch:
+    inputs:
+      season_number:
+        description: 'Enter Season Number to Import (e.g., 13)'
+        required: true
+        type: number
+
+jobs:
+  import-history:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Dependencies
+        run: npm install @libsql/client
+
+      - name: Run Historical Ingest for Target Season
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          TARGET_SEASON: ${{ github.event.inputs.season_number }}
+        run: node scripts/historical_ingest.js
