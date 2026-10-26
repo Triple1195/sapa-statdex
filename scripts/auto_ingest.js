@@ -20,7 +20,6 @@ function loadAliases() {
         if (parts.length >= 2) {
           const leagueName = parts[0].trim().replace(/^["']|["']$/g, '');
           const sdName = parts[1].trim().replace(/^["']|["']$/g, '');
-          
           if (leagueName && sdName && leagueName.toLowerCase() !== "league_name") {
             aliases[leagueName] = sdName;
           }
@@ -39,10 +38,82 @@ function getShowdownName(leagueName) {
   return showdownAliases[leagueName] || leagueName.trim();
 }
 
+// Detailed Replay Log Parser Engine (ReplayAnalyzerV8)
+function parseReplayStats(logText) {
+  const lines = logText.split("\n");
+  const playerMap = {}; // "p1" -> username, "p2" -> username
+  const teams = { p1: {}, p2: {} }; // pokemon species -> { kills, deaths, team_ko, survived }
+  let lastAttacker = null;
+
+  for (const line of lines) {
+    const parts = line.split("|");
+    if (parts.length < 2) continue;
+
+    const cmd = parts[1];
+
+    // Identify players
+    if (cmd === "player") {
+      const pId = parts[2]; // p1 or p2
+      const pName = parts[3];
+      if (pId && pName) playerMap[pId] = pName;
+    }
+
+    // Register team members from |poke| lines
+    if (cmd === "poke") {
+      const pId = parts[2]; // p1 or p2
+      const species = parts[3].split(",")[0].trim();
+      if (pId && species) {
+        teams[pId][species] = { kills: 0, deaths: 0, team_ko: 0, survived: 1 };
+      }
+    }
+
+    // Track move usage/attacker
+    if (cmd === "move" || cmd === "cant") {
+      const sideMon = parts[2]; // e.g. "p1a: Landorus-Therian"
+      if (sideMon) {
+        const pId = sideMon.substring(0, 2);
+        const species = sideMon.split(":")[1]?.trim();
+        if (pId && species) lastAttacker = { pId, species };
+      }
+    }
+
+    // Process Knockouts
+    if (cmd === "faint") {
+      const sideMon = parts[2]; // e.g. "p2a: Heatran"
+      if (sideMon) {
+        const faintedPId = sideMon.substring(0, 2);
+        const faintedSpecies = sideMon.split(":")[1]?.trim();
+
+        if (faintedPId && faintedSpecies && teams[faintedPId][faintedSpecies]) {
+          // Mark as fainted / not survived
+          teams[faintedPId][faintedSpecies].deaths = 1;
+          teams[faintedPId][faintedSpecies].survived = 0;
+
+          // Credit KO
+          if (lastAttacker) {
+            if (lastAttacker.pId !== faintedPId) {
+              // Enemy KO
+              if (teams[lastAttacker.pId]?.[lastAttacker.species]) {
+                teams[lastAttacker.pId][lastAttacker.species].kills += 1;
+              }
+            } else {
+              // Team KO (self / teammate knockout via recoil, self-destruct, etc.)
+              if (teams[lastAttacker.pId]?.[lastAttacker.species]) {
+                teams[lastAttacker.pId][lastAttacker.species].team_ko += 1;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return { playerMap, teams };
+}
+
 async function runWeeklyIngest() {
   console.log("Starting automated historical & weekly replay fetch...");
 
-  // 1. Fetch active season details (including format)
   const seasonRes = await db.execute("SELECT * FROM seasons ORDER BY season DESC LIMIT 1");
   if (seasonRes.rows.length === 0) {
     console.log("No active seasons found in database.");
@@ -55,14 +126,12 @@ async function runWeeklyIngest() {
   const startDateStr = activeSeason.week_one_start_date;
   const startDate = new Date(startDateStr);
   
-  // 2. Compute current week via date math from Week 1 Monday
   const now = new Date();
   const diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
   const currentWeek = Math.max(1, Math.floor(diffDays / 7) + 1);
 
   console.log(`Active Season: ${seasonNum} | Format: ${format || 'None'} | Scanning Weeks 1 to ${currentWeek}`);
 
-  // 3. Loop through every week from Week 1 up to the current week
   for (let w = 1; w <= currentWeek; w++) {
     console.log(`\n--- Processing Season ${seasonNum}, Week ${w} ---`);
 
@@ -76,7 +145,6 @@ async function runWeeklyIngest() {
       continue;
     }
 
-    // Calculate start and end timestamp window for this specific week (Monday to following Monday)
     const weekStartTime = Math.floor((startDate.getTime() + (w - 1) * 7 * 86400000) / 1000);
     const weekEndTime = Math.floor((startDate.getTime() + w * 7 * 86400000) / 1000);
 
@@ -102,7 +170,6 @@ async function runWeeklyIngest() {
           continue;
         }
 
-        // Filter battles that occurred strictly within this specific week's window
         const filteredJson = json.filter(battle => {
           const t = Number(battle.uploadtime);
           return t > weekStartTime && t <= weekEndTime;
@@ -147,12 +214,29 @@ async function runWeeklyIngest() {
 
           const loser = (winner.toLowerCase() === players[0].toLowerCase()) ? players[1] : players[0];
 
+          // 1. Insert Game Summary
           await db.execute({
             sql: `INSERT OR REPLACE INTO match_games (game_id, match_id, game_number, replay_url, winner, loser, turns) VALUES (?, ?, ?, ?, ?, ?, ?)`,
             args: [gameId, match_id, gameNumber, replayUrl, winner, loser, turns]
           });
 
-          console.log(`    [Game ${gameNumber}] Recorded: Winner=${winner}, Turns=${turns}`);
+          // 2. Parse Detailed Pokémon Stats
+          const { playerMap, teams } = parseReplayStats(logText);
+
+          for (const pId of ["p1", "p2"]) {
+            const playerName = playerMap[pId] || (pId === "p1" ? sdPlayer1 : sdPlayer2);
+            const monList = teams[pId];
+
+            for (const [species, stats] of Object.entries(monList)) {
+              const statId = `${gameId}_${playerName}_${species}`.replace(/\s+/g, "_");
+              await db.execute({
+                sql: `INSERT OR REPLACE INTO match_pokemon_stats (stat_id, game_id, player, pokemon, kills, deaths, team_ko, survived) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                args: [statId, gameId, playerName, species, stats.kills, stats.deaths, stats.team_ko, stats.survived]
+              });
+            }
+          }
+
+          console.log(`    [Game ${gameNumber}] Detailed stats successfully written to match_pokemon_stats!`);
         }
 
       } catch (e) {
