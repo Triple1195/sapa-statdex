@@ -371,19 +371,15 @@
             <div id="draftBoardContent" class="status-msg">Draft board data will render here.</div>
         </div>
     </div>
-
+    
+    <script src="config.js"></script>
     <script>
-        // HARDCODED READ-ONLY TURSO CREDENTIALS
-        const TURSO_DB_URL = "libsql://pokemon-draft-league-triple1195.aws-us-east-2.turso.io";
-        const TURSO_READONLY_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicm8iLCJpYXQiOjE3OTMwMzUzMTksImlkIjoiMDFhMTc4NDMtYzQwMS03NTlhLWIzMmMtMTVlMGYxYWJlMDk4Iiwia2lkIjoiTzJTeHFzSmRxNGNXbnVGZkJoV2dHLUx6RVVEUVdSakxiZ3g2endqRWFFUSIsInJpZCI6IjBhNzQ4ZmIzLWJiNTAtNDMyMC1hN2FhLTg0NjI5NjM0ZGE2ZCJ9.CzhhhnATxbJ__bOMPHPXUckuEnHSAxlS5I25jlQEC-zHSrGPQW2hgW1Ngv3UT4xtIRmfAz6tkf3ZSvWaNLY2Aw";
-
         let rawMatches = [];
         let rawStats = [];
-        // Map display names to Showdown tags if they differ
-        const playerTagAliases = {
-            "lily": "lilymoding",
-            "hall": "mfsusan"
-        };
+        
+        // Maps loaded dynamically from player_aliases table
+        window.playerAliasesMap = {}; // showdown_tag.toLowerCase() -> display_name
+        window.displayToTagMap = {};   // display_name.toLowerCase() -> showdown_tag
 
         window.addEventListener('DOMContentLoaded', () => { initApp(); });
 
@@ -427,6 +423,20 @@
 
         async function initApp() {
             try {
+                // 1. Load Player Aliases Map from DB
+                const aliasResult = await tursoQuery([{ sql: "SELECT display_name, showdown_tag FROM player_aliases" }]);
+                if (aliasResult && aliasResult[0]) {
+                    aliasResult[0].forEach(row => {
+                        const disp = (row.display_name || '').trim();
+                        const tag = (row.showdown_tag || '').trim();
+                        if (disp && tag) {
+                            window.playerAliasesMap[tag.toLowerCase()] = disp;
+                            window.displayToTagMap[disp.toLowerCase()] = tag;
+                        }
+                    });
+                }
+
+                // 2. Load Seasons
                 const results = await tursoQuery([{ sql: "SELECT season FROM seasons ORDER BY season DESC" }]);
                 if (!results) return;
 
@@ -452,6 +462,18 @@
             }
         }
 
+        function getDisplayName(name) {
+            if (!name) return '';
+            const clean = name.trim().toLowerCase();
+            return window.playerAliasesMap[clean] || name;
+        }
+
+        function getShowdownTag(displayName) {
+            if (!displayName) return '';
+            const clean = displayName.trim().toLowerCase();
+            return window.displayToTagMap[clean] || displayName;
+        }
+
         async function loadSeasonalData() {
             const season = document.getElementById('seasonSelect').value;
             if (!season) return;
@@ -464,7 +486,7 @@
                               FROM matches m 
                               LEFT JOIN match_games g ON m.match_id = g.match_id 
                               WHERE m.season = ? 
-                              ORDER BY m.week ASC, m.match_id ASC, g.game_number ASC`,
+                              ORDER BY m.week ASC, m.conference ASC, m.match_id ASC, g.game_number ASC`,
                         args: [season]
                     },
                     {
@@ -499,24 +521,27 @@
             }
         }
 
-        function getShowdownTag(displayName) {
-            const clean = (displayName || '').trim().toLowerCase();
-            return playerTagAliases[clean] || clean;
-        }
-
         function renderMatchesSheetUI() {
             const weekFilter = document.getElementById('weekSelect').value;
             const playerFilter = document.getElementById('playerSearch').value.toLowerCase();
             const grid = document.getElementById('matchGrid');
 
             const matchGroups = {};
-            rawMatches.forEach(m => {
+            
+            // Sort rawMatches primarily by week, conference, and match_id so Conf 1 is grouped before Conf 2 per week
+            const sortedMatches = [...rawMatches].sort((a, b) => {
+                if (Number(a.week) !== Number(b.week)) return Number(a.week) - Number(b.week);
+                if (String(a.conference) !== String(b.conference)) return String(a.conference).localeCompare(String(b.conference));
+                return Number(a.match_id) - Number(b.match_id);
+            });
+
+            sortedMatches.forEach(m => {
                 const matchWeek = String(m.week);
-                const p1 = (m.player_1 || '').toLowerCase();
-                const p2 = (m.player_2 || '').toLowerCase();
+                const p1Display = getDisplayName(m.player_1);
+                const p2Display = getDisplayName(m.player_2);
 
                 const matchesWeek = (weekFilter === 'all' || matchWeek === weekFilter);
-                const matchesPlayer = (!playerFilter || p1.includes(playerFilter) || p2.includes(playerFilter));
+                const matchesPlayer = (!playerFilter || p1Display.toLowerCase().includes(playerFilter) || p2Display.toLowerCase().includes(playerFilter));
 
                 if (matchesWeek && matchesPlayer) {
                     if (!matchGroups[m.match_id]) {
@@ -539,11 +564,15 @@
                 const info = match.info;
                 const games = match.games;
 
+                const p1Display = getDisplayName(info.player_1);
+                const p2Display = getDisplayName(info.player_2);
+
                 let p1Wins = 0;
                 let p2Wins = 0;
                 games.forEach(g => {
-                    if (g.winner && g.winner.toLowerCase() === info.player_1.toLowerCase()) p1Wins++;
-                    if (g.winner && g.winner.toLowerCase() === info.player_2.toLowerCase()) p2Wins++;
+                    const gWinnerDisp = getDisplayName(g.winner);
+                    if (gWinnerDisp.toLowerCase() === p1Display.toLowerCase()) p1Wins++;
+                    if (gWinnerDisp.toLowerCase() === p2Display.toLowerCase()) p2Wins++;
                 });
 
                 const gameHeadersHTML = [1, 2, 3].map(gNum => {
@@ -556,10 +585,11 @@
                             </div>
                         `;
                     }
+                    const winnerDisplay = getDisplayName(gameData.winner);
                     return `
                         <div class="game-summary-box">
                             <div class="game-summary-header">Game ${gNum} (${gameData.turns || 0}T)</div>
-                            <div class="game-summary-winner">${gameData.winner || 'Pending'}</div>
+                            <div class="game-summary-winner">${winnerDisplay || 'Pending'}</div>
                             ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:11px;">Replay</a>` : ''}
                         </div>
                     `;
@@ -573,9 +603,9 @@
                                 <div><strong>Conf:</strong> ${info.conference || 1}</div>
                             </div>
                             <div class="score-header">
-                                <div class="player-banner-left"><span>${info.player_1}</span> <span>${p1Wins}</span></div>
+                                <div class="player-banner-left"><span>${p1Display}</span> <span>${p1Wins}</span></div>
                                 <span class="vs-divider">VS</span>
-                                <div class="player-banner-right"><span>${p2Wins}</span> <span>${info.player_2}</span></div>
+                                <div class="player-banner-right"><span>${p2Wins}</span> <span>${p2Display}</span></div>
                             </div>
                             ${gameHeadersHTML}
                         </div>
@@ -583,28 +613,29 @@
                         <div class="sheet-main-grid">
                             <div>
                                 <div class="player-roster-card">
-                                    <div class="roster-header"><span>Player: ${info.player_1}</span></div>
+                                    <div class="roster-header"><span>Player: ${p1Display}</span></div>
                                     <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
                                 </div>
                                 <div class="player-roster-card">
-                                    <div class="roster-header"><span>Player: ${info.player_2}</span></div>
+                                    <div class="roster-header"><span>Player: ${p2Display}</span></div>
                                     <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
                                 </div>
                             </div>
-                            ${[1, 2, 3].map(gNum => renderGameDetailColumn(games.find(g => Number(g.game_number) === gNum), info)).join('')}
+                            ${[1, 2, 3].map(gNum => renderGameDetailColumn(games.find(g => Number(g.game_number) === gNum), info, p1Display, p2Display)).join('')}
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function renderPlayerMonSummaries(playerName, games) {
+        function renderPlayerMonSummaries(rawPlayerName, games) {
             const gameIds = games.map(g => String(g.game_id));
-            const showdownTag = getShowdownTag(playerName);
+            const showdownTag = getShowdownTag(rawPlayerName).toLowerCase();
+            const displayName = getDisplayName(rawPlayerName).toLowerCase();
             
             const playerStats = rawStats.filter(s => {
                 const statPlayer = (s.player || '').trim().toLowerCase();
-                return (statPlayer === showdownTag || statPlayer === playerName.toLowerCase()) && gameIds.includes(String(s.game_id));
+                return (statPlayer === showdownTag || statPlayer === displayName || getDisplayName(s.player).toLowerCase() === displayName) && gameIds.includes(String(s.game_id));
             });
             
             const aggregated = {};
@@ -638,25 +669,29 @@
             }).join('');
         }
 
-        function renderGameDetailColumn(gameData, matchInfo) {
+        function renderGameDetailColumn(gameData, matchInfo, p1Display, p2Display) {
             if (!gameData) {
                 return `<div class="game-detail-column"><div style="background:#fff; border:2px solid #000; padding:20px; text-align:center; color:#666;">Game Not Played</div></div>`;
             }
 
+            const gameWinnerDisplay = getDisplayName(gameData.winner);
+            const isP1Winner = gameWinnerDisplay.toLowerCase() === p1Display.toLowerCase();
+            const isP2Winner = gameWinnerDisplay.toLowerCase() === p2Display.toLowerCase();
+
             return `
                 <div class="game-detail-column">
                     <div class="game-player-block">
-                        <div class="game-player-header ${gameData.winner && gameData.winner.toLowerCase() === matchInfo.player_1.toLowerCase() ? 'status-winner' : 'status-loser'}">
-                            <span>${matchInfo.player_1}</span>
-                            <span>${gameData.winner && gameData.winner.toLowerCase() === matchInfo.player_1.toLowerCase() ? 'Winner' : 'Loser'}</span>
+                        <div class="game-player-header ${isP1Winner ? 'status-winner' : 'status-loser'}">
+                            <span>${p1Display}</span>
+                            <span>${isP1Winner ? 'Winner' : 'Loser'}</span>
                         </div>
                         <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, matchInfo.player_1)}</div>
                     </div>
 
                     <div class="game-player-block">
-                        <div class="game-player-header ${gameData.winner && gameData.winner.toLowerCase() === matchInfo.player_2.toLowerCase() ? 'status-winner' : 'status-loser'}">
-                            <span>${matchInfo.player_2}</span>
-                            <span>${gameData.winner && gameData.winner.toLowerCase() === matchInfo.player_2.toLowerCase() ? 'Winner' : 'Loser'}</span>
+                        <div class="game-player-header ${isP2Winner ? 'status-winner' : 'status-loser'}">
+                            <span>${p2Display}</span>
+                            <span>${isP2Winner ? 'Winner' : 'Loser'}</span>
                         </div>
                         <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, matchInfo.player_2)}</div>
                     </div>
@@ -664,11 +699,13 @@
             `;
         }
 
-        function renderGameMonCells(gameId, playerName) {
-            const showdownTag = getShowdownTag(playerName);
+        function renderGameMonCells(gameId, rawPlayerName) {
+            const showdownTag = getShowdownTag(rawPlayerName).toLowerCase();
+            const displayName = getDisplayName(rawPlayerName).toLowerCase();
+
             const gameStats = rawStats.filter(s => {
                 const statPlayer = (s.player || '').trim().toLowerCase();
-                return (statPlayer === showdownTag || statPlayer === playerName.toLowerCase()) && String(s.game_id) === String(gameId);
+                return (statPlayer === showdownTag || statPlayer === displayName || getDisplayName(s.player).toLowerCase() === displayName) && String(s.game_id) === String(gameId);
             });
             const mons = gameStats.slice(0, 6);
 
@@ -701,15 +738,16 @@
 
             const playerMap = {};
             rawStats.forEach(st => {
-                if (!playerMap[st.player]) {
-                    playerMap[st.player] = { pokemon: {} };
+                const dispName = getDisplayName(st.player);
+                if (!playerMap[dispName]) {
+                    playerMap[dispName] = { pokemon: {} };
                 }
-                if (!playerMap[st.player].pokemon[st.pokemon]) {
-                    playerMap[st.player].pokemon[st.pokemon] = { kos: 0, wins: 0, battles: 0 };
+                if (!playerMap[dispName].pokemon[st.pokemon]) {
+                    playerMap[dispName].pokemon[st.pokemon] = { kos: 0, wins: 0, battles: 0 };
                 }
-                playerMap[st.player].pokemon[st.pokemon].kos += Number(st.direct_kos || 0);
-                playerMap[st.player].pokemon[st.pokemon].wins += Number(st.battle_won || 0);
-                playerMap[st.player].pokemon[st.pokemon].battles += 1;
+                playerMap[dispName].pokemon[st.pokemon].kos += Number(st.direct_kos || 0);
+                playerMap[dispName].pokemon[st.pokemon].wins += Number(st.battle_won || 0);
+                playerMap[dispName].pokemon[st.pokemon].battles += 1;
             });
 
             const players = Object.keys(playerMap).filter(p => !playerFilter || p.toLowerCase().includes(playerFilter));
