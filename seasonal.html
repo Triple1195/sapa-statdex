@@ -147,7 +147,7 @@
             overflow: hidden;
         }
 
-        .player-banner-left { 
+        .player-banner-winner { 
             background-color: #3b82f6; 
             color: white; 
             padding: 8px 12px; 
@@ -158,7 +158,7 @@
             font-weight: bold;
         }
         
-        .player-banner-right { 
+        .player-banner-loser { 
             background-color: #ef4444; 
             color: white; 
             padding: 8px 12px; 
@@ -371,21 +371,22 @@
             <div id="draftBoardContent" class="status-msg">Draft board data will render here.</div>
         </div>
     </div>
-    
+
+    <!-- Load external credentials from config.js -->
     <script src="config.js"></script>
+
     <script>
         let rawMatches = [];
         let rawStats = [];
         
-        // Maps loaded dynamically from player_aliases table
-        window.playerAliasesMap = {}; // showdown_tag.toLowerCase() -> display_name
-        window.displayToTagMap = {};   // display_name.toLowerCase() -> showdown_tag
+        window.playerAliasesMap = {}; 
+        window.displayToTagMap = {};   
 
         window.addEventListener('DOMContentLoaded', () => { initApp(); });
 
         async function tursoQuery(statements) {
-            if (!TURSO_DB_URL || !TURSO_READONLY_TOKEN || TURSO_READONLY_TOKEN.includes("YOUR_READ_ONLY_TOKEN")) {
-                document.getElementById('matchGrid').innerHTML = '<div class="status-msg" style="color:#ef4444;">Please configure your Turso read-only credentials in seasonal.html.</div>';
+            if (typeof TURSO_DB_URL === 'undefined' || typeof TURSO_READONLY_TOKEN === 'undefined' || TURSO_READONLY_TOKEN.includes("YOUR_READ_ONLY_TOKEN")) {
+                document.getElementById('matchGrid').innerHTML = '<div class="status-msg" style="color:#ef4444;">Please configure your Turso read-only credentials in config.js.</div>';
                 return null;
             }
 
@@ -423,7 +424,6 @@
 
         async function initApp() {
             try {
-                // 1. Load Player Aliases Map from DB
                 const aliasResult = await tursoQuery([{ sql: "SELECT display_name, showdown_tag FROM player_aliases" }]);
                 if (aliasResult && aliasResult[0]) {
                     aliasResult[0].forEach(row => {
@@ -436,7 +436,6 @@
                     });
                 }
 
-                // 2. Load Seasons
                 const results = await tursoQuery([{ sql: "SELECT season FROM seasons ORDER BY season DESC" }]);
                 if (!results) return;
 
@@ -472,6 +471,13 @@
             if (!displayName) return '';
             const clean = displayName.trim().toLowerCase();
             return window.displayToTagMap[clean] || displayName;
+        }
+
+        function formatSpriteName(speciesName) {
+            if (!speciesName) return '0';
+            let clean = speciesName.toLowerCase().trim();
+            clean = clean.replace(/[^a-z0-9-]/g, '');
+            return clean;
         }
 
         async function loadSeasonalData() {
@@ -528,7 +534,6 @@
 
             const matchGroups = {};
             
-            // Sort rawMatches primarily by week, conference, and match_id so Conf 1 is grouped before Conf 2 per week
             const sortedMatches = [...rawMatches].sort((a, b) => {
                 if (Number(a.week) !== Number(b.week)) return Number(a.week) - Number(b.week);
                 if (String(a.conference) !== String(b.conference)) return String(a.conference).localeCompare(String(b.conference));
@@ -575,6 +580,9 @@
                     if (gWinnerDisp.toLowerCase() === p2Display.toLowerCase()) p2Wins++;
                 });
 
+                const p1IsSetWinner = p1Wins > p2Wins;
+                const p2IsSetWinner = p2Wins > p1Wins;
+
                 const gameHeadersHTML = [1, 2, 3].map(gNum => {
                     const gameData = games.find(g => Number(g.game_number) === gNum);
                     if (!gameData) {
@@ -603,9 +611,9 @@
                                 <div><strong>Conf:</strong> ${info.conference || 1}</div>
                             </div>
                             <div class="score-header">
-                                <div class="player-banner-left"><span>${p1Display}</span> <span>${p1Wins}</span></div>
+                                <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
                                 <span class="vs-divider">VS</span>
-                                <div class="player-banner-right"><span>${p2Wins}</span> <span>${p2Display}</span></div>
+                                <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
                             </div>
                             ${gameHeadersHTML}
                         </div>
@@ -654,7 +662,7 @@
             }
 
             return mons.map(m => {
-                const formattedName = m.species.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                const formattedName = formatSpriteName(m.species);
                 const spriteUrl = `https://play.pokemonshowdown.com/sprites/gen5/${formattedName}.png`;
 
                 return `
@@ -714,7 +722,7 @@
             }
 
             return mons.map(m => {
-                const formattedName = m.pokemon.toLowerCase().replace(/[^a-z0-9-]/g, '');
+                const formattedName = formatSpriteName(m.pokemon);
                 const spriteUrl = `https://play.pokemonshowdown.com/sprites/gen5/${formattedName}.png`;
                 const isFainted = Number(m.survived) === 0;
 
