@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Seasonal Hub - Pokémon Draft League</title>
+    <title>Seasonal Analytics Hub - Pokémon Draft League</title>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -53,6 +53,38 @@
             max-width: 1200px;
             margin: 1.5rem auto;
             padding: 0 1rem;
+        }
+
+        /* Config Bar for Turso Credentials */
+        .config-banner {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.8rem 1.2rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .config-banner input {
+            flex: 1;
+            padding: 0.4rem 0.6rem;
+        }
+
+        .config-banner button {
+            background-color: var(--accent-blue);
+            color: var(--bg-color);
+            border: none;
+            padding: 0.4rem 1rem;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .config-banner button:hover {
+            background-color: var(--accent-hover);
         }
 
         /* Top Filter Bar */
@@ -242,6 +274,13 @@
             font-size: 0.75rem;
             color: var(--text-muted);
         }
+
+        .status-msg {
+            color: var(--text-muted);
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 2rem;
+        }
     </style>
 </head>
 <body>
@@ -252,114 +291,62 @@
     </header>
 
     <div class="container">
+        <!-- Turso Credentials Banner -->
+        <div class="config-banner">
+            <span><strong>Turso DB:</strong></span>
+            <input type="text" id="tursoUrl" placeholder="Database URL (libsql://...)">
+            <input type="password" id="tursoToken" placeholder="Auth Token">
+            <button onclick="saveCredentials()">Save & Connect</button>
+        </div>
+
         <!-- Top Filter Bar -->
         <div class="filter-bar">
             <div class="filter-group">
                 <label for="seasonSelect">Select Season:</label>
-                <select id="seasonSelect" onchange="onSeasonChange()">
-                    <option value="16">Season 16</option>
-                    <option value="13">Season 13</option>
+                <select id="seasonSelect" onchange="loadSeasonalData()">
+                    <option value="">Loading seasons...</option>
                 </select>
             </div>
 
             <div class="filter-group">
                 <label for="weekSelect">Filter Week:</label>
-                <select id="weekSelect" onchange="applyFilters()">
+                <select id="weekSelect" onchange="renderMatches()">
                     <option value="all">All Weeks</option>
-                    <option value="1">Week 1</option>
-                    <option value="2">Week 2</option>
-                    <option value="3">Week 3</option>
-                    <option value="4">Week 4</option>
                 </select>
             </div>
 
             <div class="filter-group">
                 <label for="playerSearch">Search Player:</label>
-                <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="applyFilters()">
+                <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="renderMatches(); renderPlayerdex();">
             </div>
         </div>
 
         <!-- Navigation Tabs -->
         <div class="tabs-container">
             <button class="tab-button active" onclick="switchTab('statdex')">Seasonal Statdex (Matches)</button>
-            <button class="tab-button" onclick="switchTab('playerdex')">Seasonal Playerdex (Rosters & TVR/PVR)</button>
+            <button class="tab-button" onclick="switchTab('playerdex')">Seasonal Playerdex (Rosters & Stats)</button>
             <button class="tab-button" onclick="switchTab('draftboard')">Draft Board & Budgets</button>
         </div>
 
         <!-- Tab 1: Statdex (Matches & Replays) -->
         <div id="statdex" class="tab-content active">
             <div id="matchGrid" class="match-grid">
-                <!-- Example Match Card Structure (Populated dynamically) -->
-                <div class="match-card">
-                    <div class="match-header">
-                        <span>Conference Alpha • Week 1</span>
-                        <span>Game 1 (34 Turns)</span>
-                    </div>
-                    <div class="match-players">
-                        <span class="winner-tag">JT (W)</span>
-                        <span>vs</span>
-                        <span>Frank</span>
-                    </div>
-                    <a href="#" target="_blank" class="replay-link-btn">Watch Replay &rarr;</a>
-                </div>
+                <div class="status-msg">Select a season to view match replays.</div>
             </div>
         </div>
 
         <!-- Tab 2: Playerdex (Player & Pokémon Cards) -->
         <div id="playerdex" class="tab-content">
             <div id="playerdexGrid" class="playerdex-grid">
-                <!-- Example Player Card Structure (Populated dynamically) -->
-                <div class="player-card">
-                    <div class="player-card-header">
-                        <h3>JT</h3>
-                        <div class="metrics-badge">TVR: <strong>1.24</strong> | PVR: <strong>84.5</strong></div>
-                    </div>
-                    <div class="pokemon-tile-grid">
-                        <div class="pokemon-tile">
-                            <strong>Great Tusk</strong>
-                            <span>4 KOs | 2 Ws</span>
-                        </div>
-                        <div class="pokemon-tile">
-                            <strong>Kingambit</strong>
-                            <span>6 KOs | 3 Ws</span>
-                        </div>
-                        <div class="pokemon-tile">
-                            <strong>Gengar</strong>
-                            <span>1 KO | 1 W</span>
-                        </div>
-                    </div>
-                </div>
+                <div class="status-msg">Select a season to view player performance cards.</div>
             </div>
         </div>
 
         <!-- Tab 3: Draft Board -->
         <div id="draftboard" class="tab-content">
-            <p style="color: var(--text-muted);">Draft board and point allocation breakdown for the selected season will render here.</p>
+            <div id="draftBoardContent" class="status-msg">Draft board data will render here.</div>
         </div>
     </div>
 
     <script>
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-            event.target.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
-        }
-
-        function onSeasonChange() {
-            // Trigger database refresh for selected season
-            applyFilters();
-        }
-
-        function applyFilters() {
-            const season = document.getElementById('seasonSelect').value;
-            const week = document.getElementById('weekSelect').value;
-            const player = document.getElementById('playerSearch').value.toLowerCase();
-            
-            console.log(`Filtering for Season: ${season}, Week: ${week}, Player: ${player}`);
-            // SQL Query dispatch to Turso will happen here
-        }
-    </script>
-</body>
-</html>
+        let raw
