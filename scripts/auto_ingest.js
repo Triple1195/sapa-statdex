@@ -297,7 +297,6 @@ function getDamageHealed(data, playerIdentifier, pokemonId) { return 0; }
 function getHitsTaken(data, playerIdentifier, pokemonId) { return 0; }
 function getActiveTurns(data, playerIdentifier, pokemonId) { return 0; }
 
-
 // ==========================================
 // INGESTION ROUTINE WITH TARGET_SEASON CHECK
 // ==========================================
@@ -313,8 +312,8 @@ async function runIngest() {
       args: [Number(targetSeasonEnv)]
     });
   } else {
-    console.log("Running automated sync across all seasons...");
-    seasonsRes = await db.execute("SELECT * FROM seasons ORDER BY season ASC");
+    console.log("No TARGET_SEASON environment variable found. Pulling data for the most current season...");
+    seasonsRes = await db.execute("SELECT * FROM seasons ORDER BY season DESC LIMIT 1");
   }
 
   if (seasonsRes.rows.length === 0) {
