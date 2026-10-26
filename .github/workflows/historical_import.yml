@@ -28,4 +28,4 @@ jobs:
           TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
           TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
           TARGET_SEASON: ${{ github.event.inputs.season_number }}
-        run: node scripts/historical_ingest.js
+        run: node scripts/auto_ingest.js
