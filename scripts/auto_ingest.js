@@ -7,7 +7,6 @@ const db = createClient({
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
-// Helper for polite delay between Showdown API calls
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function loadAliases() {
@@ -41,7 +40,6 @@ function getShowdownName(leagueName) {
   return showdownAliases[leagueName] || leagueName.trim();
 }
 
-// Replay Analyzer V8 Engine Helpers
 function _getPlayerDetails(data, players, playerIdentifier) {
   let targetPlayerName;
   let playerTag; 
@@ -301,174 +299,189 @@ function getActiveTurns(data, playerIdentifier, pokemonId) { return 0; }
 
 
 // ==========================================
-// MAIN INGESTION ROUTINE WITH BATCHING
+// INGESTION ROUTINE WITH TARGET_SEASON CHECK
 // ==========================================
 
-async function runWeeklyIngest() {
-  console.log("Starting automated historical & weekly replay fetch with batching...");
+async function runIngest() {
+  const targetSeasonEnv = process.env.TARGET_SEASON;
+  let seasonsRes;
 
-  const seasonRes = await db.execute("SELECT * FROM seasons ORDER BY season DESC LIMIT 1");
-  if (seasonRes.rows.length === 0) {
-    console.log("No active seasons found in database.");
+  if (targetSeasonEnv) {
+    console.log(`Targeting single historical import for Season ${targetSeasonEnv}...`);
+    seasonsRes = await db.execute({
+      sql: "SELECT * FROM seasons WHERE season = ?",
+      args: [Number(targetSeasonEnv)]
+    });
+  } else {
+    console.log("Running automated sync across all seasons...");
+    seasonsRes = await db.execute("SELECT * FROM seasons ORDER BY season ASC");
+  }
+
+  if (seasonsRes.rows.length === 0) {
+    console.log("No matching seasons found in database.");
     return;
   }
   
-  const activeSeason = seasonRes.rows[0];
-  const seasonNum = activeSeason.season;
-  const format = activeSeason.format || "";
-  const startDateStr = activeSeason.week_one_start_date;
-  const startDate = new Date(startDateStr);
-  
-  const now = new Date();
-  const diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
-  const currentWeek = Math.max(1, Math.floor(diffDays / 7) + 1);
-
-  console.log(`Active Season: ${seasonNum} | Format: ${format || 'None'} | Scanning Weeks 1 to ${currentWeek}`);
-
-  for (let w = 1; w <= currentWeek; w++) {
-    console.log(`\n--- Processing Season ${seasonNum}, Week ${w} ---`);
-
-    const matchesRes = await db.execute({
-      sql: "SELECT * FROM matches WHERE season = ? AND week = ?",
-      args: [seasonNum, w]
+  for (const activeSeason of seasonsRes.rows) {
+    const seasonNum = activeSeason.season;
+    const format = activeSeason.format || "";
+    const startDateStr = activeSeason.week_one_start_date;
+    const startDate = new Date(startDateStr);
+    
+    const maxWeekRes = await db.execute({
+      sql: "SELECT MAX(week) as max_week FROM matches WHERE season = ?",
+      args: [seasonNum]
     });
+    const seasonMaxWeek = maxWeekRes.rows[0]?.max_week ? Number(maxWeekRes.rows[0].max_week) : 1;
 
-    if (matchesRes.rows.length === 0) {
-      console.log(`No matches scheduled for Week ${w}.`);
-      continue;
-    }
+    const now = new Date();
+    const diffDays = Math.floor((now - startDate) / (1000 * 60 * 60 * 24));
+    const calculatedWeek = Math.max(1, Math.floor(diffDays / 7) + 1);
+    
+    const targetWeeks = Math.max(seasonMaxWeek, calculatedWeek);
 
-    const weekStartTime = Math.floor((startDate.getTime() + (w - 1) * 7 * 86400000) / 1000);
-    const weekEndTime = Math.floor((startDate.getTime() + w * 7 * 86400000) / 1000);
+    console.log(`\n=== Processing Season ${seasonNum} | Format: ${format || 'None'} | Scanning Weeks 1 to ${targetWeeks} ===`);
 
-    for (const match of matchesRes.rows) {
-      const { match_id, player_1, player_2 } = match;
-      
-      const sdPlayer1 = getShowdownName(player_1);
-      const sdPlayer2 = getShowdownName(player_2);
+    for (let w = 1; w <= targetWeeks; w++) {
+      console.log(`\n--- Processing Season ${seasonNum}, Week ${w} ---`);
 
-      let searchUrl = `https://replay.pokemonshowdown.com/search.json?user=${encodeURIComponent(sdPlayer1)}&user2=${encodeURIComponent(sdPlayer2)}`;
-      if (format) {
-        searchUrl += `&format=${encodeURIComponent(format)}`;
+      const matchesRes = await db.execute({
+        sql: "SELECT * FROM matches WHERE season = ? AND week = ?",
+        args: [seasonNum, w]
+      });
+
+      if (matchesRes.rows.length === 0) {
+        console.log(`No matches scheduled for Week ${w}.`);
+        continue;
       }
-      
-      try {
-        const response = await fetch(searchUrl);
-        const json = await response.json();
+
+      const weekStartTime = Math.floor((startDate.getTime() + (w - 1) * 7 * 86400000) / 1000);
+      const weekEndTime = Math.floor((startDate.getTime() + w * 7 * 86400000) / 1000);
+
+      for (const match of matchesRes.rows) {
+        const { match_id, player_1, player_2 } = match;
         
-        // Polite delay to avoid hitting Showdown rate limits during heavy season imports
-        await sleep(150);
+        const sdPlayer1 = getShowdownName(player_1);
+        const sdPlayer2 = getShowdownName(player_2);
 
-        if (!json || json.length === 0) {
-          continue;
+        let searchUrl = `https://replay.pokemonshowdown.com/search.json?user=${encodeURIComponent(sdPlayer1)}&user2=${encodeURIComponent(sdPlayer2)}`;
+        if (format) {
+          searchUrl += `&format=${encodeURIComponent(format)}`;
         }
+        
+        try {
+          const response = await fetch(searchUrl);
+          const json = await response.json();
+          await sleep(150);
 
-        const filteredJson = json.filter(battle => {
-          const t = Number(battle.uploadtime);
-          return t > weekStartTime && t <= weekEndTime;
-        });
-        filteredJson.sort((a, b) => Number(a.uploadtime) - Number(b.uploadtime));
-
-        for (let i = 0; i < Math.min(filteredJson.length, 3); i++) {
-          const battleId = filteredJson[i].id;
-          const gameNumber = i + 1;
-          const gameId = `${match_id}_g${gameNumber}`;
-          const replayUrl = `https://replay.pokemonshowdown.com/${battleId}`;
-
-          const existingStats = await db.execute({
-            sql: "SELECT COUNT(*) as count FROM match_pokemon_stats WHERE game_id = ?",
-            args: [gameId]
-          });
-
-          if (existingStats.rows[0].count > 0) {
-            console.log(`    [Game ${gameNumber}] Stats already populated for (${gameId}). Skipping.`);
+          if (!json || json.length === 0) {
             continue;
           }
 
-          console.log(`    [Game ${gameNumber}] Ingesting & analyzing ${battleId}...`);
-          const logRes = await fetch(`${replayUrl}.json`);
-          const logData = await logRes.json();
-          await sleep(100); // Polite delay between replay log fetches
-
-          const logText = logData.log || "";
-          const players = logData.players || [sdPlayer1, sdPlayer2];
-          let winner = getWinner(logData);
-          let turns = getTurns(logData);
-          const loser = (winner.toLowerCase() === players[0].toLowerCase()) ? players[1] : players[0];
-
-          // 1. Insert Game Summary
-          await db.execute({
-            sql: `INSERT OR REPLACE INTO match_games (game_id, match_id, game_number, replay_url, winner, loser, turns) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            args: [gameId, match_id, gameNumber, replayUrl, winner, loser, turns]
+          const filteredJson = json.filter(battle => {
+            const t = Number(battle.uploadtime);
+            return t > weekStartTime && t <= weekEndTime;
           });
+          filteredJson.sort((a, b) => Number(a.uploadtime) - Number(b.uploadtime));
 
-          // 2. Prepare statements for Batch Insert (Sending all Pokémon stats in one Turso call)
-          const batchStatements = [];
-          const identifiers = ['Winner', 'Loser'];
+          for (let i = 0; i < Math.min(filteredJson.length, 3); i++) {
+            const battleId = filteredJson[i].id;
+            const gameNumber = i + 1;
+            const gameId = `${match_id}_g${gameNumber}`;
+            const replayUrl = `https://replay.pokemonshowdown.com/${battleId}`;
 
-          for (const identifier of identifiers) {
-            const playerDetails = _getPlayerDetails(logData, logData.players || [sdPlayer1, sdPlayer2], identifier);
-            if (!playerDetails) continue;
+            const existingStats = await db.execute({
+              sql: "SELECT COUNT(*) as count FROM match_pokemon_stats WHERE game_id = ?",
+              args: [gameId]
+            });
 
-            const pokemonList = _getPokemonList(logText, playerDetails.playerTag);
-
-            for (let pIdx = 1; pIdx <= pokemonList.length; pIdx++) {
-              const species = getPokemon(logData, identifier, pIdx);
-              if (!species || species.includes("not found")) continue;
-
-              const nickname = getNickname(logData, identifier, pIdx);
-              const faintType = getFaintType(logData, identifier, pIdx);
-              const faintSource = getFaintSource(logData, identifier, pIdx);
-              const faintMove = getFaintMove(logData, identifier, pIdx);
-
-              const dKos = getBattleKOs(logData, identifier, pIdx, "Direct");
-              const iKos = getBattleKOs(logData, identifier, pIdx, "Indirect");
-              const sKos = getBattleKOs(logData, identifier, pIdx, "Self");
-
-              const tDmg = getDamageDealt(logData, identifier, pIdx, "Total");
-              const dDmg = getDamageDealt(logData, identifier, pIdx, "Direct");
-              const iDmg = getDamageDealt(logData, identifier, pIdx, "Indirect");
-              const hDmg = getDamageDealt(logData, identifier, pIdx, "Hazard");
-
-              const hTaken = getHitsTaken(logData, identifier, pIdx);
-              const dTaken = getDamageTaken(logData, identifier, pIdx);
-              const dHealed = getDamageHealed(logData, identifier, pIdx);
-              const aTurns = getActiveTurns(logData, identifier, pIdx);
-
-              const survived = getBattleSurvived(logData, identifier, pIdx);
-              const fainted = getBattleFainted(logData, identifier, pIdx);
-              const bWon = getBattleWon(logData, identifier, pIdx);
-
-              const statId = `${gameId}_${playerDetails.targetPlayerName}_${species}`.replace(/\s+/g, "_");
-
-              batchStatements.push({
-                sql: `INSERT OR REPLACE INTO match_pokemon_stats (
-                  stat_id, game_id, player, pokemon, nickname, faint_type, faint_source, faint_move,
-                  direct_kos, indirect_kos, self_kos, total_damage, direct_damage, indirect_damage,
-                  hazard_damage, hits_taken, damage_taken, damage_healed, active_turns, survived, fainted, battle_won
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                args: [
-                  statId, gameId, playerDetails.targetPlayerName, species, nickname, faintType, faintSource, faintMove,
-                  dKos, iKos, sKos, tDmg, dDmg, iDmg, hDmg, hTaken, dTaken, dHealed, aTurns, survived, fainted, bWon
-                ]
-              });
+            if (existingStats.rows[0].count > 0) {
+              console.log(`    [Game ${gameNumber}] Stats already populated for (${gameId}). Skipping.`);
+              continue;
             }
+
+            console.log(`    [Game ${gameNumber}] Ingesting & analyzing ${battleId}...`);
+            const logRes = await fetch(`${replayUrl}.json`);
+            const logData = await logRes.json();
+            await sleep(100);
+
+            const logText = logData.log || "";
+            const players = logData.players || [sdPlayer1, sdPlayer2];
+            let winner = getWinner(logData);
+            let turns = getTurns(logData);
+            const loser = (winner.toLowerCase() === players[0].toLowerCase()) ? players[1] : players[0];
+
+            await db.execute({
+              sql: `INSERT OR REPLACE INTO match_games (game_id, match_id, game_number, replay_url, winner, loser, turns) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+              args: [gameId, match_id, gameNumber, replayUrl, winner, loser, turns]
+            });
+
+            const batchStatements = [];
+            const identifiers = ['Winner', 'Loser'];
+
+            for (const identifier of identifiers) {
+              const playerDetails = _getPlayerDetails(logData, logData.players || [sdPlayer1, sdPlayer2], identifier);
+              if (!playerDetails) continue;
+
+              const pokemonList = _getPokemonList(logText, playerDetails.playerTag);
+
+              for (let pIdx = 1; pIdx <= pokemonList.length; pIdx++) {
+                const species = getPokemon(logData, identifier, pIdx);
+                if (!species || species.includes("not found")) continue;
+
+                const nickname = getNickname(logData, identifier, pIdx);
+                const faintType = getFaintType(logData, identifier, pIdx);
+                const faintSource = getFaintSource(logData, identifier, pIdx);
+                const faintMove = getFaintMove(logData, identifier, pIdx);
+
+                const dKos = getBattleKOs(logData, identifier, pIdx, "Direct");
+                const iKos = getBattleKOs(logData, identifier, pIdx, "Indirect");
+                const sKos = getBattleKOs(logData, identifier, pIdx, "Self");
+
+                const tDmg = getDamageDealt(logData, identifier, pIdx, "Total");
+                const dDmg = getDamageDealt(logData, identifier, pIdx, "Direct");
+                const iDmg = getDamageDealt(logData, identifier, pIdx, "Indirect");
+                const hDmg = getDamageDealt(logData, identifier, pIdx, "Hazard");
+
+                const hTaken = getHitsTaken(logData, identifier, pIdx);
+                const dTaken = getDamageTaken(logData, identifier, pIdx);
+                const dHealed = getDamageHealed(logData, identifier, pIdx);
+                const aTurns = getActiveTurns(logData, identifier, pIdx);
+
+                const survived = getBattleSurvived(logData, identifier, pIdx);
+                const fainted = getBattleFainted(logData, identifier, pIdx);
+                const bWon = getBattleWon(logData, identifier, pIdx);
+
+                const statId = `${gameId}_${playerDetails.targetPlayerName}_${species}`.replace(/\s+/g, "_");
+
+                batchStatements.push({
+                  sql: `INSERT OR REPLACE INTO match_pokemon_stats (
+                    stat_id, game_id, player, pokemon, nickname, faint_type, faint_source, faint_move,
+                    direct_kos, indirect_kos, self_kos, total_damage, direct_damage, indirect_damage,
+                    hazard_damage, hits_taken, damage_taken, damage_healed, active_turns, survived, fainted, battle_won
+                  ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                  args: [
+                    statId, gameId, playerDetails.targetPlayerName, species, nickname, faintType, faintSource, faintMove,
+                    dKos, iKos, sKos, tDmg, dDmg, iDmg, hDmg, hTaken, dTaken, dHealed, aTurns, survived, fainted, bWon
+                  ]
+                });
+              }
+            }
+
+            if (batchStatements.length > 0) {
+              await db.batch(batchStatements);
+            }
+
+            console.log(`    [Game ${gameNumber}] Successfully processed and batched stats for ${battleId}!`);
           }
 
-          // Execute batch write for this game's stats
-          if (batchStatements.length > 0) {
-            await db.batch(batchStatements);
-          }
-
-          console.log(`    [Game ${gameNumber}] Successfully processed and batched stats for ${battleId}!`);
+        } catch (e) {
+          console.error(`Error processing match ${match_id}:`, e.message);
         }
-
-      } catch (e) {
-        console.error(`Error processing match ${match_id}:`, e.message);
       }
     }
   }
   console.log("\n✅ Ingestion run complete!");
 }
 
-runWeeklyIngest();
+runIngest();
