@@ -2,13 +2,18 @@
 
 /**
  * Normalizes Pokémon species names for Pokémon Showdown sprite URLs.
- * Example: "Landorus-Therian" -> "landorustherian"
- * Example: "Tapu Koko"        -> "tapukoko"
+ * Handles forms like Landorus-Therian -> landorustherian,
+ * Kyurem-Black -> kyuremblack, and Mega forms.
  */
 function formatShowdownSpriteName(speciesName) {
     if (!speciesName) return '0';
     let clean = speciesName.toLowerCase().trim();
-    // Showdown sprite filenames typically remove hyphens and special characters
+
+    // Handle Mega evolutions (e.g. "charizard-mega-x" -> "charizardmegax")
+    clean = clean.replace(/-mega-/g, 'mega');
+    clean = clean.replace(/-primal-/g, 'primal');
+
+    // Remove remaining hyphens and special characters for standard Showdown composite names
     return clean.replace(/[^a-z0-9]/g, '');
 }
 
@@ -47,10 +52,7 @@ function getSpriteUrl(speciesName, type = 'color') {
  * Swaps to a clean inline SVG question mark placeholder.
  */
 function handleImageError(img) {
-    // Prevent infinite loops if the fallback itself errors
     img.onerror = null; 
-    
-    // Clean inline SVG question mark placeholder data URI
     img.src = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpath d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'%3E%3C/path%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'%3E%3C/line%3E%3C/svg%3E";
     img.style.objectFit = 'contain';
     img.style.opacity = '0.6';
