@@ -120,10 +120,11 @@
             overflow-x: auto;
         }
 
+        /* Unified 2 by 4 Grid Structure */
         .sheet-scoreboard {
             display: grid;
-            grid-template-columns: 185px 1fr;
-            gap: 8px;
+            grid-template-columns: 560px 1fr 1fr 1fr;
+            gap: 12px;
             margin-bottom: 12px;
             align-items: stretch;
         }
@@ -144,6 +145,7 @@
             background: #fff;
             border: 2px solid #000;
             overflow: hidden;
+            grid-column: span 3;
         }
 
         .player-banner-winner { 
@@ -189,10 +191,10 @@
             flex-direction: column;
             justify-content: space-between;
             margin-bottom: 12px;
-            height: 48px;
+            height: 60px;
         }
-        .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 2px; }
-        .game-summary-winner { font-weight: bold; font-size: 12px; padding: 2px; }
+        .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 3px; font-size: 11px; }
+        .game-summary-winner { font-weight: bold; font-size: 11px; padding: 2px; }
 
         .sheet-main-grid {
             display: grid;
@@ -594,7 +596,7 @@
                             <div class="game-detail-column">
                                 <div class="game-column-header">
                                     <div class="game-summary-header">Game ${gNum}</div>
-                                    <div class="game-summary-winner" style="color:#94a3b8; font-size:12px;">N/A</div>
+                                    <div class="game-summary-winner" style="color:#94a3b8; font-size:11px;">N/A</div>
                                 </div>
                                 <div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:11px;">
                                     Game Not Played
@@ -613,9 +615,9 @@
                     return `
                         <div class="game-detail-column">
                             <div class="game-column-header">
-                                <div class="game-summary-header">Game ${gNum} (${gameData.turns || 0}T)</div>
+                                <div class="game-summary-header">Game ${gNum}: ${gameData.turns || 0} Turns</div>
                                 <div class="game-summary-winner">${winnerDisplay ? `Winner: ${winnerDisplay}` : 'Pending'}</div>
-                                ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:10px;">Replay Link</a>` : ''}
+                                ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:10px; margin-bottom:2px;">Replay Link</a>` : ''}
                             </div>
 
                             <div class="game-player-block">
