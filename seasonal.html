@@ -267,7 +267,7 @@
             background: #fff;
             border: 1px solid #000;
             display: grid;
-            grid-template-columns: 80px 1fr;
+            grid-template-columns: 85px 1fr;
             box-sizing: border-box;
             height: 90px;
             font-size: 10px;
@@ -278,19 +278,20 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 3px;
+            padding: 2px;
             border-right: 1px solid #000;
             box-sizing: border-box;
+            overflow: hidden;
         }
         .cell-left-col.bg-faint { background-color: #fca5a5; }
         .cell-left-col.bg-survived { background-color: #ffffff; }
 
-        .cell-sprite { width: 30px; height: 30px; object-fit: contain; }
+        .cell-sprite { width: 28px; height: 28px; object-fit: contain; }
 
         .status-badge-sheets {
             width: 100%;
             text-align: center;
-            font-size: 9px;
+            font-size: 8.5px;
             font-weight: bold;
             padding: 1px 0;
             border-top: 1px solid #000;
@@ -299,11 +300,17 @@
         .status-badge-sheets.faint { background-color: #ef4444; color: #ffffff; }
         .status-badge-sheets.survived { background-color: #ffffff; color: #000000; }
 
-        .cell-deathby-label {
-            font-size: 9px;
+        .cell-faint-source {
+            font-size: 8px;
             font-weight: bold;
             text-align: center;
             width: 100%;
+            line-height: 1.1;
+            word-break: break-word;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
         }
 
         .cell-right-col {
@@ -333,7 +340,7 @@
         }
 
         .cell-row-cause {
-            padding: 4px 6px;
+            padding: 3px 6px;
             font-size: 9px;
             line-height: 1.15;
             word-break: break-word;
@@ -849,14 +856,18 @@
 
                 const totalKos = Number(m.direct_kos || 0) + Number(m.indirect_kos || 0) + Number(m.self_kos || 0);
                 
-                let deathCause = '';
+                let sourceText = '';
+                let moveText = '';
+
                 if (isFainted) {
                     if (m.faint_source && m.faint_source !== "N/A" && m.faint_source !== "Unknown") {
-                        const source = m.faint_source;
-                        const move = (m.faint_move && m.faint_move !== "Unknown") ? m.faint_move : '';
-                        deathCause = move ? `${source}'s ${move}` : source;
+                        sourceText = m.faint_source;
                     } else {
-                        deathCause = 'Fainted';
+                        sourceText = 'Fainted';
+                    }
+
+                    if (m.faint_move && m.faint_move !== "Unknown") {
+                        moveText = m.faint_move;
                     }
                 }
 
@@ -867,7 +878,9 @@
                             <div class="status-badge-sheets ${isFainted ? 'faint' : 'survived'}">
                                 ${isFainted ? 'Faint' : 'Survived'}
                             </div>
-                            <div class="cell-deathby-label">Death By</div>
+                            <div class="cell-faint-source">
+                                ${isFainted ? sourceText : ''}
+                            </div>
                         </div>
 
                         <div class="cell-right-col">
@@ -879,7 +892,7 @@
                                 Active ${m.active_turns || 0} Turns
                             </div>
                             <div class="cell-row-cause">
-                                ${deathCause}
+                                ${moveText}
                             </div>
                         </div>
                     </div>
