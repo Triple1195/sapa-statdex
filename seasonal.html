@@ -132,7 +132,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* 1-by-4 Header Grid */
+        /* 1-by-4 Header Grid alignment */
         .sheet-scoreboard {
             display: grid;
             grid-template-columns: 560px 1fr 1fr 1fr;
@@ -147,7 +147,7 @@
             background: #fff;
             border: 2px solid #000;
             overflow: hidden;
-            height: 60px; /* Aligned with game column headers */
+            height: 60px; /* Matches game-column-header height */
         }
 
         .player-banner-winner { 
@@ -647,7 +647,7 @@
                         </div>
 
                         <div class="sheet-scoreboard">
-                            <div class="score-header" style="grid-column: span 4;">
+                            <div class="score-header">
                                 <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
                                 <span class="vs-divider">VS</span>
                                 <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
