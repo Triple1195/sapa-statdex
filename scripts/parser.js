@@ -1444,5 +1444,6 @@ export {
   getDamageDealt,
   getHitsTaken,
   _getPlayerDetails,
-  _getPokemonList
+  _getPokemonList,
+  getBattleWon
 };
