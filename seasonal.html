@@ -262,20 +262,20 @@
             align-content: start;
         }
 
-        /* Refined Game Mon Cell Structure */
+        /* Game Mon Cell Grid Structure */
         .game-mon-cell {
             background: #fff;
             border: 1px solid #000;
             display: grid;
-            grid-template-columns: 75px 1fr;
-            grid-template-rows: 20px 20px 1fr; /* Row 1: KOs, Row 2: Turns, Row 3: Move Name spanning both columns */
+            grid-template-columns: 1fr 1fr; /* Top half split into 2 equal columns */
+            grid-template-rows: 24px 24px 1fr; /* Row 1: Left Sprite/Status, Right KOs; Row 2: Right Turns; Row 3: Centered Cause spanning both columns */
             box-sizing: border-box;
-            height: 90px;
+            height: 95px;
             font-size: 10px;
         }
 
-        /* Left Column items spanning vertically */
-        .cell-left-col {
+        /* Top-Left: Sprite + Status Badge */
+        .cell-top-left {
             grid-row: 1 / span 2;
             grid-column: 1 / 2;
             display: flex;
@@ -286,39 +286,24 @@
             border-right: 1px solid #000;
             border-bottom: 1px solid #000;
             box-sizing: border-box;
-            overflow: hidden;
         }
-        .cell-left-col.bg-faint { background-color: #fca5a5; }
-        .cell-left-col.bg-survived { background-color: #ffffff; }
+        .cell-top-left.bg-faint { background-color: #fca5a5; }
+        .cell-top-left.bg-survived { background-color: #ffffff; }
 
-        .cell-sprite { width: 26px; height: 26px; object-fit: contain; }
+        .cell-sprite { width: 24px; height: 24px; object-fit: contain; }
 
         .status-badge-sheets {
             width: 100%;
             text-align: center;
-            font-size: 8px;
+            font-size: 8.5px;
             font-weight: bold;
             padding: 1px 0;
             border-top: 1px solid #000;
-            border-bottom: 1px solid #000;
         }
         .status-badge-sheets.faint { background-color: #ef4444; color: #ffffff; }
         .status-badge-sheets.survived { background-color: #ffffff; color: #000000; }
 
-        .cell-faint-source {
-            font-size: 7.5px;
-            font-weight: bold;
-            text-align: center;
-            width: 100%;
-            line-height: 1.1;
-            word-break: break-word;
-            overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
-
-        /* Right Column Rows */
+        /* Top-Right Sub-Columns */
         .cell-row-kos {
             grid-row: 1 / 2;
             grid-column: 2 / 3;
@@ -342,20 +327,20 @@
             background: #fff;
         }
 
-        /* Bottom Row: Move Name Spanning Both Columns */
+        /* Bottom Row: Spanning Both Columns with Centered Text */
         .cell-row-cause {
             grid-row: 3 / 4;
             grid-column: 1 / 3;
             padding: 4px 6px;
-            font-size: 9.5px;
+            font-size: 9px;
             line-height: 1.15;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             word-break: break-word;
             overflow: hidden;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
             background: #fff;
-            align-self: center;
         }
 
         .playerdex-grid {
@@ -863,30 +848,27 @@
 
                 const totalKos = Number(m.direct_kos || 0) + Number(m.indirect_kos || 0) + Number(m.self_kos || 0);
                 
-                let sourceText = '';
-                let moveText = '';
-
+                let deathDetails = '';
                 if (isFainted) {
-                    if (m.faint_source && m.faint_source !== "N/A" && m.faint_source !== "Unknown") {
-                        sourceText = m.faint_source;
+                    const source = (m.faint_source && m.faint_source !== "N/A" && m.faint_source !== "Unknown") ? m.faint_source : '';
+                    const move = (m.faint_move && m.faint_move !== "Unknown") ? m.faint_move : '';
+                    if (source && move) {
+                        deathDetails = `${source}: ${move}`;
+                    } else if (source) {
+                        deathDetails = source;
+                    } else if (move) {
+                        deathDetails = move;
                     } else {
-                        sourceText = 'Fainted';
-                    }
-
-                    if (m.faint_move && m.faint_move !== "Unknown") {
-                        moveText = m.faint_move;
+                        deathDetails = 'Fainted';
                     }
                 }
 
                 return `
                     <div class="game-mon-cell">
-                        <div class="cell-left-col ${isFainted ? 'bg-faint' : 'bg-survived'}">
+                        <div class="cell-top-left ${isFainted ? 'bg-faint' : 'bg-survived'}">
                             <img src="${spriteUrl}" class="cell-sprite" onerror="handleImageError(this)" />
                             <div class="status-badge-sheets ${isFainted ? 'faint' : 'survived'}">
-                                ${isFainted ? 'Fainted By' : 'Survived'}
-                            </div>
-                            <div class="cell-faint-source">
-                                ${isFainted ? sourceText : ''}
+                                ${isFainted ? 'Fainted' : 'Survived'}
                             </div>
                         </div>
 
@@ -898,7 +880,7 @@
                             Active ${m.active_turns || 0} Turns
                         </div>
                         <div class="cell-row-cause">
-                            ${moveText}
+                            ${deathDetails}
                         </div>
                     </div>
                 `;
