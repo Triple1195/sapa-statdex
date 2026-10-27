@@ -375,8 +375,9 @@
         </div>
     </div>
 
-    <!-- Load external credentials from config.js -->
+    <!-- Load external configuration and shared helpers from root directory -->
     <script src="config.js"></script>
+    <script src="helper.js"></script>
 
     <script>
         let rawMatches = [];
@@ -462,25 +463,6 @@
             } catch (err) {
                 console.error("Initialization error:", err);
             }
-        }
-
-        function getDisplayName(name) {
-            if (!name) return '';
-            const clean = name.trim().toLowerCase();
-            return window.playerAliasesMap[clean] || name;
-        }
-
-        function getShowdownTag(displayName) {
-            if (!displayName) return '';
-            const clean = displayName.trim().toLowerCase();
-            return window.displayToTagMap[clean] || displayName;
-        }
-
-        function formatSpriteName(speciesName) {
-            if (!speciesName) return '0';
-            let clean = speciesName.toLowerCase().trim();
-            clean = clean.replace(/[^a-z0-9-]/g, '');
-            return clean;
         }
 
         async function loadSeasonalData() {
@@ -588,7 +570,6 @@
                 const p1IsSetWinner = p1Wins > p2Wins;
                 const p2IsSetWinner = p2Wins > p1Wins;
 
-                // Calculate total hazard damage across games for overview section
                 const p1HazardTotal = calculateTotalHazardDamage(info.player_1, games);
                 const p2HazardTotal = calculateTotalHazardDamage(info.player_2, games);
 
@@ -700,12 +681,11 @@
             }
 
             return mons.map(m => {
-                const formattedName = formatSpriteName(m.species);
-                const spriteUrl = `https://play.pokemonshowdown.com/sprites/gen5/${formattedName}.png`;
+                const spriteUrl = getSpriteUrl(m.species, false);
 
                 return `
                     <div class="mon-summary-tile">
-                        <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://play.pokemonshowdown.com/sprites/dex/0.png'" />
+                        <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://raw.githubusercontent.com/Autumnchi/coloured-box-sprites/main/0.png'" />
                         <div class="mon-name">${m.species}</div>
                         <div class="mon-nickname">${m.nickname}</div>
                         <div class="stat-section-title">Knock Outs</div>
@@ -730,7 +710,6 @@
             const isP1Winner = gameWinnerDisplay.toLowerCase() === p1Display.toLowerCase();
             const isP2Winner = gameWinnerDisplay.toLowerCase() === p2Display.toLowerCase();
 
-            // Calculate game hazard damage
             const p1GameHazards = calculateGameHazardDamage(gameData.game_id, matchInfo.player_1);
             const p2GameHazards = calculateGameHazardDamage(gameData.game_id, matchInfo.player_2);
 
@@ -786,8 +765,7 @@
             }
 
             return mons.map(m => {
-                const formattedName = formatSpriteName(m.pokemon);
-                const spriteUrl = `https://play.pokemonshowdown.com/sprites/gen5/${formattedName}.png`;
+                const spriteUrl = getSpriteUrl(m.pokemon, false);
                 const isFainted = Number(m.survived) === 0;
                 const totalKos = Number(m.direct_kos || 0) + Number(m.indirect_kos || 0) + Number(m.self_kos || 0);
                 const deathByText = (isFainted && m.faint_source && m.faint_source !== "N/A" && m.faint_source !== "Unknown") 
