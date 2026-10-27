@@ -23,7 +23,7 @@ function getSpriteUrl(pokemonIdentifier, type = 'color') {
         // PokéAPI Black & White Animated GIFs via GitHub (bypasses corporate SSL blocks)
         const dexId = Number(pokemonIdentifier) || 0;
         if (dexId > 0) {
-            return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${dexId}.gif`;
+            return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${dexId}.png`;
         }
         // Fallback static sprite if dex ID is missing/0
         return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${dexId || 0}.png`;
