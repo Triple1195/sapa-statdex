@@ -132,7 +132,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* 1-by-4 Header Grid alignment */
+        /* 4-Column Horizontal Header Row (Matches Main Grid Columns) */
         .sheet-scoreboard {
             display: grid;
             grid-template-columns: 560px 1fr 1fr 1fr;
@@ -147,7 +147,7 @@
             background: #fff;
             border: 2px solid #000;
             overflow: hidden;
-            height: 60px; /* Matches game-column-header height */
+            height: 60px; /* Perfectly matches game-column-header height */
         }
 
         .player-banner-winner { 
@@ -652,6 +652,7 @@
                                 <span class="vs-divider">VS</span>
                                 <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
                             </div>
+                            ${gameColumnsHTML}
                         </div>
 
                         <div class="sheet-main-grid">
@@ -665,7 +666,6 @@
                                     <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
                                 </div>
                             </div>
-                            ${gameColumnsHTML}
                         </div>
                     </div>
                 `;
