@@ -44,7 +44,7 @@
         }
 
         .container {
-            max-width: 1450px;
+            max-width: 1600px;
             margin: 1.5rem auto;
             padding: 0 1rem;
         }
@@ -111,10 +111,10 @@
         .sheet-match-container {
             background-color: #a3a3a3;
             border: 2px solid #333;
-            padding: 12px;
+            padding: 14px;
             color: #000;
             font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 12px;
+            font-size: 12.5px;
             margin-bottom: 2rem;
             border-radius: 4px;
             overflow-x: auto;
@@ -123,19 +123,19 @@
         .match-top-banner {
             background: #fff;
             border: 2px solid #000;
-            padding: 8px 16px;
+            padding: 10px 16px;
             text-align: center;
-            font-size: 15px;
+            font-size: 16px;
             font-weight: bold;
-            margin-bottom: 12px;
+            margin-bottom: 14px;
             letter-spacing: 0.5px;
         }
 
         .sheet-scoreboard {
             display: grid;
-            grid-template-columns: 560px 1fr 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 12px;
+            grid-template-columns: 620px 1fr 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
             align-items: stretch;
         }
 
@@ -145,36 +145,38 @@
             background: #fff;
             border: 2px solid #000;
             overflow: hidden;
-            height: 60px;
+            height: 65px;
         }
 
         .player-banner-winner { 
             background-color: #3b82f6; 
             color: white; 
-            padding: 8px 12px; 
+            padding: 10px 14px; 
             flex: 1; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             font-weight: bold;
+            font-size: 13px;
         }
         
         .player-banner-loser { 
             background-color: #ef4444; 
             color: white; 
-            padding: 8px 12px; 
+            padding: 10px 14px; 
             flex: 1; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             font-weight: bold;
+            font-size: 13px;
         }
 
         .vs-divider { 
-            font-size: 14px; 
+            font-size: 15px; 
             color: #000; 
             background: #e5e7eb; 
-            padding: 0 12px; 
+            padding: 0 14px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
@@ -190,15 +192,16 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 60px;
+            height: 65px;
         }
-        .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 3px; font-size: 11px; }
-        .game-summary-winner { font-weight: bold; font-size: 11px; padding: 2px; }
+        .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 4px; font-size: 12px; }
+        .game-summary-winner { font-weight: bold; font-size: 12px; padding: 3px; }
 
+        /* Scaled Roster & Game Player Blocks */
         .player-roster-card {
             background: #fff;
             border: 2px solid #000;
-            height: 295px;
+            height: 350px;
             display: flex;
             flex-direction: column;
         }
@@ -206,10 +209,11 @@
         .roster-header {
             background: #000;
             color: #fff;
-            padding: 5px 8px;
+            padding: 6px 10px;
             font-weight: bold;
             display: flex;
             justify-content: space-between;
+            font-size: 12px;
         }
 
         .roster-mon-grid {
@@ -221,23 +225,23 @@
 
         .mon-summary-tile {
             border-right: 1px solid #000;
-            padding: 3px;
+            padding: 4px;
             text-align: center;
-            font-size: 10px;
+            font-size: 11px;
             background: #fff;
         }
         .mon-summary-tile:last-child { border-right: none; }
-        .mon-sprite { width: 42px; height: 42px; object-fit: contain; }
-        .mon-name { font-weight: bold; font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .mon-nickname { font-size: 9px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+        .mon-sprite { width: 48px; height: 48px; object-fit: contain; }
+        .mon-name { font-weight: bold; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mon-nickname { font-size: 10px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
         
-        .stat-section-title { background: #e5e7eb; font-weight: bold; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 1px 2px; font-size: 10px; text-align: center; }
-        .stat-row { display: flex; justify-content: space-between; border-top: 1px dashed #ddd; padding: 1px 2px; font-size: 10px; }
+        .stat-section-title { background: #e5e7eb; font-weight: bold; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2px 3px; font-size: 11px; text-align: center; }
+        .stat-row { display: flex; justify-content: space-between; border-top: 1px dashed #ddd; padding: 2px 3px; font-size: 11px; }
 
         .game-player-block {
             background: #fff;
             border: 2px solid #000;
-            height: 295px;
+            height: 350px;
             display: flex;
             flex-direction: column;
         }
@@ -245,9 +249,10 @@
         .game-player-header {
             display: flex;
             justify-content: space-between;
-            padding: 4px 8px;
+            padding: 6px 10px;
             font-weight: bold;
             border-bottom: 1px solid #000;
+            font-size: 12px;
         }
         .status-winner { background-color: #3b82f6; color: white; }
         .status-loser { background-color: #ef4444; color: white; }
@@ -262,19 +267,18 @@
             align-content: start;
         }
 
-        /* Game Mon Cell Grid Structure */
+        /* Scaled Game Mon Cell Structure */
         .game-mon-cell {
             background: #fff;
             border: 1px solid #000;
             display: grid;
-            grid-template-columns: 1fr 1fr; /* Top half split into 2 equal columns */
-            grid-template-rows: 24px 24px 1fr; /* Row 1: Left Sprite/Status, Right KOs; Row 2: Right Turns; Row 3: Centered Cause spanning both columns */
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 28px 28px 1fr;
             box-sizing: border-box;
-            height: 95px;
-            font-size: 10px;
+            height: 112px;
+            font-size: 11px;
         }
 
-        /* Top-Left: Sprite + Status Badge */
         .cell-top-left {
             grid-row: 1 / span 2;
             grid-column: 1 / 2;
@@ -282,7 +286,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
-            padding: 2px;
+            padding: 3px;
             border-right: 1px solid #000;
             border-bottom: 1px solid #000;
             box-sizing: border-box;
@@ -290,27 +294,26 @@
         .cell-top-left.bg-faint { background-color: #fca5a5; }
         .cell-top-left.bg-survived { background-color: #ffffff; }
 
-        .cell-sprite { width: 24px; height: 24px; object-fit: contain; }
+        .cell-sprite { width: 34px; height: 34px; object-fit: contain; }
 
         .status-badge-sheets {
             width: 100%;
             text-align: center;
-            font-size: 8.5px;
+            font-size: 9.5px;
             font-weight: bold;
-            padding: 1px 0;
+            padding: 2px 0;
             border-top: 1px solid #000;
         }
         .status-badge-sheets.faint { background-color: #ef4444; color: #ffffff; }
         .status-badge-sheets.survived { background-color: #ffffff; color: #000000; }
 
-        /* Top-Right Sub-Columns */
         .cell-row-kos {
             grid-row: 1 / 2;
             grid-column: 2 / 3;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 6px;
+            padding: 0 8px;
             border-bottom: 1px solid #000;
             font-weight: bold;
             background: #fff;
@@ -321,21 +324,22 @@
             grid-column: 2 / 3;
             display: flex;
             align-items: center;
-            padding: 0 6px;
+            padding: 0 8px;
             border-bottom: 1px solid #000;
             font-weight: bold;
             background: #fff;
         }
 
-        /* Bottom Row: Spanning Both Columns with Centered Text */
+        /* Bottom Row: Spanning both columns with 2 separate lines for Pokemon and Move */
         .cell-row-cause {
             grid-row: 3 / 4;
             grid-column: 1 / 3;
-            padding: 4px 6px;
-            font-size: 9px;
-            line-height: 1.15;
+            padding: 4px 8px;
+            font-size: 10px;
+            line-height: 1.25;
             text-align: center;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
             word-break: break-word;
@@ -644,7 +648,7 @@
                         return `
                             <div class="game-column-header">
                                 <div class="game-summary-header">Game ${gNum}</div>
-                                <div class="game-summary-winner" style="color:#94a3b8; font-size:11px;">N/A</div>
+                                <div class="game-summary-winner" style="color:#94a3b8; font-size:12px;">N/A</div>
                             </div>
                         `;
                     }
@@ -653,7 +657,7 @@
                         <div class="game-column-header">
                             <div class="game-summary-header">Game ${gNum}: ${gameData.turns || 0} Turns</div>
                             <div class="game-summary-winner">${winnerDisplay ? `Winner: ${winnerDisplay}` : 'Pending'}</div>
-                            ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:10px; margin-bottom:2px;">Replay Link</a>` : ''}
+                            ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:11px; margin-bottom:3px;">Replay Link</a>` : ''}
                         </div>
                     `;
                 }).join('');
@@ -661,7 +665,7 @@
                 const p1GameBlocksHTML = [1, 2, 3].map(gNum => {
                     const gameData = games.find(g => Number(g.game_number) === gNum);
                     if (!gameData) {
-                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:11px;">Game Not Played</div>`;
+                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:12px;">Game Not Played</div>`;
                     }
                     const winnerDisplay = getDisplayName(gameData.winner);
                     const p1GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_1);
@@ -681,7 +685,7 @@
                 const p2GameBlocksHTML = [1, 2, 3].map(gNum => {
                     const gameData = games.find(g => Number(g.game_number) === gNum);
                     if (!gameData) {
-                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:11px;">Game Not Played</div>`;
+                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:12px;">Game Not Played</div>`;
                     }
                     const winnerDisplay = getDisplayName(gameData.winner);
                     const p2GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_2);
@@ -715,7 +719,7 @@
                         </div>
 
                         <!-- Row 2: Player 1 Roster Card (Col 1) + Player 1 Game Blocks (Cols 2-4) -->
-                        <div class="sheet-scoreboard" style="margin-bottom: 12px;">
+                        <div class="sheet-scoreboard" style="margin-bottom: 14px;">
                             <div class="player-roster-card" style="margin-bottom: 0;">
                                 <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
                                 <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
@@ -848,19 +852,13 @@
 
                 const totalKos = Number(m.direct_kos || 0) + Number(m.indirect_kos || 0) + Number(m.self_kos || 0);
                 
-                let deathDetails = '';
+                let line1 = '';
+                let line2 = '';
                 if (isFainted) {
                     const source = (m.faint_source && m.faint_source !== "N/A" && m.faint_source !== "Unknown") ? m.faint_source : '';
                     const move = (m.faint_move && m.faint_move !== "Unknown") ? m.faint_move : '';
-                    if (source && move) {
-                        deathDetails = `${source}: ${move}`;
-                    } else if (source) {
-                        deathDetails = source;
-                    } else if (move) {
-                        deathDetails = move;
-                    } else {
-                        deathDetails = 'Fainted';
-                    }
+                    line1 = source;
+                    line2 = move;
                 }
 
                 return `
@@ -880,7 +878,7 @@
                             Active ${m.active_turns || 0} Turns
                         </div>
                         <div class="cell-row-cause">
-                            ${deathDetails}
+                            ${isFainted ? `<strong>${line1}</strong><br>${line2}` : ''}
                         </div>
                     </div>
                 `;
