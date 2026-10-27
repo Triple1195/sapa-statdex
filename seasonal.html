@@ -120,7 +120,19 @@
             overflow-x: auto;
         }
 
-        /* Unified 2 by 4 Grid Structure */
+        /* Top-level prominent banner for Week & Conference */
+        .match-top-banner {
+            background: #fff;
+            border: 2px solid #000;
+            padding: 8px 16px;
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        /* 1-by-4 Header Grid */
         .sheet-scoreboard {
             display: grid;
             grid-template-columns: 560px 1fr 1fr 1fr;
@@ -129,23 +141,13 @@
             align-items: stretch;
         }
 
-        .sheet-box {
-            background: #fff;
-            border: 1px solid #000;
-            padding: 6px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
         .score-header {
             display: flex;
             align-items: stretch;
             background: #fff;
             border: 2px solid #000;
             overflow: hidden;
-            grid-column: span 3;
+            height: 60px; /* Aligned with game column headers */
         }
 
         .player-banner-winner { 
@@ -190,7 +192,6 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            margin-bottom: 12px;
             height: 60px;
         }
         .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 3px; font-size: 11px; }
@@ -641,12 +642,12 @@
 
                 return `
                     <div class="sheet-match-container">
+                        <div class="match-top-banner">
+                            Week ${info.week} &mdash; ${info.conference ? 'Conference ' + info.conference : 'Main Conference'}
+                        </div>
+
                         <div class="sheet-scoreboard">
-                            <div class="sheet-box">
-                                <div><strong>Week:</strong> ${info.week}</div>
-                                <div><strong>Conf:</strong> ${info.conference || 1}</div>
-                            </div>
-                            <div class="score-header">
+                            <div class="score-header" style="grid-column: span 4;">
                                 <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
                                 <span class="vs-divider">VS</span>
                                 <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
