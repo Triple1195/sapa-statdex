@@ -1,24 +1,19 @@
-// helper.js - Centralized Static Sprite & Utility Helpers
+// helper.js - Showdown Static Sprite Helpers & League Utilities
 
 /**
- * Normalizes Pokémon species names for Showdown's static dex sprites on GitHub.
- * Examples:
- *   "Tapu Koko"        -> "tapukoko"
- *   "Landorus-Therian" -> "landorustherian"
- *   "Gastrodon-East"   -> "gastrodoneast"
- *   "Zygarde-10%"      -> "zygarde10"
+ * Normalizes Pokémon species names for Pokémon Showdown sprite URLs.
+ * Example: "Landorus-Therian" -> "landorustherian"
+ * Example: "Tapu Koko"        -> "tapukoko"
  */
-function formatShowdownName(speciesName) {
+function formatShowdownSpriteName(speciesName) {
     if (!speciesName) return '0';
     let clean = speciesName.toLowerCase().trim();
+    // Showdown sprite filenames typically remove hyphens and special characters
     return clean.replace(/[^a-z0-9]/g, '');
 }
 
 /**
- * Normalizes Pokémon species names for Autumnchi box sprites on GitHub.
- * Examples:
- *   "Tapu Koko"        -> "tapu-koko"
- *   "Landorus-Therian" -> "landorus-therian"
+ * Normalizes Pokémon species names for Autumnchi box sprites.
  */
 function formatAutumnchiName(speciesName) {
     if (!speciesName) return '0';
@@ -28,43 +23,45 @@ function formatAutumnchiName(speciesName) {
 }
 
 /**
- * Generates static sprite URLs hosted on GitHub (bypasses corporate SSL/firewall blocks).
- * @param {string} speciesName The raw species or form name from your battle stats.
- * @param {string} type 'dex' for Showdown static front sprite, 'color' for Autumnchi colored, 'monotone' for Autumnchi B&W.
- * @returns {string} The image URL.
+ * Generates sprite URLs.
+ * @param {string} speciesName The raw species or form name.
+ * @param {string} type 'gen5' for Showdown static sprite, 'color' for Autumnchi colored, 'monotone' for B&W.
  */
 function getSpriteUrl(speciesName, type = 'color') {
-    if (!speciesName) return 'https://raw.githubusercontent.com/Autumnchi/coloured-box-sprites/main/0.png';
+    if (!speciesName) return 'https://play.pokemonshowdown.com/sprites/gen5/0.png';
 
-    if (type === 'dex') {
-        // Static Showdown Front Sprite via GitHub Raw
-        const name = formatShowdownName(speciesName);
-        return `https://raw.githubusercontent.com/smogon/pokemon-showdown-client/master/sprites/dex/${name}.png`;
-
+    if (type === 'gen5') {
+        const name = formatShowdownSpriteName(speciesName);
+        return `https://play.pokemonshowdown.com/sprites/gen5/${name}.png`;
     } else if (type === 'monotone') {
-        // Autumnchi Monotone Box Sprite for Fainted Pokémon
         const name = formatAutumnchiName(speciesName);
         return `https://raw.githubusercontent.com/Autumnchi/monotone-box-sprites/main/${name}.png`;
-
     } else {
-        // Autumnchi Colored Box Sprite for Survived Pokémon
         const name = formatAutumnchiName(speciesName);
         return `https://raw.githubusercontent.com/Autumnchi/coloured-box-sprites/main/${name}.png`;
     }
 }
 
 /**
- * Maps a backend Showdown tag to its clean front-facing league display name.
+ * Prevents infinite reload loops if an image fails or is blocked by a network firewall.
+ * Swaps to a clean inline SVG question mark placeholder.
  */
+function handleImageError(img) {
+    // Prevent infinite loops if the fallback itself errors
+    img.onerror = null; 
+    
+    // Clean inline SVG question mark placeholder data URI
+    img.src = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'%3E%3C/circle%3E%3Cpath d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'%3E%3C/path%3E%3Cline x1='12' y1='17' x2='12.01' y2='17'%3E%3C/line%3E%3C/svg%3E";
+    img.style.objectFit = 'contain';
+    img.style.opacity = '0.6';
+}
+
 function getDisplayName(name) {
     if (!name) return '';
     const clean = name.trim().toLowerCase();
     return window.playerAliasesMap && window.playerAliasesMap[clean] ? window.playerAliasesMap[clean] : name;
 }
 
-/**
- * Maps a display name back to its corresponding Showdown tag.
- */
 function getShowdownTag(displayName) {
     if (!displayName) return '';
     const clean = displayName.trim().toLowerCase();
