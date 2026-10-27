@@ -1,7 +1,7 @@
 name: Seed Pokemon Dex Table
 
 on:
-  workflow_dispatch: # Allows manual trigger from the GitHub Actions UI
+  workflow_dispatch:
 
 jobs:
   seed:
@@ -31,7 +31,7 @@ jobs:
               authToken: process.env.TURSO_AUTH_TOKEN,
             });
 
-            console.log("Creating pokemon_dex table if needed...");
+            console.log("Re-creating pokemon_dex table with proper constraints...");
             await db.execute(`
               CREATE TABLE IF NOT EXISTS pokemon_dex (
                   pokemon_name TEXT PRIMARY KEY,
@@ -39,7 +39,7 @@ jobs:
               );
             `);
 
-            console.log("Fetching Pokemon from PokeAPI...");
+            console.log("Fetching standard Pokémon from PokeAPI...");
             const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025");
             const data = await res.json();
 
@@ -53,22 +53,48 @@ jobs:
               });
             }
 
-            // Manual form overrides (Megas, alternate forms)
-            const manual = [
-              { name: "charizard-mega-x", id: 6 },
-              { name: "charizard-mega-y", id: 6 },
-              { name: "mewtwo-mega-x", id: 150 },
-              { name: "mewtwo-mega-y", id: 150 }
+            console.log("Fetching special forms/variants (Gen 6-9 forms, Therians, Megas)...");
+            // PokeAPI lists form variants starting from ID 10001 onwards
+            for (let id = 10001; id <= 10400; id++) {
+              try {
+                const formRes = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+                if (formRes.ok) {
+                  const formData = await formRes.json();
+                  statements.push({
+                    sql: "INSERT OR REPLACE INTO pokemon_dex (pokemon_name, dex_id) VALUES (?, ?)",
+                    args: [formData.name, id]
+                  });
+                }
+              } catch (e) {
+                // Ignore missing form IDs
+              }
+            }
+
+            // Manual mapping fallbacks for backend name matching (e.g. "landorus" -> Incarnate form ID 645)
+            const manualAliases = [
+              { name: "landorus", id: 645 },
+              { name: "landorus-therian", id: 10021 },
+              { name: "thundurus", id: 642 },
+              { name: "thundurus-therian", id: 10020 },
+              { name: "tornadus", id: 641 },
+              { name: "tornadus-therian", id: 10019 },
+              { name: "charizard-mega-x", id: 10034 },
+              { name: "charizard-mega-y", id: 10035 }
             ];
-            for (const v of manual) {
+
+            for (const m of manualAliases) {
               statements.push({
                 sql: "INSERT OR REPLACE INTO pokemon_dex (pokemon_name, dex_id) VALUES (?, ?)",
-                args: [v.name, v.id]
+                args: [m.name, m.id]
               });
             }
 
-            console.log(`Inserting ${statements.length} records into Turso...`);
-            await db.batch(statements);
-            console.log("✅ Successfully populated pokemon_dex table!");
+            console.log(`Executing batch insertion of ${statements.length} entries into Turso...`);
+            // Execute in chunks of 200 to avoid pipeline limits
+            for (let i = 0; i < statements.length; i += 200) {
+              await db.batch(statements.slice(i, i + 200));
+            }
+
+            console.log("✅ Successfully populated pokemon_dex with all forms and variants!");
           });
           '
