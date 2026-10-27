@@ -681,12 +681,12 @@
             }
 
             return mons.map(m => {
-                // Use static Showdown dex sprite via GitHub for overview cards
-                const spriteUrl = getSpriteUrl(m.species, 'dex');
+                // Use original Showdown gen5 static sprite URL with onerror fallback handler
+                const spriteUrl = getSpriteUrl(m.species, 'gen5');
 
                 return `
                     <div class="mon-summary-tile">
-                        <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://raw.githubusercontent.com/Autumnchi/coloured-box-sprites/main/0.png'" />
+                        <img src="${spriteUrl}" class="mon-sprite" onerror="handleImageError(this)" />
                         <div class="mon-name">${m.species}</div>
                         <div class="mon-nickname">${m.nickname}</div>
                         <div class="stat-section-title">Knock Outs</div>
@@ -779,7 +779,7 @@
 
                 return `
                     <div class="game-mon-cell">
-                        <img src="${spriteUrl}" class="cell-sprite" onerror="this.style.display='none'" />
+                        <img src="${spriteUrl}" class="cell-sprite" onerror="handleImageError(this)" />
                         <div class="cell-info">
                             <div><strong>KOs:</strong> ${totalKos}</div>
                             <div><strong>Active ${m.active_turns || 0} Turns</strong></div>
