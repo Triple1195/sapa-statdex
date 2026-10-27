@@ -20,7 +20,8 @@ import {
   getDamageDealt,
   getHitsTaken,
   _getPlayerDetails,
-  _getPokemonList
+  _getPokemonList,
+  getBattleWon
 } from "./parser.js";
 
 const db = createClient({
