@@ -681,11 +681,12 @@
             }
 
             return mons.map(m => {
-                const spriteUrl = getSpriteUrl(m.species, false);
+                // Use Gen 5 Showdown sprites for the left overview section
+                const spriteUrl = getSpriteUrl(m.species, 'gen5');
 
                 return `
                     <div class="mon-summary-tile">
-                        <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://raw.githubusercontent.com/Autumnchi/coloured-box-sprites/main/0.png'" />
+                        <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://play.pokemonshowdown.com/sprites/dex/0.png'" />
                         <div class="mon-name">${m.species}</div>
                         <div class="mon-nickname">${m.nickname}</div>
                         <div class="stat-section-title">Knock Outs</div>
@@ -765,8 +766,13 @@
             }
 
             return mons.map(m => {
-                const spriteUrl = getSpriteUrl(m.pokemon, false);
                 const isFainted = Number(m.survived) === 0;
+                
+                // Dynamic sprite source for game breakdown:
+                // Colored GitHub sprite if survived, monotone (B&W) GitHub sprite if fainted
+                const spriteType = isFainted ? 'monotone' : 'color';
+                const spriteUrl = getSpriteUrl(m.pokemon, spriteType);
+
                 const totalKos = Number(m.direct_kos || 0) + Number(m.indirect_kos || 0) + Number(m.self_kos || 0);
                 const deathByText = (isFainted && m.faint_source && m.faint_source !== "N/A" && m.faint_source !== "Unknown") 
                     ? `${m.faint_source}${m.faint_move && m.faint_move !== "Unknown" ? ': ' + m.faint_move : ''}` 
