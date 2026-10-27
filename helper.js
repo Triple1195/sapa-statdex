@@ -26,7 +26,7 @@ function getSpriteUrl(pokemonIdentifier, type = 'color') {
             return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${dexId}.gif`;
         }
         // Fallback static sprite if dex ID is missing/0
-        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${dexId || 0}.png`;
+        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${dexId || 0}.png`;
 
     } else if (type === 'monotone') {
         // Autumnchi Monotone Box Sprites for Fainted Pokémon
