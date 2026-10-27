@@ -122,7 +122,7 @@
 
         .sheet-scoreboard {
             display: grid;
-            grid-template-columns: 185px 1fr 1fr 1fr 1fr;
+            grid-template-columns: 185px 1fr;
             gap: 8px;
             margin-bottom: 12px;
             align-items: stretch;
@@ -181,27 +181,33 @@
             border-right: 1px solid #000;
         }
 
-        .game-summary-box {
+        .game-column-header {
             background: #fff;
             border: 2px solid #000;
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            margin-bottom: 12px;
+            height: 48px;
         }
         .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 2px; }
-        .game-summary-winner { font-weight: bold; font-size: 14px; padding: 4px; }
+        .game-summary-winner { font-weight: bold; font-size: 12px; padding: 2px; }
 
         .sheet-main-grid {
             display: grid;
             grid-template-columns: 560px 1fr 1fr 1fr;
             gap: 12px;
+            align-items: start;
         }
 
         .player-roster-card {
             background: #fff;
             border: 2px solid #000;
             margin-bottom: 12px;
+            height: 295px;
+            display: flex;
+            flex-direction: column;
         }
 
         .roster-header {
@@ -217,6 +223,7 @@
             display: grid;
             grid-template-columns: repeat(6, 1fr);
             border-top: 1px solid #000;
+            flex: 1;
         }
 
         .mon-summary-tile {
@@ -243,6 +250,9 @@
         .game-player-block {
             background: #fff;
             border: 2px solid #000;
+            height: 295px;
+            display: flex;
+            flex-direction: column;
         }
 
         .game-player-header {
@@ -261,6 +271,8 @@
             gap: 2px;
             background: #000;
             padding: 1px;
+            flex: 1;
+            overflow-y: auto;
         }
 
         .game-mon-cell {
@@ -270,6 +282,8 @@
             gap: 4px;
             font-size: 10px;
             align-items: flex-start;
+            height: 100%;
+            box-sizing: border-box;
         }
 
         .cell-sprite { width: 32px; height: 32px; object-fit: contain; }
@@ -573,22 +587,52 @@
                 const p1HazardTotal = calculateTotalHazardDamage(info.player_1, games);
                 const p2HazardTotal = calculateTotalHazardDamage(info.player_2, games);
 
-                const gameHeadersHTML = [1, 2, 3].map(gNum => {
+                const gameColumnsHTML = [1, 2, 3].map(gNum => {
                     const gameData = games.find(g => Number(g.game_number) === gNum);
                     if (!gameData) {
                         return `
-                            <div class="game-summary-box">
-                                <div class="game-summary-header">Game ${gNum}</div>
-                                <div class="game-summary-winner" style="color:#94a3b8; font-size:12px;">N/A</div>
+                            <div class="game-detail-column">
+                                <div class="game-column-header">
+                                    <div class="game-summary-header">Game ${gNum}</div>
+                                    <div class="game-summary-winner" style="color:#94a3b8; font-size:12px;">N/A</div>
+                                </div>
+                                <div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:11px;">
+                                    Game Not Played
+                                </div>
                             </div>
                         `;
                     }
+
                     const winnerDisplay = getDisplayName(gameData.winner);
+                    const p1GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_1);
+                    const p2GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_2);
+
+                    const isP1Winner = winnerDisplay.toLowerCase() === p1Display.toLowerCase();
+                    const isP2Winner = winnerDisplay.toLowerCase() === p2Display.toLowerCase();
+
                     return `
-                        <div class="game-summary-box">
-                            <div class="game-summary-header">Game ${gNum} (${gameData.turns || 0}T)</div>
-                            <div class="game-summary-winner">${winnerDisplay || 'Pending'}</div>
-                            ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:11px;">Replay</a>` : ''}
+                        <div class="game-detail-column">
+                            <div class="game-column-header">
+                                <div class="game-summary-header">Game ${gNum} (${gameData.turns || 0}T)</div>
+                                <div class="game-summary-winner">${winnerDisplay ? `Winner: ${winnerDisplay}` : 'Pending'}</div>
+                                ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:10px;">Replay Link</a>` : ''}
+                            </div>
+
+                            <div class="game-player-block">
+                                <div class="game-player-header ${isP1Winner ? 'status-winner' : 'status-loser'}">
+                                    <span>${p1Display}</span>
+                                    <span>${p1GameHazards} Dmg</span>
+                                </div>
+                                <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, info.player_1)}</div>
+                            </div>
+
+                            <div class="game-player-block">
+                                <div class="game-player-header ${isP2Winner ? 'status-winner' : 'status-loser'}">
+                                    <span>${p2Display}</span>
+                                    <span>${p2GameHazards} Dmg</span>
+                                </div>
+                                <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, info.player_2)}</div>
+                            </div>
                         </div>
                     `;
                 }).join('');
@@ -605,7 +649,6 @@
                                 <span class="vs-divider">VS</span>
                                 <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
                             </div>
-                            ${gameHeadersHTML}
                         </div>
 
                         <div class="sheet-main-grid">
@@ -619,7 +662,7 @@
                                     <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
                                 </div>
                             </div>
-                            ${[1, 2, 3].map(gNum => renderGameDetailColumn(games.find(g => Number(g.game_number) === gNum), info, p1Display, p2Display)).join('')}
+                            ${gameColumnsHTML}
                         </div>
                     </div>
                 `;
@@ -681,7 +724,6 @@
             }
 
             return mons.map(m => {
-                // Use original Showdown gen5 static sprite URL with onerror fallback handler
                 const spriteUrl = getSpriteUrl(m.species, 'gen5');
 
                 return `
@@ -700,39 +742,6 @@
                     </div>
                 `;
             }).join('');
-        }
-
-        function renderGameDetailColumn(gameData, matchInfo, p1Display, p2Display) {
-            if (!gameData) {
-                return `<div class="game-detail-column"><div style="background:#fff; border:2px solid #000; padding:20px; text-align:center; color:#666;">Game Not Played</div></div>`;
-            }
-
-            const gameWinnerDisplay = getDisplayName(gameData.winner);
-            const isP1Winner = gameWinnerDisplay.toLowerCase() === p1Display.toLowerCase();
-            const isP2Winner = gameWinnerDisplay.toLowerCase() === p2Display.toLowerCase();
-
-            const p1GameHazards = calculateGameHazardDamage(gameData.game_id, matchInfo.player_1);
-            const p2GameHazards = calculateGameHazardDamage(gameData.game_id, matchInfo.player_2);
-
-            return `
-                <div class="game-detail-column">
-                    <div class="game-player-block">
-                        <div class="game-player-header ${isP1Winner ? 'status-winner' : 'status-loser'}">
-                            <span>${p1Display} ${isP1Winner ? 'Winner' : 'Loser'}</span>
-                            <span>${p1GameHazards} Hazard Damage</span>
-                        </div>
-                        <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, matchInfo.player_1)}</div>
-                    </div>
-
-                    <div class="game-player-block">
-                        <div class="game-player-header ${isP2Winner ? 'status-winner' : 'status-loser'}">
-                            <span>${p2Display} ${isP2Winner ? 'Winner' : 'Loser'}</span>
-                            <span>${p2GameHazards} Hazard Damage</span>
-                        </div>
-                        <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, matchInfo.player_2)}</div>
-                    </div>
-                </div>
-            `;
         }
 
         function calculateGameHazardDamage(gameId, rawPlayerName) {
@@ -767,8 +776,6 @@
 
             return mons.map(m => {
                 const isFainted = Number(m.survived) === 0;
-                
-                // Autumnchi box sprites: Colored if survived, monotone (B&W) if fainted
                 const spriteType = isFainted ? 'monotone' : 'color';
                 const spriteUrl = getSpriteUrl(m.pokemon, spriteType);
 
