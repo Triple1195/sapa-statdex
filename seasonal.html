@@ -375,7 +375,7 @@
         </div>
     </div>
 
-    <!-- Load external configuration and shared helpers from root directory -->
+    <!-- Load external configuration and shared helpers -->
     <script src="config.js"></script>
     <script src="helper.js"></script>
 
@@ -482,9 +482,11 @@
                     },
                     {
                         sql: `SELECT s.stat_id, s.game_id, s.player, s.pokemon, s.nickname, s.faint_type, s.faint_source, s.faint_move,
+                                     d.dex_id,
                                      s.direct_kos, s.indirect_kos, s.self_kos, s.total_damage, s.direct_damage, s.indirect_damage,
                                      s.hazard_damage, s.hits_taken, s.damage_taken, s.damage_healed, s.active_turns, s.survived, s.fainted, s.battle_won
                               FROM match_pokemon_stats s
+                              LEFT JOIN pokemon_dex d ON LOWER(s.pokemon) = LOWER(d.pokemon_name)
                               JOIN match_games g ON s.game_id = g.game_id
                               JOIN matches m ON g.match_id = m.match_id
                               WHERE m.season = ?`,
@@ -658,6 +660,7 @@
                 if (!aggregated[s.pokemon]) {
                     aggregated[s.pokemon] = { 
                         species: s.pokemon, 
+                        dexId: s.dex_id || 0,
                         nickname: s.nickname || s.pokemon,
                         directKos: 0, 
                         indirectKos: 0, 
@@ -681,12 +684,12 @@
             }
 
             return mons.map(m => {
-                // Use Gen 5 Showdown sprites for the left overview section
-                const spriteUrl = getSpriteUrl(m.species, 'gen5');
+                // Pass dexId to getSpriteUrl for PokéAPI Gen 5 animated GIFs
+                const spriteUrl = getSpriteUrl(m.dexId, 'gen5');
 
                 return `
                     <div class="mon-summary-tile">
-                        <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://play.pokemonshowdown.com/sprites/dex/0.png'" />
+                        <img src="${spriteUrl}" class="mon-sprite" onerror="this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/0.png'" />
                         <div class="mon-name">${m.species}</div>
                         <div class="mon-nickname">${m.nickname}</div>
                         <div class="stat-section-title">Knock Outs</div>
