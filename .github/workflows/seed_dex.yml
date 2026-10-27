@@ -1,0 +1,74 @@
+name: Seed Pokemon Dex Table
+
+on:
+  workflow_dispatch: # Allows manual trigger from the GitHub Actions UI
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install @libsql/client
+        run: npm install @libsql/client
+
+      - name: Create and Run Seed Script
+        env:
+          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
+          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+        run: |
+          node -e '
+          import("@libsql/client").then(async ({ createClient }) => {
+            const db = createClient({
+              url: process.env.TURSO_DATABASE_URL,
+              authToken: process.env.TURSO_AUTH_TOKEN,
+            });
+
+            console.log("Creating pokemon_dex table if needed...");
+            await db.execute(`
+              CREATE TABLE IF NOT EXISTS pokemon_dex (
+                  pokemon_name TEXT PRIMARY KEY,
+                  dex_id INTEGER NOT NULL
+              );
+            `);
+
+            console.log("Fetching Pokemon from PokeAPI...");
+            const res = await fetch("https://pokeapi.co/api/v2/pokemon?limit=1025");
+            const data = await res.json();
+
+            const statements = [];
+            for (const item of data.results) {
+              const match = item.url.match(/\/pokemon\/(\d+)\//);
+              if (!match) continue;
+              statements.push({
+                sql: "INSERT OR REPLACE INTO pokemon_dex (pokemon_name, dex_id) VALUES (?, ?)",
+                args: [item.name, Number(match[1])]
+              });
+            }
+
+            // Manual form overrides (Megas, alternate forms)
+            const manual = [
+              { name: "charizard-mega-x", id: 6 },
+              { name: "charizard-mega-y", id: 6 },
+              { name: "mewtwo-mega-x", id: 150 },
+              { name: "mewtwo-mega-y", id: 150 }
+            ];
+            for (const v of manual) {
+              statements.push({
+                sql: "INSERT OR REPLACE INTO pokemon_dex (pokemon_name, dex_id) VALUES (?, ?)",
+                args: [v.name, v.id]
+              });
+            }
+
+            console.log(`Inserting ${statements.length} records into Turso...`);
+            await db.batch(statements);
+            console.log("✅ Successfully populated pokemon_dex table!");
+          });
+          '
