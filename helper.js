@@ -1,9 +1,26 @@
-// helper.js - Centralized Frontend Helper & Utility Functions
+// helper.js - Centralized Static Sprite & Utility Helpers
 
 /**
- * Normalizes Pokémon species names for Autumnchi GitHub box sprites.
+ * Normalizes Pokémon species names for Showdown's static dex sprites on GitHub.
+ * Examples:
+ *   "Tapu Koko"        -> "tapukoko"
+ *   "Landorus-Therian" -> "landorustherian"
+ *   "Gastrodon-East"   -> "gastrodoneast"
+ *   "Zygarde-10%"      -> "zygarde10"
  */
-function formatAutumnchiSpriteName(speciesName) {
+function formatShowdownName(speciesName) {
+    if (!speciesName) return '0';
+    let clean = speciesName.toLowerCase().trim();
+    return clean.replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * Normalizes Pokémon species names for Autumnchi box sprites on GitHub.
+ * Examples:
+ *   "Tapu Koko"        -> "tapu-koko"
+ *   "Landorus-Therian" -> "landorus-therian"
+ */
+function formatAutumnchiName(speciesName) {
     if (!speciesName) return '0';
     let clean = speciesName.toLowerCase().trim();
     clean = clean.replace(/[\s_]+/g, '-');
@@ -11,32 +28,28 @@ function formatAutumnchiSpriteName(speciesName) {
 }
 
 /**
- * Generates sprite URLs hosted on GitHub (bypasses corporate firewall blocks).
- * @param {string|number} pokemonIdentifier Dex ID (for PokeAPI) or Species Name (for Autumnchi).
- * @param {string} type 'gen5' for PokeAPI B/W Animated GIF, 'color' for Autumnchi colored, 'monotone' for B&W.
- * @returns {string} The full image URL.
+ * Generates static sprite URLs hosted on GitHub (bypasses corporate SSL/firewall blocks).
+ * @param {string} speciesName The raw species or form name from your battle stats.
+ * @param {string} type 'dex' for Showdown static front sprite, 'color' for Autumnchi colored, 'monotone' for Autumnchi B&W.
+ * @returns {string} The image URL.
  */
-function getSpriteUrl(pokemonIdentifier, type = 'color') {
-    if (!pokemonIdentifier) return 'https://raw.githubusercontent.com/Autumnchi/coloured-box-sprites/main/0.png';
+function getSpriteUrl(speciesName, type = 'color') {
+    if (!speciesName) return 'https://raw.githubusercontent.com/Autumnchi/coloured-box-sprites/main/0.png';
 
-    if (type === 'gen5') {
-        // PokéAPI Black & White Animated GIFs via GitHub (bypasses corporate SSL blocks)
-        const dexId = Number(pokemonIdentifier) || 0;
-        if (dexId > 0) {
-            return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${dexId}.png`;
-        }
-        // Fallback static sprite if dex ID is missing/0
-        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/${dexId || 0}.png`;
+    if (type === 'dex') {
+        // Static Showdown Front Sprite via GitHub Raw
+        const name = formatShowdownName(speciesName);
+        return `https://raw.githubusercontent.com/smogon/pokemon-showdown-client/master/sprites/dex/${name}.png`;
 
     } else if (type === 'monotone') {
-        // Autumnchi Monotone Box Sprites for Fainted Pokémon
-        const formattedName = formatAutumnchiSpriteName(pokemonIdentifier);
-        return `https://raw.githubusercontent.com/Autumnchi/monotone-box-sprites/main/${formattedName}.png`;
+        // Autumnchi Monotone Box Sprite for Fainted Pokémon
+        const name = formatAutumnchiName(speciesName);
+        return `https://raw.githubusercontent.com/Autumnchi/monotone-box-sprites/main/${name}.png`;
 
     } else {
-        // Autumnchi Colored Box Sprites for Survived Pokémon
-        const formattedName = formatAutumnchiSpriteName(pokemonIdentifier);
-        return `https://raw.githubusercontent.com/Autumnchi/coloured-box-sprites/main/${formattedName}.png`;
+        // Autumnchi Colored Box Sprite for Survived Pokémon
+        const name = formatAutumnchiName(speciesName);
+        return `https://raw.githubusercontent.com/Autumnchi/coloured-box-sprites/main/${name}.png`;
     }
 }
 
