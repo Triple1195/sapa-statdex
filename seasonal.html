@@ -132,7 +132,7 @@
             letter-spacing: 0.5px;
         }
 
-        /* 4-Column Grid Structure */
+        /* 4-Column Grid Structure Layout */
         .sheet-scoreboard {
             display: grid;
             grid-template-columns: 560px 1fr 1fr 1fr;
@@ -197,17 +197,9 @@
         .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 3px; font-size: 11px; }
         .game-summary-winner { font-weight: bold; font-size: 11px; padding: 2px; }
 
-        .sheet-main-grid {
-            display: grid;
-            grid-template-columns: 560px 1fr 1fr 1fr;
-            gap: 12px;
-            align-items: start;
-        }
-
         .player-roster-card {
             background: #fff;
             border: 2px solid #000;
-            margin-bottom: 12px;
             height: 295px;
             display: flex;
             flex-direction: column;
@@ -243,12 +235,6 @@
         
         .stat-section-title { background: #e5e7eb; font-weight: bold; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 1px 2px; font-size: 10px; text-align: center; }
         .stat-row { display: flex; justify-content: space-between; border-top: 1px dashed #ddd; padding: 1px 2px; font-size: 10px; }
-
-        .game-detail-column {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
 
         .game-player-block {
             background: #fff;
@@ -590,52 +576,62 @@
                 const p1HazardTotal = calculateTotalHazardDamage(info.player_1, games);
                 const p2HazardTotal = calculateTotalHazardDamage(info.player_2, games);
 
-                const gameColumnsHTML = [1, 2, 3].map(gNum => {
+                const gameHeadersHTML = [1, 2, 3].map(gNum => {
                     const gameData = games.find(g => Number(g.game_number) === gNum);
                     if (!gameData) {
                         return `
-                            <div class="game-detail-column">
-                                <div class="game-column-header">
-                                    <div class="game-summary-header">Game ${gNum}</div>
-                                    <div class="game-summary-winner" style="color:#94a3b8; font-size:11px;">N/A</div>
-                                </div>
-                                <div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:11px;">
-                                    Game Not Played
-                                </div>
+                            <div class="game-column-header">
+                                <div class="game-summary-header">Game ${gNum}</div>
+                                <div class="game-summary-winner" style="color:#94a3b8; font-size:11px;">N/A</div>
                             </div>
                         `;
                     }
+                    const winnerDisplay = getDisplayName(gameData.winner);
+                    return `
+                        <div class="game-column-header">
+                            <div class="game-summary-header">Game ${gNum}: ${gameData.turns || 0} Turns</div>
+                            <div class="game-summary-winner">${winnerDisplay ? `Winner: ${winnerDisplay}` : 'Pending'}</div>
+                            ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:10px; margin-bottom:2px;">Replay Link</a>` : ''}
+                        </div>
+                    `;
+                }).join('');
 
+                const p1GameBlocksHTML = [1, 2, 3].map(gNum => {
+                    const gameData = games.find(g => Number(g.game_number) === gNum);
+                    if (!gameData) {
+                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:11px;">Game Not Played</div>`;
+                    }
                     const winnerDisplay = getDisplayName(gameData.winner);
                     const p1GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_1);
-                    const p2GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_2);
-
                     const isP1Winner = winnerDisplay.toLowerCase() === p1Display.toLowerCase();
+
+                    return `
+                        <div class="game-player-block">
+                            <div class="game-player-header ${isP1Winner ? 'status-winner' : 'status-loser'}">
+                                <span>${p1Display}</span>
+                                <span>${p1GameHazards} Dmg</span>
+                            </div>
+                            <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, info.player_1)}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                const p2GameBlocksHTML = [1, 2, 3].map(gNum => {
+                    const gameData = games.find(g => Number(g.game_number) === gNum);
+                    if (!gameData) {
+                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:11px;">Game Not Played</div>`;
+                    }
+                    const winnerDisplay = getDisplayName(gameData.winner);
+                    const p2GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_2);
                     const isP2Winner = winnerDisplay.toLowerCase() === p2Display.toLowerCase();
 
                     return `
-                        <div class="game-detail-column">
-                            <div class="game-column-header">
-                                <div class="game-summary-header">Game ${gNum}: ${gameData.turns || 0} Turns</div>
-                                <div class="game-summary-winner">${winnerDisplay ? `Winner: ${winnerDisplay}` : 'Pending'}</div>
-                                ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:10px; margin-bottom:2px;">Replay Link</a>` : ''}
+                        <div class="game-player-block">
+                            <div class="game-player-header ${isP2Winner ? 'status-winner' : 'status-loser'}">
+                                <span>${p2Display}</span>
+                                <span>${p2GameHazards} Dmg</span>
                             </div>
-
-                            <div class="game-player-block">
-                                <div class="game-player-header ${isP1Winner ? 'status-winner' : 'status-loser'}">
-                                    <span>${p1Display}</span>
-                                    <span>${p1GameHazards} Dmg</span>
-                                </div>
-                                <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, info.player_1)}</div>
-                            </div>
-
-                            <div class="game-player-block">
-                                <div class="game-player-header ${isP2Winner ? 'status-winner' : 'status-loser'}">
-                                    <span>${p2Display}</span>
-                                    <span>${p2GameHazards} Dmg</span>
-                                </div>
-                                <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, info.player_2)}</div>
-                            </div>
+                            <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, info.player_2)}</div>
                         </div>
                     `;
                 }).join('');
@@ -646,26 +642,32 @@
                             Week ${info.week} &mdash; ${info.conference ? 'Conference ' + info.conference : 'Main Conference'}
                         </div>
 
+                        <!-- Row 1: Score Header (Col 1) + Game Headers (Cols 2-4) -->
                         <div class="sheet-scoreboard">
                             <div class="score-header">
                                 <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
                                 <span class="vs-divider">VS</span>
                                 <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
                             </div>
-                            ${gameColumnsHTML}
+                            ${gameHeadersHTML}
                         </div>
 
-                        <div class="sheet-main-grid">
-                            <div>
-                                <div class="player-roster-card">
-                                    <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
-                                    <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
-                                </div>
-                                <div class="player-roster-card">
-                                    <div class="roster-header"><span>Player: ${p2Display}</span> <span>${p2HazardTotal} Hazard Damage</span></div>
-                                    <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
-                                </div>
+                        <!-- Row 2: Player 1 Roster Card (Col 1) + Player 1 Game Blocks (Cols 2-4) -->
+                        <div class="sheet-scoreboard" style="margin-bottom: 12px;">
+                            <div class="player-roster-card" style="margin-bottom: 0;">
+                                <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
+                                <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
                             </div>
+                            ${p1GameBlocksHTML}
+                        </div>
+
+                        <!-- Row 3: Player 2 Roster Card (Col 1) + Player 2 Game Blocks (Cols 2-4) -->
+                        <div class="sheet-scoreboard" style="margin-bottom: 0;">
+                            <div class="player-roster-card" style="margin-bottom: 0;">
+                                <div class="roster-header"><span>Player: ${p2Display}</span> <span>${p2HazardTotal} Hazard Damage</span></div>
+                                <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
+                            </div>
+                            ${p2GameBlocksHTML}
                         </div>
                     </div>
                 `;
