@@ -182,14 +182,14 @@ async function runIngest() {
                 const faintSource = getFaintSource(logData, identifier, pIdx);
                 const faintMove = getFaintMove(logData, identifier, pIdx);
 
-                const dKos = getBattleKOs(logData, identifier, pIdx, "Direct");
-                const iKos = getBattleKOs(logData, identifier, pIdx, "Indirect");
-                const sKos = getBattleKOs(logData, identifier, pIdx, "Self");
+                const dKos = getBattleKOs(logData, identifier, pIdx, "direct");
+                const iKos = getBattleKOs(logData, identifier, pIdx, "indirect");
+                const sKos = getBattleKOs(logData, identifier, pIdx, "self");
 
-                const tDmg = getDamageDealt(logData, identifier, pIdx, "Total");
-                const dDmg = getDamageDealt(logData, identifier, pIdx, "Direct");
-                const iDmg = getDamageDealt(logData, identifier, pIdx, "Indirect");
-                const hDmg = getDamageDealt(logData, identifier, pIdx, "Hazard");
+                const tDmg = getDamageDealt(logData, identifier, pIdx, "total");
+                const dDmg = getDamageDealt(logData, identifier, pIdx, "direct");
+                const iDmg = getDamageDealt(logData, identifier, pIdx, "indirect");
+                const hDmg = getDamageDealt(logData, identifier, pIdx, "hazard");
 
                 const hTaken = getHitsTaken(logData, identifier, pIdx);
                 const dTaken = getDamageTaken(logData, identifier, pIdx);
