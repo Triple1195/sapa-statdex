@@ -992,14 +992,16 @@
             }).join('');
         }
 
-        // Render Full Playerdex View with Dynamic Records
+        // Render Full Playerdex View Separated by Conference and Sorted by Record
         function renderPlayerdex() {
             const playerFilter = document.getElementById('playerSearch').value.toLowerCase();
             const grid = document.getElementById('playerdexGrid');
 
-            // 1. Calculate Player Set & Game Records from rawMatches
+            // 1. Calculate Player Set & Game Records, and map players to conferences
             const playerRecords = {};
+            const playerConferences = {};
             const matchGroups = {};
+
             rawMatches.forEach(m => {
                 if (!matchGroups[m.match_id]) {
                     matchGroups[m.match_id] = { info: m, games: [] };
@@ -1016,6 +1018,10 @@
 
                 const p1 = getDisplayName(info.player_1);
                 const p2 = getDisplayName(info.player_2);
+                const conf = info.conference ? String(info.conference) : "Main";
+
+                playerConferences[p1] = conf;
+                playerConferences[p2] = conf;
 
                 if (!playerRecords[p1]) playerRecords[p1] = { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
                 if (!playerRecords[p2]) playerRecords[p2] = { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
@@ -1092,149 +1098,179 @@
                 pObj.battleWon += Number(st.battle_won || 0);
             });
 
-            const playerNames = Object.keys(playerMap).filter(p => !playerFilter || p.toLowerCase().includes(playerFilter));
-            if (playerNames.length === 0) {
+            // 3. Group players by Conference
+            const conferenceMap = {};
+            Object.keys(playerMap).forEach(player => {
+                if (playerFilter && !player.toLowerCase().includes(playerFilter)) return;
+                const conf = playerConferences[player] || "Main";
+                if (!conferenceMap[conf]) conferenceMap[conf] = [];
+                conferenceMap[conf].push(player);
+            });
+
+            const confKeys = Object.keys(conferenceMap).sort();
+            if (confKeys.length === 0) {
                 grid.innerHTML = '<div class="status-msg">No player records found for this season.</div>';
                 return;
             }
 
-            grid.innerHTML = playerNames.map(player => {
-                const playerData = playerMap[player];
-                const pokemons = Object.values(playerData.pokemon);
-                const rec = playerRecords[player] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
-
-                // Compute team totals for percentage share calculations
-                const totals = {
-                    timesBrought: pokemons.reduce((acc, m) => acc + m.timesBrought, 0) || 1,
-                    battlesActive: pokemons.reduce((acc, m) => acc + m.battlesActive, 0) || 1,
-                    directKo: pokemons.reduce((acc, m) => acc + m.directKo, 0) || 1,
-                    indirectKo: pokemons.reduce((acc, m) => acc + m.indirectKo, 0) || 1,
-                    damageDealt: pokemons.reduce((acc, m) => acc + m.damageDealt, 0) || 1,
-                    damageDirect: pokemons.reduce((acc, m) => acc + m.damageDirect, 0) || 1,
-                    damageIndirect: pokemons.reduce((acc, m) => acc + m.damageIndirect, 0) || 1,
-                    hitsTaken: pokemons.reduce((acc, m) => acc + m.hitsTaken, 0) || 1,
-                    damageTaken: pokemons.reduce((acc, m) => acc + m.damageTaken, 0) || 1,
-                    damageHeal: pokemons.reduce((acc, m) => acc + m.damageHeal, 0) || 1,
-                    activeTurns: pokemons.reduce((acc, m) => acc + m.activeTurns, 0) || 1,
-                    survived: pokemons.reduce((acc, m) => acc + m.survived, 0) || 1,
-                    battleWon: pokemons.reduce((acc, m) => acc + m.battleWon, 0) || 1
-                };
-
-                // Calculate TVR, PVR, and O/U for each Pokémon
-                pokemons.forEach(m => {
-                    const shares = [
-                        m.timesBrought / totals.timesBrought,
-                        m.battlesActive / totals.battlesActive,
-                        m.directKo / totals.directKo,
-                        m.indirectKo / totals.indirectKo,
-                        m.damageDealt / totals.damageDealt,
-                        m.damageDirect / totals.damageDirect,
-                        m.damageIndirect / totals.damageIndirect,
-                        m.hitsTaken / totals.hitsTaken,
-                        m.damageTaken / totals.damageTaken,
-                        m.damageHeal / totals.damageHeal,
-                        m.activeTurns / totals.activeTurns,
-                        m.survived / totals.survived,
-                        m.battleWon / totals.battleWon
-                    ];
-                    m.tvr = (shares.reduce((a, b) => a + b, 0) / shares.length) * 100;
-
-                    const cost = rawDraftCosts[m.species] || 0;
-                    m.pvr = (cost / totalSeasonBudget) * 100;
-                    m.ou = m.pvr > 0 ? m.tvr / m.pvr : 0;
+            // 4. Sort players within each conference by record (Set Wins desc, then Game Wins desc)
+            confKeys.forEach(conf => {
+                conferenceMap[conf].sort((a, b) => {
+                    const recA = playerRecords[a] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
+                    const recB = playerRecords[b] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
+                    if (recB.setWins !== recA.setWins) return recB.setWins - recA.setWins;
+                    if (recA.setLosses !== recB.setLosses) return recA.setLosses - recB.setLosses;
+                    return recB.gameWins - recA.gameWins;
                 });
+            });
 
-                // Sort Pokémon by TVR descending
-                pokemons.sort((a, b) => b.tvr - a.tvr);
+            // 5. Build HTML for each conference and its sorted players
+            grid.innerHTML = confKeys.map(conf => {
+                const playersInConf = conferenceMap[conf];
+                if (playersInConf.length === 0) return '';
 
-                const summaryTableRows = pokemons.map(m => `
-                    <tr>
-                        <td>${m.species}</td>
-                        <td style="text-align:right;">${m.tvr.toFixed(1)}%</td>
-                        <td style="text-align:right;">${m.pvr.toFixed(1)}%</td>
-                        <td style="text-align:right;">${m.ou.toFixed(2)}</td>
-                    </tr>
-                `).join('');
+                const playerContainersHTML = playersInConf.map(player => {
+                    const playerData = playerMap[player];
+                    const pokemons = Object.values(playerData.pokemon);
+                    const rec = playerRecords[player] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
 
-                const pokemonCardsHTML = pokemons.map((m, idx) => {
-                    const spriteUrl = getSpriteUrl(m.species, 'color');
-                    const directAvg = m.battlesActive > 0 ? (m.directKo / m.battlesActive).toFixed(1) : '0.0';
-                    const indirectAvg = m.battlesActive > 0 ? (m.indirectKo / m.battlesActive).toFixed(1) : '0.0';
-                    const takenAvg = m.battlesActive > 0 ? (m.damageTaken / m.battlesActive).toFixed(1) : '0.0';
-                    const hitsAvg = m.battlesActive > 0 ? (m.hitsTaken / m.battlesActive).toFixed(1) : '0.0';
-                    const healedAvg = m.battlesActive > 0 ? (m.damageHeal / m.battlesActive).toFixed(1) : '0.0';
-                    const dealtAvg = m.battlesActive > 0 ? (m.damageDealt / m.battlesActive).toFixed(1) : '0.0';
-                    const dealtIndAvg = m.battlesActive > 0 ? (m.damageIndirect / m.battlesActive).toFixed(1) : '0.0';
+                    const totals = {
+                        timesBrought: pokemons.reduce((acc, m) => acc + m.timesBrought, 0) || 1,
+                        battlesActive: pokemons.reduce((acc, m) => acc + m.battlesActive, 0) || 1,
+                        directKo: pokemons.reduce((acc, m) => acc + m.directKo, 0) || 1,
+                        indirectKo: pokemons.reduce((acc, m) => acc + m.indirectKo, 0) || 1,
+                        damageDealt: pokemons.reduce((acc, m) => acc + m.damageDealt, 0) || 1,
+                        damageDirect: pokemons.reduce((acc, m) => acc + m.damageDirect, 0) || 1,
+                        damageIndirect: pokemons.reduce((acc, m) => acc + m.damageIndirect, 0) || 1,
+                        hitsTaken: pokemons.reduce((acc, m) => acc + m.hitsTaken, 0) || 1,
+                        damageTaken: pokemons.reduce((acc, m) => acc + m.damageTaken, 0) || 1,
+                        damageHeal: pokemons.reduce((acc, m) => acc + m.damageHeal, 0) || 1,
+                        activeTurns: pokemons.reduce((acc, m) => acc + m.activeTurns, 0) || 1,
+                        survived: pokemons.reduce((acc, m) => acc + m.survived, 0) || 1,
+                        battleWon: pokemons.reduce((acc, m) => acc + m.battleWon, 0) || 1
+                    };
 
-                    return `
-                        <div class="pokemon-card-cell">
-                            <div style="background:#e5e7eb; padding:4px 8px; font-weight:bold; border-bottom:1px solid #bdc1c6; display:flex; justify-content:space-between;">
-                                <span>Team Value Ratio</span>
-                                <span>${m.tvr.toFixed(2)}%</span>
-                            </div>
-                            <div class="pcard-top">
-                                <div class="pcard-img-box">
-                                    <img src="${spriteUrl}" class="pcard-sprite" onerror="handleImageError(this)" />
-                                    <span style="font-size:10px; font-weight:bold; margin-top:2px;">#${idx + 1}</span>
+                    pokemons.forEach(m => {
+                        const shares = [
+                            m.timesBrought / totals.timesBrought,
+                            m.battlesActive / totals.battlesActive,
+                            m.directKo / totals.directKo,
+                            m.indirectKo / totals.indirectKo,
+                            m.damageDealt / totals.damageDealt,
+                            m.damageDirect / totals.damageDirect,
+                            m.damageIndirect / totals.damageIndirect,
+                            m.hitsTaken / totals.hitsTaken,
+                            m.damageTaken / totals.damageTaken,
+                            m.damageHeal / totals.damageHeal,
+                            m.activeTurns / totals.activeTurns,
+                            m.survived / totals.survived,
+                            m.battleWon / totals.battleWon
+                        ];
+                        m.tvr = (shares.reduce((a, b) => a + b, 0) / shares.length) * 100;
+
+                        const cost = rawDraftCosts[m.species] || 0;
+                        m.pvr = (cost / totalSeasonBudget) * 100;
+                        m.ou = m.pvr > 0 ? m.tvr / m.pvr : 0;
+                    });
+
+                    pokemons.sort((a, b) => b.tvr - a.tvr);
+
+                    const summaryTableRows = pokemons.map(m => `
+                        <tr>
+                            <td>${m.species}</td>
+                            <td style="text-align:right;">${m.tvr.toFixed(1)}%</td>
+                            <td style="text-align:right;">${m.pvr.toFixed(1)}%</td>
+                            <td style="text-align:right;">${m.ou.toFixed(2)}</td>
+                        </tr>
+                    `).join('');
+
+                    const pokemonCardsHTML = pokemons.map((m, idx) => {
+                        const spriteUrl = getSpriteUrl(m.species, 'color');
+                        const directAvg = m.battlesActive > 0 ? (m.directKo / m.battlesActive).toFixed(1) : '0.0';
+                        const indirectAvg = m.battlesActive > 0 ? (m.indirectKo / m.battlesActive).toFixed(1) : '0.0';
+                        const takenAvg = m.battlesActive > 0 ? (m.damageTaken / m.battlesActive).toFixed(1) : '0.0';
+                        const hitsAvg = m.battlesActive > 0 ? (m.hitsTaken / m.battlesActive).toFixed(1) : '0.0';
+                        const healedAvg = m.battlesActive > 0 ? (m.damageHeal / m.battlesActive).toFixed(1) : '0.0';
+                        const dealtAvg = m.battlesActive > 0 ? (m.damageDealt / m.battlesActive).toFixed(1) : '0.0';
+                        const dealtIndAvg = m.battlesActive > 0 ? (m.damageIndirect / m.battlesActive).toFixed(1) : '0.0';
+
+                        return `
+                            <div class="pokemon-card-cell">
+                                <div style="background:#e5e7eb; padding:4px 8px; font-weight:bold; border-bottom:1px solid #bdc1c6; display:flex; justify-content:space-between;">
+                                    <span>Team Value Ratio</span>
+                                    <span>${m.tvr.toFixed(2)}%</span>
                                 </div>
-                                <table class="pcard-info-table">
-                                    <tr><td>Pokemon:</td><td><strong>1</strong></td><td>Total</td><td>Avg</td></tr>
-                                    <tr><td>Direct KOs:</td><td>${m.directKo}</td><td>-</td><td>${directAvg}</td></tr>
-                                    <tr><td>Indirect KOs:</td><td>${m.indirectKo}</td><td>-</td><td>${indirectAvg}</td></tr>
-                                    <tr><td>Damage Taken:</td><td>${m.damageTaken}</td><td>-</td><td>${takenAvg}</td></tr>
-                                    <tr><td>Hits Taken:</td><td>${m.hitsTaken}</td><td>-</td><td>${hitsAvg}</td></tr>
-                                    <tr><td>Damage Healed:</td><td>${m.damageHeal}</td><td>-</td><td>${healedAvg}</td></tr>
-                                    <tr><td>Total Dealt:</td><td>${m.damageDealt}</td><td>-</td><td>${dealtAvg}</td></tr>
-                                    <tr><td>Direct Dealt:</td><td>${m.damageDirect}</td><td>-</td><td>-</td></tr>
-                                    <tr><td>Indirect Dealt:</td><td>${m.damageIndirect}</td><td>-</td><td>${dealtIndAvg}</td></tr>
+                                <div class="pcard-top">
+                                    <div class="pcard-img-box">
+                                        <img src="${spriteUrl}" class="pcard-sprite" onerror="handleImageError(this)" />
+                                        <span style="font-size:10px; font-weight:bold; margin-top:2px;">#${idx + 1}</span>
+                                    </div>
+                                    <table class="pcard-info-table">
+                                        <tr><td>Pokemon:</td><td><strong>1</strong></td><td>Total</td><td>Avg</td></tr>
+                                        <tr><td>Direct KOs:</td><td>${m.directKo}</td><td>-</td><td>${directAvg}</td></tr>
+                                        <tr><td>Indirect KOs:</td><td>${m.indirectKo}</td><td>-</td><td>${indirectAvg}</td></tr>
+                                        <tr><td>Damage Taken:</td><td>${m.damageTaken}</td><td>-</td><td>${takenAvg}</td></tr>
+                                        <tr><td>Hits Taken:</td><td>${m.hitsTaken}</td><td>-</td><td>${hitsAvg}</td></tr>
+                                        <tr><td>Damage Healed:</td><td>${m.damageHeal}</td><td>-</td><td>${healedAvg}</td></tr>
+                                        <tr><td>Total Dealt:</td><td>${m.damageDealt}</td><td>-</td><td>${dealtAvg}</td></tr>
+                                        <tr><td>Direct Dealt:</td><td>${m.damageDirect}</td><td>-</td><td>-</td></tr>
+                                        <tr><td>Indirect Dealt:</td><td>${m.damageIndirect}</td><td>-</td><td>${dealtIndAvg}</td></tr>
+                                    </table>
+                                </div>
+                                <table class="pcard-info-table" style="font-size:11px;">
+                                    <tr><td>Battles:</td><td><strong>${m.timesBrought}</strong></td></tr>
+                                    <tr><td>Active Battles:</td><td>${m.battlesActive} Battles</td></tr>
+                                    <tr><td>Survived Battles:</td><td>${m.survived} Battles</td></tr>
+                                    <tr><td>Won Battles:</td><td>${m.battleWon} Battles</td></tr>
+                                    <tr><td>Active Turns:</td><td>${m.activeTurns} Turns</td></tr>
                                 </table>
                             </div>
-                            <table class="pcard-info-table" style="font-size:11px;">
-                                <tr><td>Battles:</td><td><strong>${m.timesBrought}</strong></td></tr>
-                                <tr><td>Active Battles:</td><td>${m.battlesActive} Battles</td></tr>
-                                <tr><td>Survived Battles:</td><td>${m.survived} Battles</td></tr>
-                                <tr><td>Won Battles:</td><td>${m.battleWon} Battles</td></tr>
-                                <tr><td>Active Turns:</td><td>${m.activeTurns} Turns</td></tr>
-                            </table>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="playerdex-sheet-container">
+                            <div class="match-top-banner" style="margin-bottom:14px; text-align:left; padding:8px 14px; display:flex; justify-content:space-between; align-items:center;">
+                                <span>Conference ${conf}</span>
+                                <span>Season Standings</span>
+                            </div>
+                            <div class="playerdex-grid">
+                                <div class="playerdex-sidebar">
+                                    <div class="playerdex-sidebar-header">${player}</div>
+                                    <div style="padding:10px; text-align:center; background:#fafafa; border-bottom:1px solid #bdc1c6;">
+                                        <div style="font-weight:bold; font-size:14px;">Record: ${rec.setWins}-${rec.setLosses} (${rec.gameWins}-${rec.gameLosses})</div>
+                                    </div>
+                                    <div style="background:#202124; color:#fff; padding:6px; text-align:center; font-weight:bold; font-size:12px;">Team Value Ratio</div>
+                                    <table class="playerdex-summary-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Pokemon</th>
+                                                <th style="text-align:right;">TVR</th>
+                                                <th style="text-align:right;">PVR</th>
+                                                <th style="text-align:right;">O/U</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${summaryTableRows}
+                                        </tbody>
+                                    </table>
+                                    <div style="padding:8px; text-align:center; font-weight:bold; font-size:11px; background:#f1f3f4; border-top:1px solid #bdc1c6;">
+                                        ${pokemons.length} Pokémon Used
+                                    </div>
+                                </div>
+
+                                <div style="grid-column: span 3; display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+                                    ${pokemonCardsHTML}
+                                </div>
+                            </div>
                         </div>
                     `;
                 }).join('');
 
                 return `
-                    <div class="playerdex-sheet-container">
-                        <div class="match-top-banner" style="margin-bottom:14px; text-align:left; padding:8px 14px; display:flex; justify-content:space-between; align-items:center;">
-                            <span>Conference 1</span>
-                            <span>Season Standings</span>
-                        </div>
-                        <div class="playerdex-grid">
-                            <div class="playerdex-sidebar">
-                                <div class="playerdex-sidebar-header">${player}</div>
-                                <div style="padding:10px; text-align:center; background:#fafafa; border-bottom:1px solid #bdc1c6;">
-                                    <div style="font-weight:bold; font-size:14px;">Record: ${rec.setWins}-${rec.setLosses} (${rec.gameWins}-${rec.gameLosses})</div>
-                                </div>
-                                <div style="background:#202124; color:#fff; padding:6px; text-align:center; font-weight:bold; font-size:12px;">Team Value Ratio</div>
-                                <table class="playerdex-summary-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Pokemon</th>
-                                            <th style="text-align:right;">TVR</th>
-                                            <th style="text-align:right;">PVR</th>
-                                            <th style="text-align:right;">O/U</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        ${summaryTableRows}
-                                    </tbody>
-                                </table>
-                                <div style="padding:8px; text-align:center; font-weight:bold; font-size:11px; background:#f1f3f4; border-top:1px solid #bdc1c6;">
-                                    ${pokemons.length} Pokémon Used
-                                </div>
-                            </div>
-
-                            <div style="grid-column: span 3; display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
-                                ${pokemonCardsHTML}
-                            </div>
-                        </div>
+                    <div style="margin-bottom: 2rem;">
+                        <h2 style="color: var(--text-main); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">Conference ${conf} Standings</h2>
+                        ${playerContainersHTML}
                     </div>
                 `;
             }).join('');
