@@ -107,7 +107,7 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Spreadsheet-Style Grid Theme */
+        /* Spreadsheet-Style Grid Theme with horizontal scroll wrapper for mobile */
         .sheet-match-container {
             background-color: #a3a3a3;
             border: 2px solid #333;
@@ -118,6 +118,11 @@
             margin-bottom: 2rem;
             border-radius: 4px;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .sheet-match-inner {
+            min-width: 1240px; /* Ensures desktop layout integrity on small screens with smooth scrolling */
         }
 
         .match-top-banner {
@@ -266,10 +271,9 @@
             background: #000;
             padding: 0;
             flex: 1;
-            align-stretch: stretch;
         }
 
-        /* Game Mon Cell Structure filling its exact grid cell */
+        /* Game Mon Cell Structure */
         .game-mon-cell {
             background: #fff;
             border: 1px solid #000;
@@ -707,36 +711,38 @@
 
                 return `
                     <div class="sheet-match-container">
-                        <div class="match-top-banner">
-                            Week ${info.week} &mdash; ${info.conference ? 'Conference ' + info.conference : 'Main Conference'}
-                        </div>
-
-                        <!-- Row 1: Score Header (Col 1) + Game Headers (Cols 2-4) -->
-                        <div class="sheet-scoreboard">
-                            <div class="score-header">
-                                <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
-                                <span class="vs-divider">VS</span>
-                                <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
+                        <div class="sheet-match-inner">
+                            <div class="match-top-banner">
+                                Week ${info.week} &mdash; ${info.conference ? 'Conference ' + info.conference : 'Main Conference'}
                             </div>
-                            ${gameHeadersHTML}
-                        </div>
 
-                        <!-- Row 2: Player 1 Roster Card (Col 1) + Player 1 Game Blocks (Cols 2-4) -->
-                        <div class="sheet-scoreboard" style="margin-bottom: 14px;">
-                            <div class="player-roster-card" style="margin-bottom: 0;">
-                                <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
-                                <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
+                            <!-- Row 1: Score Header (Col 1) + Game Headers (Cols 2-4) -->
+                            <div class="sheet-scoreboard">
+                                <div class="score-header">
+                                    <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
+                                    <span class="vs-divider">VS</span>
+                                    <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
+                                </div>
+                                ${gameHeadersHTML}
                             </div>
-                            ${p1GameBlocksHTML}
-                        </div>
 
-                        <!-- Row 3: Player 2 Roster Card (Col 1) + Player 2 Game Blocks (Cols 2-4) -->
-                        <div class="sheet-scoreboard" style="margin-bottom: 0;">
-                            <div class="player-roster-card" style="margin-bottom: 0;">
-                                <div class="roster-header"><span>Player: ${p2Display}</span> <span>${p2HazardTotal} Hazard Damage</span></div>
-                                <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
+                            <!-- Row 2: Player 1 Roster Card (Col 1) + Player 1 Game Blocks (Cols 2-4) -->
+                            <div class="sheet-scoreboard" style="margin-bottom: 14px;">
+                                <div class="player-roster-card" style="margin-bottom: 0;">
+                                    <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
+                                    <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
+                                </div>
+                                ${p1GameBlocksHTML}
                             </div>
-                            ${p2GameBlocksHTML}
+
+                            <!-- Row 3: Player 2 Roster Card (Col 1) + Player 2 Game Blocks (Cols 2-4) -->
+                            <div class="sheet-scoreboard" style="margin-bottom: 0;">
+                                <div class="player-roster-card" style="margin-bottom: 0;">
+                                    <div class="roster-header"><span>Player: ${p2Display}</span> <span>${p2HazardTotal} Hazard Damage</span></div>
+                                    <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
+                                </div>
+                                ${p2GameBlocksHTML}
+                            </div>
                         </div>
                     </div>
                 `;
