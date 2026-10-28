@@ -107,7 +107,7 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Spreadsheet-Style Grid Theme with horizontal scroll wrapper for mobile */
+        /* Spreadsheet-Style Grid Theme */
         .sheet-match-container {
             background-color: #a3a3a3;
             border: 2px solid #333;
@@ -122,7 +122,7 @@
         }
 
         .sheet-match-inner {
-            min-width: 1240px; /* Ensures desktop layout integrity on small screens with smooth scrolling */
+            min-width: 1240px;
         }
 
         .match-top-banner {
@@ -330,11 +330,15 @@
             grid-row: 2 / 3;
             grid-column: 2 / 3;
             display: flex;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            padding: 0 6px;
+            line-height: 1.15;
+            padding: 0 4px;
             border-bottom: 1px solid #000;
-            font-weight: bold;
             background: #fff;
+            font-size: 10px;
+            text-align: center;
         }
 
         /* Bottom Row: Spanning both columns, perfectly centered horizontally and vertically */
@@ -396,6 +400,13 @@
             grid-column: 1 / -1;
             text-align: center;
             padding: 2rem;
+        }
+
+        /* Mobile Adjustments: Slightly widen game overview columns so text fits comfortably without vertical expansion */
+        @media (max-width: 1024px) {
+            .sheet-match-inner {
+                min-width: 1350px;
+            }
         }
     </style>
 </head>
@@ -884,7 +895,7 @@
                             <span>${totalKos}</span>
                         </div>
                         <div class="cell-row-turns">
-                            Active ${m.active_turns || 0} Turns
+                            <strong>Active</strong> ${m.active_turns || 0} Turns
                         </div>
                         <div class="cell-row-cause">
                             ${isFainted ? `<div><strong>${line1}</strong></div><div>${line2}</div>` : ''}
