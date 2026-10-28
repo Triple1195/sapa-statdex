@@ -183,9 +183,9 @@ async function runIngest() {
                 const faintSource = getFaintSource(logData, identifier, pIdx);
                 const faintMove = getFaintMove(logData, identifier, pIdx);
 
-                const dKos = getBattleKOs(logData, identifier, pIdx, "direct");
-                const iKos = getBattleKOs(logData, identifier, pIdx, "indirect");
-                const sKos = getBattleKOs(logData, identifier, pIdx, "self");
+                const dKos = getBattleKOs(logData, identifier, pIdx, Direct");
+                const iKos = getBattleKOs(logData, identifier, pIdx, "Indirect");
+                const sKos = getBattleKOs(logData, identifier, pIdx, "Self");
 
                 const tDmg = getDamageDealt(logData, identifier, pIdx, "total");
                 const dDmg = getDamageDealt(logData, identifier, pIdx, "direct");
