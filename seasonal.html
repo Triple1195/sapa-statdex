@@ -6,22 +6,17 @@
     <title>Seasonal Analytics Hub - Pokémon Draft League</title>
     <style>
         :root {
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --accent-blue: #1a73e8;
-            --text-main: #202124;
-            --text-muted: #5f6368;
-            --border-color: #dadce0;
-            --grid-line: #e0e0e0;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-blue: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
-            background-image: 
-                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-            background-size: 100px 24px; /* Matches standard spreadsheet column width and row height */
             color: var(--text-main);
             margin: 0;
             padding: 0;
@@ -34,17 +29,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 1px 3px rgba(60,64,67,0.15);
         }
 
         header h1 {
             margin: 0;
             font-size: 1.5rem;
-            color: #188038; /* Google Sheets green accent */
+            color: var(--accent-blue);
         }
 
         .nav-back {
-            color: var(--accent-blue);
+            color: var(--text-muted);
             text-decoration: none;
             font-weight: bold;
         }
@@ -58,14 +52,13 @@
         .filter-bar {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border-radius: 8px;
             padding: 1rem 1.5rem;
             display: flex;
             gap: 1.5rem;
             align-items: center;
             flex-wrap: wrap;
             margin-bottom: 1.5rem;
-            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
         }
 
         .filter-group {
@@ -81,7 +74,7 @@
         }
 
         select, input {
-            background-color: #fff;
+            background-color: var(--bg-color);
             color: var(--text-main);
             border: 1px solid var(--border-color);
             border-radius: 4px;
@@ -93,9 +86,6 @@
             display: flex;
             border-bottom: 2px solid var(--border-color);
             margin-bottom: 1.5rem;
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(2px);
-            border-radius: 4px 4px 0 0;
         }
 
         .tab-button {
@@ -110,8 +100,8 @@
         }
 
         .tab-button.active {
-            color: #188038;
-            border-bottom-color: #188038;
+            color: var(--accent-blue);
+            border-bottom-color: var(--accent-blue);
         }
 
         .tab-content { display: none; }
@@ -119,8 +109,8 @@
 
         /* Spreadsheet-Style Grid Theme */
         .sheet-match-container {
-            background-color: #f1f3f4;
-            border: 1px solid #bdc1c6;
+            background-color: #a3a3a3;
+            border: 2px solid #333;
             padding: 14px;
             color: #000;
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -128,17 +118,11 @@
             margin-bottom: 2rem;
             border-radius: 4px;
             overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-            box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3);
-        }
-
-        .sheet-match-inner {
-            min-width: 1350px;
         }
 
         .match-top-banner {
             background: #fff;
-            border: 1px solid #bdc1c6;
+            border: 2px solid #000;
             padding: 10px 16px;
             text-align: center;
             font-size: 16px;
@@ -159,13 +143,13 @@
             display: flex;
             align-items: stretch;
             background: #fff;
-            border: 1px solid #bdc1c6;
+            border: 2px solid #000;
             overflow: hidden;
             height: 65px;
         }
 
         .player-banner-winner { 
-            background-color: #1a73e8; 
+            background-color: #3b82f6; 
             color: white; 
             padding: 10px 14px; 
             flex: 1; 
@@ -177,7 +161,7 @@
         }
         
         .player-banner-loser { 
-            background-color: #d93025; 
+            background-color: #ef4444; 
             color: white; 
             padding: 10px 14px; 
             flex: 1; 
@@ -191,39 +175,39 @@
         .vs-divider { 
             font-size: 15px; 
             color: #000; 
-            background: #f1f3f4; 
+            background: #e5e7eb; 
             padding: 0 14px; 
             display: flex; 
             align-items: center; 
             justify-content: center; 
             font-weight: bold;
-            border-left: 1px solid #bdc1c6;
-            border-right: 1px solid #bdc1c6;
+            border-left: 1px solid #000;
+            border-right: 1px solid #000;
         }
 
         .game-column-header {
             background: #fff;
-            border: 1px solid #bdc1c6;
+            border: 2px solid #000;
             text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             height: 65px;
         }
-        .game-summary-header { font-weight: bold; background: #f1f3f4; border-bottom: 1px solid #bdc1c6; padding: 4px; font-size: 12px; }
+        .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 4px; font-size: 12px; }
         .game-summary-winner { font-weight: bold; font-size: 12px; padding: 3px; }
 
-        /* Fixed height for Roster & Game Player Blocks */
+        /* Expanded Roster & Game Player Blocks to accommodate Hits Taken */
         .player-roster-card {
             background: #fff;
-            border: 1px solid #bdc1c6;
-            height: 318px;
+            border: 2px solid #000;
+            height: 410px;
             display: flex;
             flex-direction: column;
         }
 
         .roster-header {
-            background: #202124;
+            background: #000;
             color: #fff;
             padding: 6px 10px;
             font-weight: bold;
@@ -235,12 +219,12 @@
         .roster-mon-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
-            border-top: 1px solid #bdc1c6;
+            border-top: 1px solid #000;
             flex: 1;
         }
 
         .mon-summary-tile {
-            border-right: 1px solid #bdc1c6;
+            border-right: 1px solid #000;
             padding: 4px;
             text-align: center;
             font-size: 11px;
@@ -251,13 +235,13 @@
         .mon-name { font-weight: bold; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .mon-nickname { font-size: 10px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
         
-        .stat-section-title { background: #f1f3f4; font-weight: bold; border-top: 1px solid #bdc1c6; border-bottom: 1px solid #bdc1c6; padding: 2px 3px; font-size: 11px; text-align: center; }
-        .stat-row { display: flex; justify-content: space-between; border-top: 1px dashed #e8eaed; padding: 2px 3px; font-size: 11px; }
+        .stat-section-title { background: #e5e7eb; font-weight: bold; border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 2px 3px; font-size: 11px; text-align: center; }
+        .stat-row { display: flex; justify-content: space-between; border-top: 1px dashed #ddd; padding: 2px 3px; font-size: 11px; }
 
         .game-player-block {
             background: #fff;
-            border: 1px solid #bdc1c6;
-            height: 318px;
+            border: 2px solid #000;
+            height: 410px;
             display: flex;
             flex-direction: column;
         }
@@ -267,33 +251,31 @@
             justify-content: space-between;
             padding: 6px 10px;
             font-weight: bold;
-            border-bottom: 1px solid #bdc1c6;
+            border-bottom: 1px solid #000;
             font-size: 12px;
         }
-        .status-winner { background-color: #1a73e8; color: white; }
-        .status-loser { background-color: #d93025; color: white; }
+        .status-winner { background-color: #3b82f6; color: white; }
+        .status-loser { background-color: #ef4444; color: white; }
 
-        /* Strict 2x3 Grid: 2 columns, 3 equal rows spanning the available block height */
         .game-mon-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            grid-template-rows: repeat(3, 1fr);
             gap: 0;
-            background: #bdc1c6;
+            background: #000;
             padding: 0;
             flex: 1;
+            align-content: start;
         }
 
-        /* Game Mon Cell Structure */
+        /* Perfectly proportioned Game Mon Cell Structure */
         .game-mon-cell {
             background: #fff;
-            border: 1px solid #bdc1c6;
+            border: 1px solid #000;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr 1.2fr;
+            grid-template-rows: 29px 29px 33px;
             box-sizing: border-box;
-            height: 100%;
-            width: 100%;
+            height: 121px;
             font-size: 11px;
         }
 
@@ -305,25 +287,25 @@
             align-items: center;
             justify-content: space-between;
             padding: 2px;
-            border-right: 1px solid #bdc1c6;
-            border-bottom: 1px solid #bdc1c6;
+            border-right: 1px solid #000;
+            border-bottom: 1px solid #000;
             box-sizing: border-box;
         }
-        .cell-top-left.bg-faint { background-color: #fce8e6; }
+        .cell-top-left.bg-faint { background-color: #fca5a5; }
         .cell-top-left.bg-survived { background-color: #ffffff; }
 
-        .cell-sprite { width: 26px; height: 26px; object-fit: contain; }
+        .cell-sprite { width: 32px; height: 32px; object-fit: contain; }
 
         .status-badge-sheets {
             width: 100%;
             text-align: center;
-            font-size: 8px;
+            font-size: 9.5px;
             font-weight: bold;
-            padding: 1px 0;
-            border-top: 1px solid #bdc1c6;
+            padding: 2px 0;
+            border-top: 1px solid #000;
         }
-        .status-badge-sheets.faint { background-color: #d93025; color: #ffffff; }
-        .status-badge-sheets.survived { background-color: #ffffff; color: #202124; }
+        .status-badge-sheets.faint { background-color: #ef4444; color: #ffffff; }
+        .status-badge-sheets.survived { background-color: #ffffff; color: #000000; }
 
         .cell-row-kos {
             grid-row: 1 / 2;
@@ -331,8 +313,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 6px;
-            border-bottom: 1px solid #bdc1c6;
+            padding: 0 8px;
+            border-bottom: 1px solid #000;
             font-weight: bold;
             background: #fff;
         }
@@ -341,29 +323,25 @@
             grid-row: 2 / 3;
             grid-column: 2 / 3;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            line-height: 1.15;
-            padding: 0 4px;
-            border-bottom: 1px solid #bdc1c6;
+            padding: 0 8px;
+            border-bottom: 1px solid #000;
+            font-weight: bold;
             background: #fff;
-            font-size: 10px;
-            text-align: center;
         }
 
-        /* Bottom Row: Spanning both columns, perfectly centered horizontally and vertically */
+        /* Bottom Row: Spanning both columns with 2 separate lines for Pokemon and Move */
         .cell-row-cause {
             grid-row: 3 / 4;
             grid-column: 1 / 3;
-            padding: 2px 4px;
-            font-size: 9px;
+            padding: 2px 6px;
+            font-size: 10px;
+            line-height: 1.2;
             text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 2px;
             word-break: break-word;
             overflow: hidden;
             background: #fff;
@@ -380,7 +358,6 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1.2rem;
-            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3);
         }
 
         .player-card-header {
@@ -399,7 +376,7 @@
         }
 
         .pokemon-tile {
-            background-color: #f8f9fa;
+            background-color: var(--bg-color);
             border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 0.5rem;
@@ -412,12 +389,6 @@
             grid-column: 1 / -1;
             text-align: center;
             padding: 2rem;
-        }
-
-        @media (max-width: 1024px) {
-            .sheet-match-inner {
-                min-width: 1350px;
-            }
         }
     </style>
 </head>
@@ -488,7 +459,7 @@
 
         async function tursoQuery(statements) {
             if (typeof TURSO_DB_URL === 'undefined' || typeof TURSO_READONLY_TOKEN === 'undefined' || TURSO_READONLY_TOKEN.includes("YOUR_READ_ONLY_TOKEN")) {
-                document.getElementById('matchGrid').innerHTML = '<div class="status-msg" style="color:#d93025;">Please configure your Turso read-only credentials in config.js.</div>';
+                document.getElementById('matchGrid').innerHTML = '<div class="status-msg" style="color:#ef4444;">Please configure your Turso read-only credentials in config.js.</div>';
                 return null;
             }
 
@@ -677,7 +648,7 @@
                         return `
                             <div class="game-column-header">
                                 <div class="game-summary-header">Game ${gNum}</div>
-                                <div class="game-summary-winner" style="color:#5f6368; font-size:12px;">N/A</div>
+                                <div class="game-summary-winner" style="color:#94a3b8; font-size:12px;">N/A</div>
                             </div>
                         `;
                     }
@@ -694,7 +665,7 @@
                 const p1GameBlocksHTML = [1, 2, 3].map(gNum => {
                     const gameData = games.find(g => Number(g.game_number) === gNum);
                     if (!gameData) {
-                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#5f6368; font-size:12px;">Game Not Played</div>`;
+                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:12px;">Game Not Played</div>`;
                     }
                     const winnerDisplay = getDisplayName(gameData.winner);
                     const p1GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_1);
@@ -714,7 +685,7 @@
                 const p2GameBlocksHTML = [1, 2, 3].map(gNum => {
                     const gameData = games.find(g => Number(g.game_number) === gNum);
                     if (!gameData) {
-                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#5f6368; font-size:12px;">Game Not Played</div>`;
+                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#666; font-size:12px;">Game Not Played</div>`;
                     }
                     const winnerDisplay = getDisplayName(gameData.winner);
                     const p2GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_2);
@@ -733,38 +704,36 @@
 
                 return `
                     <div class="sheet-match-container">
-                        <div class="sheet-match-inner">
-                            <div class="match-top-banner">
-                                Week ${info.week} &mdash; ${info.conference ? 'Conference ' + info.conference : 'Main Conference'}
-                            </div>
+                        <div class="match-top-banner">
+                            Week ${info.week} &mdash; ${info.conference ? 'Conference ' + info.conference : 'Main Conference'}
+                        </div>
 
-                            <!-- Row 1: Score Header (Col 1) + Game Headers (Cols 2-4) -->
-                            <div class="sheet-scoreboard">
-                                <div class="score-header">
-                                    <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
-                                    <span class="vs-divider">VS</span>
-                                    <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
-                                </div>
-                                ${gameHeadersHTML}
+                        <!-- Row 1: Score Header (Col 1) + Game Headers (Cols 2-4) -->
+                        <div class="sheet-scoreboard">
+                            <div class="score-header">
+                                <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
+                                <span class="vs-divider">VS</span>
+                                <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
                             </div>
+                            ${gameHeadersHTML}
+                        </div>
 
-                            <!-- Row 2: Player 1 Roster Card (Col 1) + Player 1 Game Blocks (Cols 2-4) -->
-                            <div class="sheet-scoreboard" style="margin-bottom: 14px;">
-                                <div class="player-roster-card" style="margin-bottom: 0;">
-                                    <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
-                                    <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
-                                </div>
-                                ${p1GameBlocksHTML}
+                        <!-- Row 2: Player 1 Roster Card (Col 1) + Player 1 Game Blocks (Cols 2-4) -->
+                        <div class="sheet-scoreboard" style="margin-bottom: 14px;">
+                            <div class="player-roster-card" style="margin-bottom: 0;">
+                                <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
+                                <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
                             </div>
+                            ${p1GameBlocksHTML}
+                        </div>
 
-                            <!-- Row 3: Player 2 Roster Card (Col 1) + Player 2 Game Blocks (Cols 2-4) -->
-                            <div class="sheet-scoreboard" style="margin-bottom: 0;">
-                                <div class="player-roster-card" style="margin-bottom: 0;">
-                                    <div class="roster-header"><span>Player: ${p2Display}</span> <span>${p2HazardTotal} Hazard Damage</span></div>
-                                    <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
-                                </div>
-                                ${p2GameBlocksHTML}
+                        <!-- Row 3: Player 2 Roster Card (Col 1) + Player 2 Game Blocks (Cols 2-4) -->
+                        <div class="sheet-scoreboard" style="margin-bottom: 0;">
+                            <div class="player-roster-card" style="margin-bottom: 0;">
+                                <div class="roster-header"><span>Player: ${p2Display}</span> <span>${p2HazardTotal} Hazard Damage</span></div>
+                                <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
                             </div>
+                            ${p2GameBlocksHTML}
                         </div>
                     </div>
                 `;
@@ -809,7 +778,8 @@
                         teamKos: 0,
                         totalDmg: 0,
                         takenDmg: 0,
-                        healedDmg: 0
+                        healedDmg: 0,
+                        hitsTaken: 0
                     };
                 }
                 aggregated[s.pokemon].directKos += Number(s.direct_kos || 0);
@@ -818,6 +788,7 @@
                 aggregated[s.pokemon].totalDmg += Number(s.total_damage || 0);
                 aggregated[s.pokemon].takenDmg += Number(s.damage_taken || 0);
                 aggregated[s.pokemon].healedDmg += Number(s.damage_healed || 0);
+                aggregated[s.pokemon].hitsTaken += Number(s.hits_taken || 0);
             });
 
             const mons = Object.values(aggregated).slice(0, 6);
@@ -841,6 +812,7 @@
                         <div class="stat-row"><span>Dealt:</span> <strong>${m.totalDmg}%</strong></div>
                         <div class="stat-row"><span>Taken:</span> <strong>${m.takenDmg}%</strong></div>
                         <div class="stat-row"><span>Healed:</span> <strong>${m.healedDmg}%</strong></div>
+                        <div class="stat-row"><span>Hits Taken:</span> <strong>${m.hitsTaken}</strong></div>
                     </div>
                 `;
             }).join('');
@@ -906,10 +878,10 @@
                             <span>${totalKos}</span>
                         </div>
                         <div class="cell-row-turns">
-                            <strong>Active</strong> ${m.active_turns || 0} Turns
+                            Active ${m.active_turns || 0} Turns
                         </div>
                         <div class="cell-row-cause">
-                            ${isFainted ? `<div><strong>${line1}</strong></div><div>${line2}</div>` : ''}
+                            ${isFainted ? `<strong>${line1}</strong><br>${line2}` : ''}
                         </div>
                     </div>
                 `;
