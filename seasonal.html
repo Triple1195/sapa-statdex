@@ -197,11 +197,11 @@
         .game-summary-header { font-weight: bold; background: #e5e7eb; border-bottom: 1px solid #000; padding: 4px; font-size: 12px; }
         .game-summary-winner { font-weight: bold; font-size: 12px; padding: 3px; }
 
-        /* Exactly matched height for Roster & Game Player Blocks (3 rows * 102px = 306px) */
+        /* Fixed height for Roster & Game Player Blocks */
         .player-roster-card {
             background: #fff;
             border: 2px solid #000;
-            height: 306px;
+            height: 318px;
             display: flex;
             flex-direction: column;
         }
@@ -241,7 +241,7 @@
         .game-player-block {
             background: #fff;
             border: 2px solid #000;
-            height: 306px;
+            height: 318px;
             display: flex;
             flex-direction: column;
         }
@@ -257,25 +257,28 @@
         .status-winner { background-color: #3b82f6; color: white; }
         .status-loser { background-color: #ef4444; color: white; }
 
+        /* Strict 2x3 Grid: 2 columns, 3 equal rows spanning the available block height */
         .game-mon-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(3, 1fr);
             gap: 0;
             background: #000;
             padding: 0;
             flex: 1;
-            align-content: start;
+            align-stretch: stretch;
         }
 
-        /* Compact, perfectly proportioned Game Mon Cell Structure (102px total height) */
+        /* Game Mon Cell Structure filling its exact grid cell */
         .game-mon-cell {
             background: #fff;
             border: 1px solid #000;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            grid-template-rows: 25px 25px 52px;
+            grid-template-rows: 1fr 1fr 1.2fr;
             box-sizing: border-box;
-            height: 102px;
+            height: 100%;
+            width: 100%;
             font-size: 11px;
         }
 
@@ -294,12 +297,12 @@
         .cell-top-left.bg-faint { background-color: #fca5a5; }
         .cell-top-left.bg-survived { background-color: #ffffff; }
 
-        .cell-sprite { width: 28px; height: 28px; object-fit: contain; }
+        .cell-sprite { width: 26px; height: 26px; object-fit: contain; }
 
         .status-badge-sheets {
             width: 100%;
             text-align: center;
-            font-size: 8.5px;
+            font-size: 8px;
             font-weight: bold;
             padding: 1px 0;
             border-top: 1px solid #000;
@@ -313,7 +316,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 8px;
+            padding: 0 6px;
             border-bottom: 1px solid #000;
             font-weight: bold;
             background: #fff;
@@ -324,18 +327,18 @@
             grid-column: 2 / 3;
             display: flex;
             align-items: center;
-            padding: 0 8px;
+            padding: 0 6px;
             border-bottom: 1px solid #000;
             font-weight: bold;
             background: #fff;
         }
 
-        /* Bottom Row: Shorter height with controlled gap between lines, perfectly centered */
+        /* Bottom Row: Spanning both columns, perfectly centered horizontally and vertically */
         .cell-row-cause {
             grid-row: 3 / 4;
             grid-column: 1 / 3;
             padding: 2px 4px;
-            font-size: 9.5px;
+            font-size: 9px;
             text-align: center;
             display: flex;
             flex-direction: column;
