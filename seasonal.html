@@ -27,9 +27,41 @@
             color: var(--text-main);
             margin: 0;
             padding: 0;
+            position: relative;
+        }
+
+        /* Background Sheet Cell Headers (A, B, C... and 1, 2, 3...) fixed to the grid */
+        .sheet-bg-headers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 10px;
+            color: #9aa0a6;
+            font-weight: 600;
+        }
+
+        .bg-col-label {
+            position: absolute;
+            top: 4px;
+            width: 100px;
+            text-align: center;
+        }
+
+        .bg-row-label {
+            position: absolute;
+            left: 6px;
+            height: 24px;
+            line-height: 24px;
         }
 
         header {
+            position: relative;
+            z-index: 10;
             background-color: var(--card-bg);
             border-bottom: 1px solid var(--border-color);
             padding: 1rem 2rem;
@@ -52,6 +84,8 @@
         }
 
         .container {
+            position: relative;
+            z-index: 10;
             max-width: 1600px;
             margin: 1.5rem auto;
             padding: 0 1rem;
@@ -119,75 +153,19 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Spreadsheet-Style Grid with Row/Column Header Wrappers */
-        .sheet-frame {
-            background-color: #ffffff;
-            border: 1px solid var(--sheets-border);
-            margin-bottom: 2rem;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3);
-            overflow: hidden;
-        }
-
-        .sheets-col-header-row {
-            display: flex;
-            background-color: var(--sheets-header-bg);
-            border-bottom: 1px solid var(--sheets-border);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 11px;
-            color: #5f6368;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .sheets-corner-cell {
-            width: 40px;
-            min-width: 40px;
-            border-right: 1px solid var(--sheets-border);
-            background-color: #eaeeef;
-        }
-
-        .sheets-col-letter {
-            flex: 1;
-            padding: 4px 0;
-            border-right: 1px solid var(--sheets-border);
-        }
-
-        .sheets-body-row {
-            display: flex;
-        }
-
-        .sheets-row-headers {
-            width: 40px;
-            min-width: 40px;
-            background-color: var(--sheets-header-bg);
-            border-right: 1px solid var(--sheets-border);
-            display: flex;
-            flex-direction: column;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 11px;
-            color: #5f6368;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .sheets-row-num {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-bottom: 1px solid var(--sheets-border);
-        }
-
+        /* Clean Spreadsheet-Style Match Container without inner headers */
         .sheet-match-container {
-            flex: 1;
             background-color: #f1f3f4;
+            border: 1px solid #bdc1c6;
             padding: 14px;
             color: #000;
             font-family: 'Segoe UI', Arial, sans-serif;
             font-size: 12.5px;
+            margin-bottom: 2rem;
+            border-radius: 4px;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+            box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3);
         }
 
         .sheet-match-inner {
@@ -480,6 +458,37 @@
     </style>
 </head>
 <body>
+
+    <!-- Background Grid Cell Headers -->
+    <div class="sheet-bg-headers">
+        <div class="bg-col-label" style="left: 0px;">A</div>
+        <div class="bg-col-label" style="left: 100px;">B</div>
+        <div class="bg-col-label" style="left: 200px;">C</div>
+        <div class="bg-col-label" style="left: 300px;">D</div>
+        <div class="bg-col-label" style="left: 400px;">E</div>
+        <div class="bg-col-label" style="left: 500px;">F</div>
+        <div class="bg-col-label" style="left: 600px;">G</div>
+        <div class="bg-col-label" style="left: 700px;">H</div>
+        <div class="bg-col-label" style="left: 800px;">I</div>
+        <div class="bg-col-label" style="left: 900px;">J</div>
+        <div class="bg-col-label" style="left: 1000px;">K</div>
+        <div class="bg-col-label" style="left: 1100px;">L</div>
+        <div class="bg-col-label" style="left: 1200px;">M</div>
+        <div class="bg-col-label" style="left: 1300px;">N</div>
+        <div class="bg-col-label" style="left: 1400px;">O</div>
+        <div class="bg-col-label" style="left: 1500px;">P</div>
+
+        <div class="bg-row-label" style="top: 24px;">1</div>
+        <div class="bg-row-label" style="top: 48px;">2</div>
+        <div class="bg-row-label" style="top: 72px;">3</div>
+        <div class="bg-row-label" style="top: 96px;">4</div>
+        <div class="bg-row-label" style="top: 120px;">5</div>
+        <div class="bg-row-label" style="top: 144px;">6</div>
+        <div class="bg-row-label" style="top: 168px;">7</div>
+        <div class="bg-row-label" style="top: 192px;">8</div>
+        <div class="bg-row-label" style="top: 216px;">9</div>
+        <div class="bg-row-label" style="top: 240px;">10</div>
+    </div>
 
     <header>
         <h1>Seasonal Analytics Hub</h1>
@@ -790,54 +799,38 @@
                 }).join('');
 
                 return `
-                    <div class="sheet-frame">
-                        <div class="sheets-col-header-row">
-                            <div class="sheets-corner-cell"></div>
-                            <div class="sheets-col-letter">A</div>
-                            <div class="sheets-col-letter">B</div>
-                            <div class="sheets-col-letter">C</div>
-                            <div class="sheets-col-letter">D</div>
-                        </div>
-                        <div class="sheets-body-row">
-                            <div class="sheets-row-headers">
-                                <div class="sheets-row-num">1</div>
-                                <div class="sheets-row-num">2</div>
-                                <div class="sheets-row-num">3</div>
+                    <div class="sheet-match-container">
+                        <div class="sheet-match-inner">
+                            <div class="match-top-banner">
+                                Week ${info.week} &mdash; ${info.conference ? 'Conference ' + info.conference : 'Main Conference'}
                             </div>
-                            <div class="sheet-match-container">
-                                <div class="sheet-match-inner">
-                                    <div class="match-top-banner">
-                                        Week ${info.week} &mdash; ${info.conference ? 'Conference ' + info.conference : 'Main Conference'}
-                                    </div>
 
-                                    <!-- Row 1: Score Header (Col 1) + Game Headers (Cols 2-4) -->
-                                    <div class="sheet-scoreboard">
-                                        <div class="score-header">
-                                            <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
-                                            <span class="vs-divider">VS</span>
-                                            <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
-                                        </div>
-                                        ${gameHeadersHTML}
-                                    </div>
-
-                                    <!-- Row 2: Player 1 Roster Card (Col 1) + Player 1 Game Blocks (Cols 2-4) -->
-                                    <div class="sheet-scoreboard" style="margin-bottom: 14px;">
-                                        <div class="player-roster-card" style="margin-bottom: 0;">
-                                            <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
-                                            <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
-                                        </div>
-                                        ${p1GameBlocksHTML}
-                                    </div>
-
-                                    <!-- Row 3: Player 2 Roster Card (Col 1) + Player 2 Game Blocks (Cols 2-4) -->
-                                    <div class="sheet-scoreboard" style="margin-bottom: 0;">
-                                        <div class="player-roster-card" style="margin-bottom: 0;">
-                                            <div class="roster-header"><span>Player: ${p2Display}</span> <span>${p2HazardTotal} Hazard Damage</span></div>
-                                            <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
-                                        </div>
-                                        ${p2GameBlocksHTML}
-                                    </div>
+                            <!-- Row 1: Score Header (Col 1) + Game Headers (Cols 2-4) -->
+                            <div class="sheet-scoreboard">
+                                <div class="score-header">
+                                    <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
+                                    <span class="vs-divider">VS</span>
+                                    <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
                                 </div>
+                                ${gameHeadersHTML}
+                            </div>
+
+                            <!-- Row 2: Player 1 Roster Card (Col 1) + Player 1 Game Blocks (Cols 2-4) -->
+                            <div class="sheet-scoreboard" style="margin-bottom: 14px;">
+                                <div class="player-roster-card" style="margin-bottom: 0;">
+                                    <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
+                                    <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
+                                </div>
+                                ${p1GameBlocksHTML}
+                            </div>
+
+                            <!-- Row 3: Player 2 Roster Card (Col 1) + Player 2 Game Blocks (Cols 2-4) -->
+                            <div class="sheet-scoreboard" style="margin-bottom: 0;">
+                                <div class="player-roster-card" style="margin-bottom: 0;">
+                                    <div class="roster-header"><span>Player: ${p2Display}</span> <span>${p2HazardTotal} Hazard Damage</span></div>
+                                    <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
+                                </div>
+                                ${p2GameBlocksHTML}
                             </div>
                         </div>
                     </div>
