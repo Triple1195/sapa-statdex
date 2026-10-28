@@ -427,7 +427,7 @@
 
         .pcard-top {
             display: grid;
-            grid-template-columns: 80px 1fr;
+            grid-template-columns: 95px 1fr;
             border-bottom: 1px solid #bdc1c6;
         }
 
@@ -439,6 +439,7 @@
             padding: 4px;
             border-right: 1px solid #bdc1c6;
             background: #fafafa;
+            text-align: center;
         }
 
         .pcard-sprite {
@@ -493,7 +494,7 @@
             </div>
 
             <div class="filter-group">
-                <label for="weekSelect">Filter Week:</label>
+                <labelfor="weekSelect">Filter Week:</label>
                 <select id="weekSelect" onchange="renderMatchesSheetUI()">
                     <option value="all">All Weeks</option>
                 </select>
@@ -1203,18 +1204,18 @@
                                 <div class="pcard-top">
                                     <div class="pcard-img-box">
                                         <img src="${spriteUrl}" class="pcard-sprite" onerror="handleImageError(this)" />
-                                        <span style="font-size:10px; font-weight:bold; margin-top:2px;">#${idx + 1}</span>
+                                        <span style="font-size:10px; font-weight:bold; margin-top:2px; word-break:break-word;">${m.species}</span>
                                     </div>
                                     <table class="pcard-info-table">
-                                        <tr><td>Pokemon:</td><td><strong>1</strong></td><td>Total</td><td>Avg</td></tr>
-                                        <tr><td>Direct KOs:</td><td>${m.directKo}</td><td>-</td><td>${directAvg}</td></tr>
-                                        <tr><td>Indirect KOs:</td><td>${m.indirectKo}</td><td>-</td><td>${indirectAvg}</td></tr>
-                                        <tr><td>Damage Taken:</td><td>${m.damageTaken}</td><td>-</td><td>${takenAvg}</td></tr>
-                                        <tr><td>Hits Taken:</td><td>${m.hitsTaken}</td><td>-</td><td>${hitsAvg}</td></tr>
-                                        <tr><td>Damage Healed:</td><td>${m.damageHeal}</td><td>-</td><td>${healedAvg}</td></tr>
-                                        <tr><td>Total Dealt:</td><td>${m.damageDealt}</td><td>-</td><td>${dealtAvg}</td></tr>
-                                        <tr><td>Direct Dealt:</td><td>${m.damageDirect}</td><td>-</td><td>-</td></tr>
-                                        <tr><td>Indirect Dealt:</td><td>${m.damageIndirect}</td><td>-</td><td>${dealtIndAvg}</td></tr>
+                                        <tr><td colspan="2"></td><td>Total</td><td>Avg</td></tr>
+                                        <tr><td colspan="2">Direct KOs:</td><td>${m.directKo}</td><td>${directAvg}</td></tr>
+                                        <tr><td colspan="2">Indirect KOs:</td><td>${m.indirectKo}</td><td>${indirectAvg}</td></tr>
+                                        <tr><td colspan="2">Damage Taken:</td><td>${m.damageTaken}</td><td>${takenAvg}</td></tr>
+                                        <tr><td colspan="2">Hits Taken:</td><td>${m.hitsTaken}</td><td>${hitsAvg}</td></tr>
+                                        <tr><td colspan="2">Damage Healed:</td><td>${m.damageHeal}</td><td>${healedAvg}</td></tr>
+                                        <tr><td colspan="2">Total Dealt:</td><td>${m.damageDealt}</td><td>${dealtAvg}</td></tr>
+                                        <tr><td colspan="2">Direct Dealt:</td><td>${m.damageDirect}</td><td>-</td></tr>
+                                        <tr><td colspan="2">Indirect Dealt:</td><td>${m.damageIndirect}</td><td>${dealtIndAvg}</td></tr>
                                     </table>
                                 </div>
                                 <table class="pcard-info-table" style="font-size:11px;">
