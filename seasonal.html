@@ -494,7 +494,7 @@
             </div>
 
             <div class="filter-group">
-                <label for="weekSelect">Filter Week:</label>
+                <labelfor="weekSelect">Filter Week:</label>
                 <select id="weekSelect" onchange="renderMatchesSheetUI()">
                     <option value="all">All Weeks</option>
                 </select>
@@ -1114,7 +1114,7 @@
                 return;
             }
 
-            // 4. Sort players within each conference by record
+            // 4. Sort players within each conference by record (Set Wins desc, then Game Wins desc)
             confKeys.forEach(conf => {
                 conferenceMap[conf].sort((a, b) => {
                     const recA = playerRecords[a] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
@@ -1219,11 +1219,11 @@
                                     </table>
                                 </div>
                                 <table class="pcard-info-table" style="font-size:11px;">
-                                    <tr><td>Battles:</td><td colspan="3" style="text-align:right;"><strong>${m.timesBrought}</strong></td></tr>
-                                    <tr><td>Active Battles:</td><td colspan="3" style="text-align:right;">${m.battlesActive} Battles</td></tr>
-                                    <tr><td>Survived Battles:</td><td colspan="3" style="text-align:right;">${m.survived} Battles</td></tr>
-                                    <tr><td>Won Battles:</td><td colspan="3" style="text-align:right;">${m.battleWon} Battles</td></tr>
-                                    <tr><td>Active Turns:</td><td colspan="3" style="text-align:right;">${m.activeTurns} Turns</td></tr>
+                                    <tr><td>Battles:</td><td><strong>${m.timesBrought}</strong></td></tr>
+                                    <tr><td>Active Battles:</td><td>${m.battlesActive} Battles</td></tr>
+                                    <tr><td>Survived Battles:</td><td>${m.survived} Battles</td></tr>
+                                    <tr><td>Won Battles:</td><td>${m.battleWon} Battles</td></tr>
+                                    <tr><td>Active Turns:</td><td>${m.activeTurns} Turns</td></tr>
                                 </table>
                             </div>
                         `;
