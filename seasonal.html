@@ -535,8 +535,8 @@
     <script>
         let rawMatches = [];
         let rawStats = [];
-        let rawDraftCosts = {}; // Map: player -> { pokemon -> cost }
-        let totalSeasonPoints = 100; // Fallback total draft points
+        let rawDraftCosts = {}; // Map: pokemon_name -> cost
+        let totalSeasonBudget = 120; // Fallback total draft budget
         
         window.playerAliasesMap = {}; 
         window.displayToTagMap = {};   
@@ -646,11 +646,11 @@
                         args: [season]
                     },
                     {
-                        sql: `SELECT player, pokemon, cost FROM pokemon_draft_costs WHERE season = ?`,
+                        sql: `SELECT pokemon_name, draft_cost FROM pokemon_draft_costs WHERE season = ?`,
                         args: [season]
                     },
                     {
-                        sql: `SELECT total_points FROM seasons WHERE season = ?`,
+                        sql: `SELECT total_draft_budget FROM seasons WHERE season = ?`,
                         args: [season]
                     }
                 ]);
@@ -663,14 +663,12 @@
                 rawDraftCosts = {};
                 if (results[2]) {
                     results[2].forEach(row => {
-                        const pName = getDisplayName(row.player);
-                        if (!rawDraftCosts[pName]) rawDraftCosts[pName] = {};
-                        rawDraftCosts[pName][row.pokemon] = Number(row.cost || 0);
+                        rawDraftCosts[row.pokemon_name] = Number(row.draft_cost || 0);
                     });
                 }
 
-                if (results[3] && results[3][0] && results[3][0].total_points) {
-                    totalSeasonPoints = Number(results[3][0].total_points);
+                if (results[3] && results[3][0] && results[3][0].total_draft_budget) {
+                    totalSeasonBudget = Number(results[3][0].total_draft_budget);
                 }
 
                 const weeks = [...new Set(rawMatches.map(m => m.week))].sort((a, b) => a - b);
@@ -1004,7 +1002,7 @@
             rawStats.forEach(st => {
                 const dispName = getDisplayName(st.player);
                 if (!playerMap[dispName]) {
-                    playerMap[dispName] = { pokemon: {}, totalWins: 0, totalLosses: 0 };
+                    playerMap[dispName] = { pokemon: {} };
                 }
                 if (!playerMap[dispName].pokemon[st.pokemon]) {
                     playerMap[dispName].pokemon[st.pokemon] = {
@@ -1027,7 +1025,7 @@
                 }
                 const pObj = playerMap[dispName].pokemon[st.pokemon];
                 pObj.timesBrought += 1;
-                pObj.battlesActive += 1; // Or based on distinct game participation if needed
+                pObj.battlesActive += 1;
                 pObj.directKo += Number(st.direct_kos || 0);
                 pObj.indirectKo += Number(st.indirect_kos || 0);
                 pObj.damageDealt += Number(st.total_damage || 0);
@@ -1069,7 +1067,7 @@
                     battleWon: pokemons.reduce((acc, m) => acc + m.battleWon, 0) || 1
                 };
 
-                // Calculate TVR (average percentage share across stats) and PVR for each Pokémon
+                // Calculate TVR, PVR, and O/U for each Pokémon using global draft costs
                 pokemons.forEach(m => {
                     const shares = [
                         m.timesBrought / totals.timesBrought,
@@ -1088,8 +1086,8 @@
                     ];
                     m.tvr = (shares.reduce((a, b) => a + b, 0) / shares.length) * 100;
 
-                    const cost = (rawDraftCosts[player] && rawDraftCosts[player][m.species]) ? rawDraftCosts[player][m.species] : 0;
-                    m.pvr = (cost / totalSeasonPoints) * 100;
+                    const cost = rawDraftCosts[m.species] || 0;
+                    m.pvr = (cost / totalSeasonBudget) * 100;
                     m.ou = m.pvr > 0 ? m.tvr / m.pvr : 0;
                 });
 
@@ -1156,7 +1154,6 @@
                             <span>Season Standings</span>
                         </div>
                         <div class="playerdex-grid">
-                            <!-- Sidebar with Team Overview & TVR/PVR Table -->
                             <div class="playerdex-sidebar">
                                 <div class="playerdex-sidebar-header">${player}</div>
                                 <div style="padding:10px; text-align:center; background:#fafafa; border-bottom:1px solid #bdc1c6;">
@@ -1181,7 +1178,6 @@
                                 </div>
                             </div>
 
-                            <!-- Grid of Pokémon cards matching spreadsheet layout -->
                             <div style="grid-column: span 3; display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
                                 ${pokemonCardsHTML}
                             </div>
