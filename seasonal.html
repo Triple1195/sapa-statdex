@@ -12,11 +12,16 @@
             --text-main: #202124;
             --text-muted: #5f6368;
             --border-color: #dadce0;
+            --grid-line: #e0e0e0;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+            background-size: 100px 24px; /* Matches standard spreadsheet column width and row height */
             color: var(--text-main);
             margin: 0;
             padding: 0;
@@ -29,6 +34,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 1px 3px rgba(60,64,67,0.15);
         }
 
         header h1 {
@@ -87,6 +93,9 @@
             display: flex;
             border-bottom: 2px solid var(--border-color);
             margin-bottom: 1.5rem;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(2px);
+            border-radius: 4px 4px 0 0;
         }
 
         .tab-button {
