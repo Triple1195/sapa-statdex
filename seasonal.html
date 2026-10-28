@@ -213,11 +213,11 @@
         .game-summary-header { font-weight: bold; background: #f1f3f4; border-bottom: 1px solid #bdc1c6; padding: 4px; font-size: 12px; }
         .game-summary-winner { font-weight: bold; font-size: 12px; padding: 3px; }
 
-        /* Fixed height for Roster & Game Player Blocks */
+        /* Expanded height for Roster Card to accommodate Hits Taken row */
         .player-roster-card {
             background: #fff;
             border: 1px solid #bdc1c6;
-            height: 318px;
+            height: 350px;
             display: flex;
             flex-direction: column;
         }
@@ -257,7 +257,7 @@
         .game-player-block {
             background: #fff;
             border: 1px solid #bdc1c6;
-            height: 318px;
+            height: 350px;
             display: flex;
             flex-direction: column;
         }
@@ -809,7 +809,8 @@
                         teamKos: 0,
                         totalDmg: 0,
                         takenDmg: 0,
-                        healedDmg: 0
+                        healedDmg: 0,
+                        hitsTaken: 0
                     };
                 }
                 aggregated[s.pokemon].directKos += Number(s.direct_kos || 0);
@@ -818,6 +819,7 @@
                 aggregated[s.pokemon].totalDmg += Number(s.total_damage || 0);
                 aggregated[s.pokemon].takenDmg += Number(s.damage_taken || 0);
                 aggregated[s.pokemon].healedDmg += Number(s.damage_healed || 0);
+                aggregated[s.pokemon].hitsTaken += Number(s.hits_taken || 0);
             });
 
             const mons = Object.values(aggregated).slice(0, 6);
@@ -841,6 +843,7 @@
                         <div class="stat-row"><span>Dealt:</span> <strong>${m.totalDmg}%</strong></div>
                         <div class="stat-row"><span>Taken:</span> <strong>${m.takenDmg}%</strong></div>
                         <div class="stat-row"><span>Healed:</span> <strong>${m.healedDmg}%</strong></div>
+                        <div class="stat-row"><span>Hits Taken:</span> <strong>${m.hitsTaken}</strong></div>
                     </div>
                 `;
             }).join('');
@@ -965,6 +968,7 @@
         }
 
         function switchTab(tabId) {
+            document.querySelectorAll('.tab-button').format ? '' : '';
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
