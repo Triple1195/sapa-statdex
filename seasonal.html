@@ -19,27 +19,37 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
-            color: var(--text-main);
             margin: 0;
             padding: 0;
         }
 
-        /* Full Google Sheets Background Frame */
+        /* Full Google Sheets Background Grid Frame with dynamic row heights */
         .sheets-app-container {
             display: grid;
-            grid-template-columns: 48px 1fr;
-            grid-template-rows: 28px 1fr;
+            grid-template-columns: 48px repeat(20, 100px);
+            grid-auto-rows: 24px;
             min-height: 100vh;
-            background-color: #ffffff;
+            background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(to right, #e0e0e0 1px, transparent 1px),
+                linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
+            background-size: 100px 24px;
         }
 
         .sheets-top-corner {
+            grid-column: 1 / 2;
+            grid-row: 1 / 2;
             background-color: var(--sheets-header-bg);
             border-right: 1px solid var(--sheets-border);
             border-bottom: 1px solid var(--sheets-border);
+            position: sticky;
+            top: 0;
+            z-index: 30;
         }
 
         .sheets-col-headers {
+            grid-column: 2 / -1;
+            grid-row: 1 / 2;
             display: flex;
             background-color: var(--sheets-header-bg);
             border-bottom: 1px solid var(--sheets-border);
@@ -48,16 +58,21 @@
             color: #5f6368;
             font-weight: bold;
             text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 20;
         }
 
         .sheets-col-header-cell {
-            flex: 1;
             min-width: 100px;
-            padding: 6px 0;
+            width: 100px;
+            padding: 4px 0;
             border-right: 1px solid var(--sheets-border);
         }
 
         .sheets-row-headers {
+            grid-column: 1 / 2;
+            grid-row: 2 / -1;
             background-color: var(--sheets-header-bg);
             border-right: 1px solid var(--sheets-border);
             display: flex;
@@ -71,18 +86,15 @@
 
         .sheets-row-header-cell {
             height: 24px;
+            min-height: 24px;
             line-height: 24px;
             border-bottom: 1px solid var(--sheets-border);
         }
 
         .sheets-workspace {
-            background-color: var(--bg-color);
-            background-image: 
-                linear-gradient(to right, #e0e0e0 1px, transparent 1px),
-                linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
-            background-size: 100px 24px;
+            grid-column: 2 / -1;
+            grid-row: 2 / -1;
             padding: 1.5rem;
-            overflow: auto;
         }
 
         header {
@@ -486,7 +498,7 @@
         <!-- Top-Left Corner Cell -->
         <div class="sheets-top-corner"></div>
 
-        <!-- Column Headers (A, B, C...) -->
+        <!-- Column Headers (A, B, C...) perfectly aligned with 100px grid columns -->
         <div class="sheets-col-headers">
             <div class="sheets-col-header-cell">A</div>
             <div class="sheets-col-header-cell">B</div>
@@ -498,30 +510,21 @@
             <div class="sheets-col-header-cell">H</div>
             <div class="sheets-col-header-cell">I</div>
             <div class="sheets-col-header-cell">J</div>
+            <div class="sheets-col-header-cell">K</div>
+            <div class="sheets-col-header-cell">L</div>
+            <div class="sheets-col-header-cell">M</div>
+            <div class="sheets-col-header-cell">N</div>
+            <div class="sheets-col-header-cell">O</div>
+            <div class="sheets-col-header-cell">P</div>
+            <div class="sheets-col-header-cell">Q</div>
+            <div class="sheets-col-header-cell">R</div>
+            <div class="sheets-col-header-cell">S</div>
+            <div class="sheets-col-header-cell">T</div>
         </div>
 
-        <!-- Row Headers (1, 2, 3...) -->
-        <div class="sheets-row-headers">
-            <div class="sheets-row-header-cell">1</div>
-            <div class="sheets-row-header-cell">2</div>
-            <div class="sheets-row-header-cell">3</div>
-            <div class="sheets-row-header-cell">4</div>
-            <div class="sheets-row-header-cell">5</div>
-            <div class="sheets-row-header-cell">6</div>
-            <div class="sheets-row-header-cell">7</div>
-            <div class="sheets-row-header-cell">8</div>
-            <div class="sheets-row-header-cell">9</div>
-            <div class="sheets-row-header-cell">10</div>
-            <div class="sheets-row-header-cell">11</div>
-            <div class="sheets-row-header-cell">12</div>
-            <div class="sheets-row-header-cell">13</div>
-            <div class="sheets-row-header-cell">14</div>
-            <div class="sheets-row-header-cell">15</div>
-            <div class="sheets-row-header-cell">16</div>
-            <div class="sheets-row-header-cell">17</div>
-            <div class="sheets-row-header-cell">18</div>
-            <div class="sheets-row-header-cell">19</div>
-            <div class="sheets-row-header-cell">20</div>
+        <!-- Row Headers (1, 2, 3...) generated dynamically to cover the page length -->
+        <div class="sheets-row-headers" id="rowHeaders">
+            <!-- Populated via script to span the entire document height -->
         </div>
 
         <!-- Main Workspace Area -->
@@ -589,7 +592,20 @@
         window.playerAliasesMap = {}; 
         window.displayToTagMap = {};   
 
-        window.addEventListener('DOMContentLoaded', () => { initApp(); });
+        window.addEventListener('DOMContentLoaded', () => { 
+            generateRowHeaders();
+            initApp(); 
+        });
+
+        // Automatically fill row headers to match page length
+        function generateRowHeaders() {
+            const rowHeaderContainer = document.getElementById('rowHeaders');
+            let html = '';
+            for (let i = 1; i <= 250; i++) {
+                html += `<div class="sheets-row-header-cell">${i}</div>`;
+            }
+            rowHeaderContainer.innerHTML = html;
+        }
 
         async function tursoQuery(statements) {
             if (typeof TURSO_DB_URL === 'undefined' || typeof TURSO_READONLY_TOKEN === 'undefined' || TURSO_READONLY_TOKEN.includes("YOUR_READ_ONLY_TOKEN")) {
