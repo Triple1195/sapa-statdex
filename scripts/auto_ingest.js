@@ -90,6 +90,14 @@ async function runIngest() {
     const startDate = new Date(startDateStr);
     const seasonStartTime = Math.floor(startDate.getTime() / 1000);
     
+    // Parse playoffs start date to cut off regular season imports cleanly
+    const playoffDateStr = activeSeason.playoffs_start_date;
+    let playoffEndTime = Infinity; 
+    if (playoffDateStr) {
+      const playoffDate = new Date(playoffDateStr);
+      playoffEndTime = Math.floor(playoffDate.getTime() / 1000);
+    }
+    
     const maxWeekRes = await db.execute({
       sql: "SELECT MAX(week) as max_week FROM matches WHERE season = ?",
       args: [seasonNum]
@@ -137,9 +145,10 @@ async function runIngest() {
             continue;
           }
 
+          // Filter replays to only include matches within the regular season window
           const filteredJson = json.filter(battle => {
             const t = Number(battle.uploadtime);
-            return t >= seasonStartTime;
+            return t >= seasonStartTime && t < playoffEndTime;
           });
           filteredJson.sort((a, b) => Number(a.uploadtime) - Number(b.uploadtime));
 
