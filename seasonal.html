@@ -535,8 +535,8 @@
     <script>
         let rawMatches = [];
         let rawStats = [];
-        let rawDraftCosts = {}; // Map: pokemon_name -> cost
-        let totalSeasonBudget = 120; // Fallback total draft budget
+        let rawDraftCosts = {}; 
+        let totalSeasonBudget = 120; 
         
         window.playerAliasesMap = {}; 
         window.displayToTagMap = {};   
@@ -992,12 +992,64 @@
             }).join('');
         }
 
-        // Render Full Playerdex View matching your spreadsheet layout
+        // Render Full Playerdex View with Dynamic Records
         function renderPlayerdex() {
             const playerFilter = document.getElementById('playerSearch').value.toLowerCase();
             const grid = document.getElementById('playerdexGrid');
 
-            // Group stats by player
+            // 1. Calculate Player Set & Game Records from rawMatches
+            const playerRecords = {};
+            const matchGroups = {};
+            rawMatches.forEach(m => {
+                if (!matchGroups[m.match_id]) {
+                    matchGroups[m.match_id] = { info: m, games: [] };
+                }
+                if (m.game_number) {
+                    matchGroups[m.match_id].games.push(m);
+                }
+            });
+
+            Object.values(matchGroups).forEach(matchObj => {
+                const info = matchObj.info;
+                const games = matchObj.games;
+                if (!info.player_1 || !info.player_2) return;
+
+                const p1 = getDisplayName(info.player_1);
+                const p2 = getDisplayName(info.player_2);
+
+                if (!playerRecords[p1]) playerRecords[p1] = { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
+                if (!playerRecords[p2]) playerRecords[p2] = { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
+
+                let p1GameWins = 0;
+                let p2GameWins = 0;
+
+                games.forEach(g => {
+                    const winner = getDisplayName(g.winner);
+                    if (winner) {
+                        if (winner.toLowerCase() === p1.toLowerCase()) {
+                            p1GameWins++;
+                            playerRecords[p1].gameWins++;
+                            playerRecords[p2].gameLosses++;
+                        } else if (winner.toLowerCase() === p2.toLowerCase()) {
+                            p2GameWins++;
+                            playerRecords[p2].gameWins++;
+                            playerRecords[p1].gameLosses++;
+                        }
+                    }
+                });
+
+                if (games.length > 0) {
+                    if (p1GameWins > p2GameWins) {
+                        playerRecords[p1].setWins++;
+                        playerRecords[p2].setLosses++;
+                    } else if (p2GameWins > p1GameWins) {
+                        playerRecords[p2].setWins++;
+                        playerRecords[p1].setLosses++;
+                    }
+                }
+            });
+
+            // 2. Group stats by player
             const playerMap = {};
             rawStats.forEach(st => {
                 const dispName = getDisplayName(st.player);
@@ -1049,6 +1101,7 @@
             grid.innerHTML = playerNames.map(player => {
                 const playerData = playerMap[player];
                 const pokemons = Object.values(playerData.pokemon);
+                const rec = playerRecords[player] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
 
                 // Compute team totals for percentage share calculations
                 const totals = {
@@ -1067,7 +1120,7 @@
                     battleWon: pokemons.reduce((acc, m) => acc + m.battleWon, 0) || 1
                 };
 
-                // Calculate TVR, PVR, and O/U for each Pokémon using global draft costs
+                // Calculate TVR, PVR, and O/U for each Pokémon
                 pokemons.forEach(m => {
                     const shares = [
                         m.timesBrought / totals.timesBrought,
@@ -1157,7 +1210,7 @@
                             <div class="playerdex-sidebar">
                                 <div class="playerdex-sidebar-header">${player}</div>
                                 <div style="padding:10px; text-align:center; background:#fafafa; border-bottom:1px solid #bdc1c6;">
-                                    <div style="font-weight:bold; font-size:14px;">Record: 2-8 (7-16)</div>
+                                    <div style="font-weight:bold; font-size:14px;">Record: ${rec.setWins}-${rec.setLosses} (${rec.gameWins}-${rec.gameLosses})</div>
                                 </div>
                                 <div style="background:#202124; color:#fff; padding:6px; text-align:center; font-weight:bold; font-size:12px;">Team Value Ratio</div>
                                 <table class="playerdex-summary-table">
