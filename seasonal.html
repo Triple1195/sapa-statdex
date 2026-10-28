@@ -12,107 +12,35 @@
             --text-main: #202124;
             --text-muted: #5f6368;
             --border-color: #dadce0;
-            --sheets-header-bg: #f1f3f4;
-            --sheets-border: #c0c0c0;
+            --grid-line: #e0e0e0;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+            background-size: 100px 24px; /* Matches standard spreadsheet column width and row height */
+            color: var(--text-main);
             margin: 0;
             padding: 0;
         }
 
-        /* Full Google Sheets Background Grid Frame with dynamic row heights */
-        .sheets-app-container {
-            display: grid;
-            grid-template-columns: 48px repeat(20, 100px);
-            grid-auto-rows: 24px;
-            min-height: 100vh;
-            background-color: var(--bg-color);
-            background-image: 
-                linear-gradient(to right, #e0e0e0 1px, transparent 1px),
-                linear-gradient(to bottom, #e0e0e0 1px, transparent 1px);
-            background-size: 100px 24px;
-        }
-
-        .sheets-top-corner {
-            grid-column: 1 / 2;
-            grid-row: 1 / 2;
-            background-color: var(--sheets-header-bg);
-            border-right: 1px solid var(--sheets-border);
-            border-bottom: 1px solid var(--sheets-border);
-            position: sticky;
-            top: 0;
-            z-index: 30;
-        }
-
-        .sheets-col-headers {
-            grid-column: 2 / -1;
-            grid-row: 1 / 2;
-            display: flex;
-            background-color: var(--sheets-header-bg);
-            border-bottom: 1px solid var(--sheets-border);
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 11px;
-            color: #5f6368;
-            font-weight: bold;
-            text-align: center;
-            position: sticky;
-            top: 0;
-            z-index: 20;
-        }
-
-        .sheets-col-header-cell {
-            min-width: 100px;
-            width: 100px;
-            padding: 4px 0;
-            border-right: 1px solid var(--sheets-border);
-        }
-
-        .sheets-row-headers {
-            grid-column: 1 / 2;
-            grid-row: 2 / -1;
-            background-color: var(--sheets-header-bg);
-            border-right: 1px solid var(--sheets-border);
-            display: flex;
-            flex-direction: column;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 11px;
-            color: #5f6368;
-            font-weight: bold;
-            text-align: center;
-        }
-
-        .sheets-row-header-cell {
-            height: 24px;
-            min-height: 24px;
-            line-height: 24px;
-            border-bottom: 1px solid var(--sheets-border);
-        }
-
-        .sheets-workspace {
-            grid-column: 2 / -1;
-            grid-row: 2 / -1;
-            padding: 1.5rem;
-        }
-
         header {
             background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border-bottom: 1px solid var(--border-color);
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 1px 3px rgba(60,64,67,0.15);
-            margin-bottom: 1.5rem;
         }
 
         header h1 {
             margin: 0;
             font-size: 1.5rem;
-            color: #188038;
+            color: #188038; /* Google Sheets green accent */
         }
 
         .nav-back {
@@ -123,7 +51,8 @@
 
         .container {
             max-width: 1600px;
-            margin: 0 auto;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
         }
 
         .filter-bar {
@@ -188,7 +117,7 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        /* Spreadsheet-Style Match Container */
+        /* Spreadsheet-Style Grid Theme */
         .sheet-match-container {
             background-color: #f1f3f4;
             border: 1px solid #bdc1c6;
@@ -494,90 +423,53 @@
 </head>
 <body>
 
-    <div class="sheets-app-container">
-        <!-- Top-Left Corner Cell -->
-        <div class="sheets-top-corner"></div>
+    <header>
+        <h1>Seasonal Analytics Hub</h1>
+        <a href="index.html" class="nav-back">&larr; Back to Main Hub</a>
+    </header>
 
-        <!-- Column Headers (A, B, C...) perfectly aligned with 100px grid columns -->
-        <div class="sheets-col-headers">
-            <div class="sheets-col-header-cell">A</div>
-            <div class="sheets-col-header-cell">B</div>
-            <div class="sheets-col-header-cell">C</div>
-            <div class="sheets-col-header-cell">D</div>
-            <div class="sheets-col-header-cell">E</div>
-            <div class="sheets-col-header-cell">F</div>
-            <div class="sheets-col-header-cell">G</div>
-            <div class="sheets-col-header-cell">H</div>
-            <div class="sheets-col-header-cell">I</div>
-            <div class="sheets-col-header-cell">J</div>
-            <div class="sheets-col-header-cell">K</div>
-            <div class="sheets-col-header-cell">L</div>
-            <div class="sheets-col-header-cell">M</div>
-            <div class="sheets-col-header-cell">N</div>
-            <div class="sheets-col-header-cell">O</div>
-            <div class="sheets-col-header-cell">P</div>
-            <div class="sheets-col-header-cell">Q</div>
-            <div class="sheets-col-header-cell">R</div>
-            <div class="sheets-col-header-cell">S</div>
-            <div class="sheets-col-header-cell">T</div>
-        </div>
-
-        <!-- Row Headers (1, 2, 3...) generated dynamically to cover the page length -->
-        <div class="sheets-row-headers" id="rowHeaders">
-            <!-- Populated via script to span the entire document height -->
-        </div>
-
-        <!-- Main Workspace Area -->
-        <div class="sheets-workspace">
-            <header>
-                <h1>Seasonal Analytics Hub</h1>
-                <a href="index.html" class="nav-back">&larr; Back to Main Hub</a>
-            </header>
-
-            <div class="container">
-                <div class="filter-bar">
-                    <div class="filter-group">
-                        <label for="seasonSelect">Select Season:</label>
-                        <select id="seasonSelect" onchange="loadSeasonalData()">
-                            <option value="">Loading seasons...</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="weekSelect">Filter Week:</label>
-                        <select id="weekSelect" onchange="renderMatchesSheetUI()">
-                            <option value="all">All Weeks</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="playerSearch">Search Player:</label>
-                        <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="renderMatchesSheetUI(); renderPlayerdex();">
-                    </div>
-                </div>
-
-                <div class="tabs-container">
-                    <button class="tab-button active" onclick="switchTab('statdex')">Seasonal Statdex (Matches)</button>
-                    <button class="tab-button" onclick="switchTab('playerdex')">Seasonal Playerdex (Rosters & Stats)</button>
-                    <button class="tab-button" onclick="switchTab('draftboard')">Draft Board & Budgets</button>
-                </div>
-
-                <div id="statdex" class="tab-content active">
-                    <div id="matchGrid">
-                        <div class="status-msg">Loading seasonal data...</div>
-                    </div>
-                </div>
-
-                <div id="playerdex" class="tab-content">
-                    <div id="playerdexGrid" class="playerdex-grid">
-                        <div class="status-msg">Loading player cards...</div>
-                    </div>
-                </div>
-
-                <div id="draftboard" class="tab-content">
-                    <div id="draftBoardContent" class="status-msg">Draft board data will render here.</div>
-                </div>
+    <div class="container">
+        <div class="filter-bar">
+            <div class="filter-group">
+                <label for="seasonSelect">Select Season:</label>
+                <select id="seasonSelect" onchange="loadSeasonalData()">
+                    <option value="">Loading seasons...</option>
+                </select>
             </div>
+
+            <div class="filter-group">
+                <label for="weekSelect">Filter Week:</label>
+                <select id="weekSelect" onchange="renderMatchesSheetUI()">
+                    <option value="all">All Weeks</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="playerSearch">Search Player:</label>
+                <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="renderMatchesSheetUI(); renderPlayerdex();">
+            </div>
+        </div>
+
+        <div class="tabs-container">
+            <button class="tab-button active" onclick="switchTab('statdex')">Seasonal Statdex (Matches)</button>
+            <button class="tab-button" onclick="switchTab('playerdex')">Seasonal Playerdex (Rosters & Stats)</button>
+            <button class="tab-button" onclick="switchTab('draftboard')">Draft Board & Budgets</button>
+        </div>
+
+        <div id="statdex" class="tab-content active">
+            <div id="matchGrid">
+                <div class="status-msg">Loading seasonal data...</div>
+            </div>
+        </div>
+
+        <div id="playerdex" class="tab-content">
+            <div id="playerdexGrid" class="playerdex-grid">
+                <div class="status-msg">Loading player cards...</div>
+            </div>
+        </div>
+
+        <div id="draftboard" class="tab-content">
+            <div id="draftBoardContent" class="status-msg">Draft board data will render here.</div>
         </div>
     </div>
 
@@ -592,20 +484,7 @@
         window.playerAliasesMap = {}; 
         window.displayToTagMap = {};   
 
-        window.addEventListener('DOMContentLoaded', () => { 
-            generateRowHeaders();
-            initApp(); 
-        });
-
-        // Automatically fill row headers to match page length
-        function generateRowHeaders() {
-            const rowHeaderContainer = document.getElementById('rowHeaders');
-            let html = '';
-            for (let i = 1; i <= 250; i++) {
-                html += `<div class="sheets-row-header-cell">${i}</div>`;
-            }
-            rowHeaderContainer.innerHTML = html;
-        }
+        window.addEventListener('DOMContentLoaded', () => { initApp(); });
 
         async function tursoQuery(statements) {
             if (typeof TURSO_DB_URL === 'undefined' || typeof TURSO_READONLY_TOKEN === 'undefined' || TURSO_READONLY_TOKEN.includes("YOUR_READ_ONLY_TOKEN")) {
