@@ -86,15 +86,16 @@ async function runIngest() {
   for (const activeSeason of seasonsRes.rows) {
     const seasonNum = activeSeason.season;
     const format = activeSeason.format || "";
+    
+    // Append T00:00:00 to prevent UTC timezone drift issues
     const startDateStr = activeSeason.week_one_start_date;
-    const startDate = new Date(startDateStr);
+    const startDate = new Date(startDateStr + "T00:00:00");
     const seasonStartTime = Math.floor(startDate.getTime() / 1000);
     
-    // Parse playoffs start date to cut off regular season imports cleanly
     const playoffDateStr = activeSeason.playoffs_start_date;
     let playoffEndTime = Infinity; 
     if (playoffDateStr) {
-      const playoffDate = new Date(playoffDateStr);
+      const playoffDate = new Date(playoffDateStr + "T00:00:00");
       playoffEndTime = Math.floor(playoffDate.getTime() / 1000);
     }
     
@@ -152,8 +153,23 @@ async function runIngest() {
           });
           filteredJson.sort((a, b) => Number(a.uploadtime) - Number(b.uploadtime));
 
-          for (let i = 0; i < Math.min(filteredJson.length, 3); i++) {
-            const battleId = filteredJson[i].id;
+          // Ensure game set grouping: cap to 3 games and ensure they happen within a 4-hour window of game 1
+          const setGames = [];
+          if (filteredJson.length > 0) {
+            const g1Time = Number(filteredJson[0].uploadtime);
+            const FOUR_HOURS = 4 * 60 * 60;
+
+            for (const b of filteredJson) {
+              if (setGames.length < 3) {
+                if (setGames.length === 0 || (Number(b.uploadtime) - g1Time) <= FOUR_HOURS) {
+                  setGames.push(b);
+                }
+              }
+            }
+          }
+
+          for (let i = 0; i < setGames.length; i++) {
+            const battleId = setGames[i].id;
             const gameNumber = i + 1;
             const gameId = `${match_id}_g${gameNumber}`;
             const replayUrl = `https://replay.pokemonshowdown.com/${battleId}`;
