@@ -558,6 +558,41 @@
 
         window.addEventListener('DOMContentLoaded', () => { initApp(); });
 
+        // Helper function to resolve draft cost for alternate forms & regional variants
+        function getDraftCost(species, draftCosts) {
+            if (draftCosts[species] !== undefined) {
+                return Number(draftCosts[species]);
+            }
+            
+            if (species.includes('-Mega')) {
+                const base = species.replace('-Mega', '');
+                if (draftCosts[`Mega ${base}`] !== undefined) return Number(draftCosts[`Mega ${base}`]);
+                if (draftCosts[base] !== undefined) return Number(draftCosts[base]);
+            }
+            
+            if (species.includes('-Alola')) {
+                const base = species.replace('-Alola', '');
+                if (draftCosts[`Alolan ${base}`] !== undefined) return Number(draftCosts[`Alolan ${base}`]);
+            }
+
+            if (species.includes('-Galar')) {
+                const base = species.replace('-Galar', '');
+                if (draftCosts[`Galarian ${base}`] !== undefined) return Number(draftCosts[`Galarian ${base}`]);
+            }
+
+            if (species.includes('-Hisui')) {
+                const base = species.replace('-Hisui', '');
+                if (draftCosts[`Hisuian ${base}`] !== undefined) return Number(draftCosts[`Hisuian ${base}`]);
+            }
+
+            if (species.includes('-Paldea')) {
+                const base = species.replace('-Paldea', '');
+                if (draftCosts[`Paldean ${base}`] !== undefined) return Number(draftCosts[`Paldean ${base}`]);
+            }
+
+            return 0;
+        }
+
         async function tursoQuery(statements) {
             if (typeof TURSO_DB_URL === 'undefined' || typeof TURSO_READONLY_TOKEN === 'undefined' || TURSO_READONLY_TOKEN.includes("YOUR_READ_ONLY_TOKEN")) {
                 document.getElementById('matchGrid').innerHTML = '<div class="status-msg" style="color:#d93025;">Please configure your Turso read-only credentials in config.js.</div>';
@@ -1187,7 +1222,8 @@
                         ];
                         m.tvr = (shares.reduce((a, b) => a + b, 0) / shares.length) * 100;
 
-                        const cost = rawDraftCosts[m.species] || 0;
+                        // Uses getDraftCost fallback lookup helper for regional/mega forms
+                        const cost = getDraftCost(m.species, rawDraftCosts);
                         m.pvr = (cost / totalSeasonBudget) * 100;
                         m.ou = m.pvr > 0 ? m.tvr / m.pvr : 0;
                     });
