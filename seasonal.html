@@ -477,6 +477,11 @@
             border-bottom: none;
         }
 
+        /* Stat Row Color-Coding Classes */
+        .stat-row-red { background-color: #f4c7c3; }
+        .stat-row-green { background-color: #b7e1cd; }
+        .stat-row-blue { background-color: #c9daf8; }
+
         .status-msg {
             color: var(--text-muted);
             grid-column: 1 / -1;
@@ -1274,14 +1279,14 @@
                                     <div>
                                         <table class="pcard-info-table">
                                             <tr><td></td><td>Total</td><td>Avg</td></tr>
-                                            <tr><td>Direct KOs:</td><td>${m.directKo}</td><td>${directAvg}</td></tr>
-                                            <tr><td>Indirect KOs:</td><td>${m.indirectKo}</td><td>${indirectAvg}</td></tr>
-                                            <tr><td>Damage Taken:</td><td>${m.damageTaken}</td><td>${takenAvg}</td></tr>
-                                            <tr><td>Hits Taken:</td><td>${m.hitsTaken}</td><td>${hitsAvg}</td></tr>
-                                            <tr><td>Damage Healed:</td><td>${m.damageHeal}</td><td>${healedAvg}</td></tr>
+                                            <tr class="stat-row-red"><td>Direct KOs:</td><td>${m.directKo}</td><td>${directAvg}</td></tr>
+                                            <tr class="stat-row-green"><td>Indirect KOs:</td><td>${m.indirectKo}</td><td>${indirectAvg}</td></tr>
+                                            <tr class="stat-row-blue"><td>Damage Taken:</td><td>${m.damageTaken}</td><td>${takenAvg}</td></tr>
+                                            <tr class="stat-row-blue"><td>Hits Taken:</td><td>${m.hitsTaken}</td><td>${hitsAvg}</td></tr>
+                                            <tr class="stat-row-blue"><td>Damage Healed:</td><td>${m.damageHeal}</td><td>${healedAvg}</td></tr>
                                             <tr><td>Total Dealt:</td><td>${m.damageDealt}</td><td>${dealtAvg}</td></tr>
-                                            <tr><td>Direct Dealt:</td><td>${m.damageDirect}</td><td>${dealtDirectAvg}</td></tr>
-                                            <tr><td>Indirect Dealt:</td><td>${m.damageIndirect}</td><td>${dealtIndAvg}</td></tr>
+                                            <tr class="stat-row-red"><td>Direct Dealt:</td><td>${m.damageDirect}</td><td>${dealtDirectAvg}</td></tr>
+                                            <tr class="stat-row-green"><td>Indirect Dealt:</td><td>${m.damageIndirect}</td><td>${dealtIndAvg}</td></tr>
                                         </table>
                                         <table class="pcard-info-table" style="border-top:1px solid #bdc1c6;">
                                             <tr><td>Battles:</td><td style="text-align:right;"><strong>${m.timesBrought}</strong></td></tr>
