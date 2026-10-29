@@ -425,29 +425,41 @@
             flex-direction: column;
         }
 
-        .pcard-top {
+        .pcard-body {
             display: grid;
-            grid-template-columns: 95px 1fr;
+            grid-template-columns: 120px 1fr;
             border-bottom: 1px solid #bdc1c6;
         }
 
-        .pcard-img-box {
+        .pcard-left-col {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #bdc1c6;
+            background: #fafafa;
+        }
+
+        .pcard-sprite-box {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 4px;
-            border-right: 1px solid #bdc1c6;
-            background: #fafafa;
+            padding: 8px 4px;
+            border-bottom: 1px solid #bdc1c6;
             text-align: center;
-            height: 100%;
-            box-sizing: border-box;
         }
 
         .pcard-sprite {
-            width: 36px;
-            height: 36px;
+            width: 48px;
+            height: 48px;
             object-fit: contain;
+        }
+
+        .pcard-nicknames-box {
+            padding: 6px;
+            flex: 1;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
         }
 
         .pcard-info-table {
@@ -1203,8 +1215,8 @@
 
                         const nicknamesList = Array.from(m.nicknamesSet);
                         const nicknamesHtml = nicknamesList.length > 0 
-                            ? nicknamesList.map(n => `<div style="font-size:9.5px; color:#5f6368; line-height:1.2; word-break:break-word;">&ldquo;${n}&rdquo;</div>`).join('')
-                            : `<div style="font-size:9.5px; color:#9aa0a6; font-style:italic;">No nicknames</div>`;
+                            ? nicknamesList.map(n => `<div style="font-size:10px; color:#5f6368; line-height:1.3; word-break:break-word; margin-bottom:2px;">&ldquo;${n}&rdquo;</div>`).join('')
+                            : `<div style="font-size:10px; color:#9aa0a6; font-style:italic;">None</div>`;
 
                         return `
                             <div class="pokemon-card-cell">
@@ -1212,35 +1224,38 @@
                                     <span>Team Value Ratio</span>
                                     <span>${m.tvr.toFixed(2)}%</span>
                                 </div>
-                                <div class="pcard-top">
-                                    <div class="pcard-img-box">
-                                        <img src="${spriteUrl}" class="pcard-sprite" onerror="handleImageError(this)" />
-                                        <span style="font-size:10px; font-weight:bold; margin-top:2px; word-break:break-word; max-width:85px;">${m.species}</span>
+                                <div class="pcard-body">
+                                    <div class="pcard-left-col">
+                                        <div class="pcard-sprite-box">
+                                            <img src="${spriteUrl}" class="pcard-sprite" onerror="handleImageError(this)" />
+                                            <span style="font-size:11px; font-weight:bold; margin-top:4px; word-break:break-word;">${m.species}</span>
+                                        </div>
+                                        <div class="pcard-nicknames-box">
+                                            <div style="font-size:10px; font-weight:bold; color:#202124; margin-bottom:4px; border-bottom:1px solid #e0e0e0; padding-bottom:2px;">Nicknames</div>
+                                            ${nicknamesHtml}
+                                        </div>
                                     </div>
-                                    <table class="pcard-info-table">
-                                        <tr><td colspan="2"></td><td>Total</td><td>Avg</td></tr>
-                                        <tr><td colspan="2">Direct KOs:</td><td>${m.directKo}</td><td>${directAvg}</td></tr>
-                                        <tr><td colspan="2">Indirect KOs:</td><td>${m.indirectKo}</td><td>${indirectAvg}</td></tr>
-                                        <tr><td colspan="2">Damage Taken:</td><td>${m.damageTaken}</td><td>${takenAvg}</td></tr>
-                                        <tr><td colspan="2">Hits Taken:</td><td>${m.hitsTaken}</td><td>${hitsAvg}</td></tr>
-                                        <tr><td colspan="2">Damage Healed:</td><td>${m.damageHeal}</td><td>${healedAvg}</td></tr>
-                                        <tr><td colspan="2">Total Dealt:</td><td>${m.damageDealt}</td><td>${dealtAvg}</td></tr>
-                                        <tr><td colspan="2">Direct Dealt:</td><td>${m.damageDirect}</td><td>-</td></tr>
-                                        <tr><td colspan="2">Indirect Dealt:</td><td>${m.damageIndirect}</td><td>${dealtIndAvg}</td></tr>
-                                    </table>
+                                    <div>
+                                        <table class="pcard-info-table">
+                                            <tr><td></td><td>Total</td><td>Avg</td></tr>
+                                            <tr><td>Direct KOs:</td><td>${m.directKo}</td><td>${directAvg}</td></tr>
+                                            <tr><td>Indirect KOs:</td><td>${m.indirectKo}</td><td>${indirectAvg}</td></tr>
+                                            <tr><td>Damage Taken:</td><td>${m.damageTaken}</td><td>${takenAvg}</td></tr>
+                                            <tr><td>Hits Taken:</td><td>${m.hitsTaken}</td><td>${hitsAvg}</td></tr>
+                                            <tr><td>Damage Healed:</td><td>${m.damageHeal}</td><td>${healedAvg}</td></tr>
+                                            <tr><td>Total Dealt:</td><td>${m.damageDealt}</td><td>${dealtAvg}</td></tr>
+                                            <tr><td>Direct Dealt:</td><td>${m.damageDirect}</td><td>-</td></tr>
+                                            <tr><td>Indirect Dealt:</td><td>${m.damageIndirect}</td><td>${dealtIndAvg}</td></tr>
+                                        </table>
+                                        <table class="pcard-info-table" style="border-top:1px solid #bdc1c6;">
+                                            <tr><td>Battles:</td><td style="text-align:right;"><strong>${m.timesBrought}</strong></td></tr>
+                                            <tr><td>Active Battles:</td><td style="text-align:right;">${m.battlesActive} Battles</td></tr>
+                                            <tr><td>Survived Battles:</td><td style="text-align:right;">${m.survived} Battles</td></tr>
+                                            <tr><td>Won Battles:</td><td style="text-align:right;">${m.battleWon} Battles</td></tr>
+                                            <tr><td>Active Turns:</td><td style="text-align:right;">${m.activeTurns} Turns</td></tr>
+                                        </table>
+                                    </div>
                                 </div>
-                                <!-- Nicknames Bottom Section inside top header column width -->
-                                <div style="background:#fafafa; border-bottom:1px solid #bdc1c6; display:grid; grid-template-columns: 95px 1fr;">
-                                    <div style="padding:4px 6px; font-size:10px; font-weight:bold; color:#5f6368; border-right:1px solid #bdc1c6; text-align:center; display:flex; align-items:center; justify-content:center;">Nicknames</div>
-                                    <div style="padding:4px 8px; max-height:45px; overflow-y:auto;">${nicknamesHtml}</div>
-                                </div>
-                                <table class="pcard-info-table" style="font-size:11px;">
-                                    <tr><td style="width: 95px; border-right: 1px solid #bdc1c6;">Battles:</td><td colspan="3" style="text-align:right;"><strong>${m.timesBrought}</strong></td></tr>
-                                    <tr><td style="width: 95px; border-right: 1px solid #bdc1c6;">Active Battles:</td><td colspan="3" style="text-align:right;">${m.battlesActive} Battles</td></tr>
-                                    <tr><td style="width: 95px; border-right: 1px solid #bdc1c6;">Survived Battles:</td><td colspan="3" style="text-align:right;">${m.survived} Battles</td></tr>
-                                    <tr><td style="width: 95px; border-right: 1px solid #bdc1c6;">Won Battles:</td><td colspan="3" style="text-align:right;">${m.battleWon} Battles</td></tr>
-                                    <tr><td style="width: 95px; border-right: 1px solid #bdc1c6;">Active Turns:</td><td colspan="3" style="text-align:right;">${m.activeTurns} Turns</td></tr>
-                                </table>
                             </div>
                         `;
                     }).join('');
