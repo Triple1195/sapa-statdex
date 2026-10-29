@@ -440,11 +440,13 @@
             border-right: 1px solid #bdc1c6;
             background: #fafafa;
             text-align: center;
+            height: 100%;
+            box-sizing: border-box;
         }
 
         .pcard-sprite {
-            width: 48px;
-            height: 48px;
+            width: 36px;
+            height: 36px;
             object-fit: contain;
         }
 
@@ -494,7 +496,7 @@
             </div>
 
             <div class="filter-group">
-                <labelfor="weekSelect">Filter Week:</label>
+                <label for="weekSelect">Filter Week:</label>
                 <select id="weekSelect" onchange="renderMatchesSheetUI()">
                     <option value="all">All Weeks</option>
                 </select>
@@ -1056,7 +1058,7 @@
                 }
             });
 
-            // 2. Group stats by player
+            // 2. Group stats by player and collect all unique nicknames per pokemon
             const playerMap = {};
             rawStats.forEach(st => {
                 const dispName = getDisplayName(st.player);
@@ -1066,6 +1068,7 @@
                 if (!playerMap[dispName].pokemon[st.pokemon]) {
                     playerMap[dispName].pokemon[st.pokemon] = {
                         species: st.pokemon,
+                        nicknamesSet: new Set(),
                         timesBrought: 0,
                         battlesActive: 0,
                         directKo: 0,
@@ -1083,6 +1086,9 @@
                     };
                 }
                 const pObj = playerMap[dispName].pokemon[st.pokemon];
+                if (st.nickname && st.nickname.trim() !== "" && st.nickname !== st.pokemon) {
+                    pObj.nicknamesSet.add(st.nickname.trim());
+                }
                 pObj.timesBrought += 1;
                 pObj.battlesActive += 1;
                 pObj.directKo += Number(st.direct_kos || 0);
@@ -1114,7 +1120,7 @@
                 return;
             }
 
-            // 4. Sort players within each conference by record (Set Wins desc, then Game Wins desc)
+            // 4. Sort players within each conference by record
             confKeys.forEach(conf => {
                 conferenceMap[conf].sort((a, b) => {
                     const recA = playerRecords[a] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
@@ -1195,6 +1201,11 @@
                         const dealtAvg = m.battlesActive > 0 ? (m.damageDealt / m.battlesActive).toFixed(1) : '0.0';
                         const dealtIndAvg = m.battlesActive > 0 ? (m.damageIndirect / m.battlesActive).toFixed(1) : '0.0';
 
+                        const nicknamesList = Array.from(m.nicknamesSet);
+                        const nicknamesHtml = nicknamesList.length > 0 
+                            ? nicknamesList.map(n => `<div style="font-size:9.5px; color:#5f6368; line-height:1.2; word-break:break-word;">&ldquo;${n}&rdquo;</div>`).join('')
+                            : `<div style="font-size:9.5px; color:#9aa0a6; font-style:italic;">No nicknames</div>`;
+
                         return `
                             <div class="pokemon-card-cell">
                                 <div style="background:#e5e7eb; padding:4px 8px; font-weight:bold; border-bottom:1px solid #bdc1c6; display:flex; justify-content:space-between;">
@@ -1204,7 +1215,7 @@
                                 <div class="pcard-top">
                                     <div class="pcard-img-box">
                                         <img src="${spriteUrl}" class="pcard-sprite" onerror="handleImageError(this)" />
-                                        <span style="font-size:10px; font-weight:bold; margin-top:2px; word-break:break-word;">${m.species}</span>
+                                        <span style="font-size:10px; font-weight:bold; margin-top:2px; word-break:break-word; max-width:85px;">${m.species}</span>
                                     </div>
                                     <table class="pcard-info-table">
                                         <tr><td colspan="2"></td><td>Total</td><td>Avg</td></tr>
@@ -1218,12 +1229,17 @@
                                         <tr><td colspan="2">Indirect Dealt:</td><td>${m.damageIndirect}</td><td>${dealtIndAvg}</td></tr>
                                     </table>
                                 </div>
+                                <!-- Nicknames Bottom Section inside top header column width -->
+                                <div style="background:#fafafa; border-bottom:1px solid #bdc1c6; display:grid; grid-template-columns: 95px 1fr;">
+                                    <div style="padding:4px 6px; font-size:10px; font-weight:bold; color:#5f6368; border-right:1px solid #bdc1c6; text-align:center; display:flex; align-items:center; justify-content:center;">Nicknames</div>
+                                    <div style="padding:4px 8px; max-height:45px; overflow-y:auto;">${nicknamesHtml}</div>
+                                </div>
                                 <table class="pcard-info-table" style="font-size:11px;">
-                                    <tr><td>Battles:</td><td><strong>${m.timesBrought}</strong></td></tr>
-                                    <tr><td>Active Battles:</td><td>${m.battlesActive} Battles</td></tr>
-                                    <tr><td>Survived Battles:</td><td>${m.survived} Battles</td></tr>
-                                    <tr><td>Won Battles:</td><td>${m.battleWon} Battles</td></tr>
-                                    <tr><td>Active Turns:</td><td>${m.activeTurns} Turns</td></tr>
+                                    <tr><td style="width: 95px; border-right: 1px solid #bdc1c6;">Battles:</td><td colspan="3" style="text-align:right;"><strong>${m.timesBrought}</strong></td></tr>
+                                    <tr><td style="width: 95px; border-right: 1px solid #bdc1c6;">Active Battles:</td><td colspan="3" style="text-align:right;">${m.battlesActive} Battles</td></tr>
+                                    <tr><td style="width: 95px; border-right: 1px solid #bdc1c6;">Survived Battles:</td><td colspan="3" style="text-align:right;">${m.survived} Battles</td></tr>
+                                    <tr><td style="width: 95px; border-right: 1px solid #bdc1c6;">Won Battles:</td><td colspan="3" style="text-align:right;">${m.battleWon} Battles</td></tr>
+                                    <tr><td style="width: 95px; border-right: 1px solid #bdc1c6;">Active Turns:</td><td colspan="3" style="text-align:right;">${m.activeTurns} Turns</td></tr>
                                 </table>
                             </div>
                         `;
