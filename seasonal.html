@@ -1222,7 +1222,6 @@
                         ];
                         m.tvr = (shares.reduce((a, b) => a + b, 0) / shares.length) * 100;
 
-                        // Uses getDraftCost fallback lookup helper for regional/mega forms
                         const cost = getDraftCost(m.species, rawDraftCosts);
                         m.pvr = (cost / totalSeasonBudget) * 100;
                         m.ou = m.pvr > 0 ? m.tvr / m.pvr : 0;
@@ -1247,6 +1246,7 @@
                         const hitsAvg = m.battlesActive > 0 ? (m.hitsTaken / m.battlesActive).toFixed(1) : '0.0';
                         const healedAvg = m.battlesActive > 0 ? (m.damageHeal / m.battlesActive).toFixed(1) : '0.0';
                         const dealtAvg = m.battlesActive > 0 ? (m.damageDealt / m.battlesActive).toFixed(1) : '0.0';
+                        const dealtDirectAvg = m.battlesActive > 0 ? (m.damageDirect / m.battlesActive).toFixed(1) : '0.0';
                         const dealtIndAvg = m.battlesActive > 0 ? (m.damageIndirect / m.battlesActive).toFixed(1) : '0.0';
 
                         const nicknamesList = Array.from(m.nicknamesSet);
@@ -1280,7 +1280,7 @@
                                             <tr><td>Hits Taken:</td><td>${m.hitsTaken}</td><td>${hitsAvg}</td></tr>
                                             <tr><td>Damage Healed:</td><td>${m.damageHeal}</td><td>${healedAvg}</td></tr>
                                             <tr><td>Total Dealt:</td><td>${m.damageDealt}</td><td>${dealtAvg}</td></tr>
-                                            <tr><td>Direct Dealt:</td><td>${m.damageDirect}</td><td>-</td></tr>
+                                            <tr><td>Direct Dealt:</td><td>${m.damageDirect}</td><td>${dealtDirectAvg}</td></tr>
                                             <tr><td>Indirect Dealt:</td><td>${m.damageIndirect}</td><td>${dealtIndAvg}</td></tr>
                                         </table>
                                         <table class="pcard-info-table" style="border-top:1px solid #bdc1c6;">
