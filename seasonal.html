@@ -482,6 +482,13 @@
         .stat-row-green { background-color: #b7e1cd; }
         .stat-row-blue { background-color: #c9daf8; }
 
+        /* TVR Podium & O/U Highlight Classes */
+        .podium-gold { background-color: #fce8b2 !important; }
+        .podium-silver { background-color: #e8eaed !important; }
+        .podium-bronze { background-color: #fad2cf !important; }
+        .ou-blue { background-color: #c9daf8; }
+        .ou-red { background-color: #f4c7c3; }
+
         /* Schedule Table Styles */
         .schedule-table {
             width: 100%;
@@ -1314,14 +1321,23 @@
 
                     pokemons.sort((a, b) => b.tvr - a.tvr);
 
-                    const summaryTableRows = pokemons.map(m => `
-                        <tr>
-                            <td>${m.species}</td>
-                            <td style="text-align:right;">${m.tvr.toFixed(1)}%</td>
-                            <td style="text-align:right;">${m.pvr.toFixed(1)}%</td>
-                            <td style="text-align:right;">${m.ou.toFixed(2)}</td>
-                        </tr>
-                    `).join('');
+                    const summaryTableRows = pokemons.map((m, index) => {
+                        let rankClass = '';
+                        if (index === 0) rankClass = 'podium-gold';
+                        else if (index === 1) rankClass = 'podium-silver';
+                        else if (index === 2) rankClass = 'podium-bronze';
+
+                        const ouClass = m.ou > 1 ? 'ou-blue' : (m.ou < 1 ? 'ou-red' : '');
+
+                        return `
+                            <tr>
+                                <td class="${rankClass}">${m.species}</td>
+                                <td style="text-align:right;" class="${rankClass}">${m.tvr.toFixed(1)}%</td>
+                                <td style="text-align:right;" class="${rankClass}">${m.pvr.toFixed(1)}%</td>
+                                <td style="text-align:right;" class="${ouClass}">${m.ou.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    }).join('');
 
                     const pokemonCardsHTML = pokemons.map((m, idx) => {
                         const spriteUrl = getSpriteUrl(m.species, 'color');
