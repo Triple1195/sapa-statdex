@@ -380,7 +380,7 @@
 
         .playerdex-grid {
             display: grid;
-            grid-template-columns: 300px repeat(3, 1fr);
+            grid-template-columns: 320px repeat(3, 1fr);
             gap: 14px;
             align-items: start;
         }
@@ -481,6 +481,28 @@
         .stat-row-red { background-color: #f4c7c3; }
         .stat-row-green { background-color: #b7e1cd; }
         .stat-row-blue { background-color: #c9daf8; }
+
+        /* Schedule Table Styles */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .schedule-table th, .schedule-table td {
+            border: 1px solid #bdc1c6;
+            padding: 4px 5px;
+            text-align: left;
+        }
+
+        .schedule-table th {
+            background: #f1f3f4;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .sched-row-win { background-color: #c9daf8; }
+        .sched-row-loss { background-color: #f4c7c3; }
 
         .status-msg {
             color: var(--text-muted);
@@ -1110,7 +1132,36 @@
                 }
             });
 
-            // 2. Group stats by player and collect all unique nicknames per pokemon
+            // 2. Build player weekly schedules from rawMatches
+            const playerSchedules = {};
+            Object.values(matchGroups).forEach(matchObj => {
+                const info = matchObj.info;
+                const games = matchObj.games;
+                if (!info.player_1 || !info.player_2) return;
+
+                const p1 = getDisplayName(info.player_1);
+                const p2 = getDisplayName(info.player_2);
+                const weekNum = Number(info.week || 0);
+                if (!weekNum) return;
+
+                let p1Wins = 0;
+                let p2Wins = 0;
+                games.forEach(g => {
+                    const w = getDisplayName(g.winner);
+                    if (w.toLowerCase() === p1.toLowerCase()) p1Wins++;
+                    if (w.toLowerCase() === p2.toLowerCase()) p2Wins++;
+                });
+
+                const hasPlayed = games.length > 0 && (p1Wins > 0 || p2Wins > 0 || games.some(g => g.winner));
+
+                if (!playerSchedules[p1]) playerSchedules[p1] = [];
+                if (!playerSchedules[p2]) playerSchedules[p2] = [];
+
+                playerSchedules[p1].push({ week: weekNum, opponent: p2, pWins: p1Wins, oWins: p2Wins, played: hasPlayed });
+                playerSchedules[p2].push({ week: weekNum, opponent: p1, pWins: p2Wins, oWins: p1Wins, played: hasPlayed });
+            });
+
+            // 3. Group stats by player and collect all unique nicknames per pokemon
             const playerMap = {};
             rawStats.forEach(st => {
                 const dispName = getDisplayName(st.player);
@@ -1157,7 +1208,7 @@
                 pObj.battleWon += Number(st.battle_won || 0);
             });
 
-            // 3. Group players by Conference
+            // 4. Group players by Conference
             const conferenceMap = {};
             Object.keys(playerMap).forEach(player => {
                 if (playerFilter && !player.toLowerCase().includes(playerFilter)) return;
@@ -1172,7 +1223,7 @@
                 return;
             }
 
-            // 4. Sort players within each conference by record
+            // 5. Sort players within each conference by record
             confKeys.forEach(conf => {
                 conferenceMap[conf].sort((a, b) => {
                     const recA = playerRecords[a] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
@@ -1183,7 +1234,7 @@
                 });
             });
 
-            // 5. Build HTML for each conference and its sorted players
+            // 6. Build HTML for each conference and its sorted players
             grid.innerHTML = confKeys.map(conf => {
                 const playersInConf = conferenceMap[conf];
                 if (playersInConf.length === 0) return '';
@@ -1192,6 +1243,35 @@
                     const playerData = playerMap[player];
                     const pokemons = Object.values(playerData.pokemon);
                     const rec = playerRecords[player] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
+                    const sched = playerSchedules[player] || [];
+                    sched.sort((a, b) => a.week - b.week);
+
+                    const scheduleRowsHtml = sched.map(s => {
+                        const weekStr = String(s.week).padStart(2, '0');
+                        if (!s.played) {
+                            return `
+                                <tr>
+                                    <td style="text-align:center; font-weight:bold;">${weekStr}</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>${s.opponent}</td>
+                                </tr>
+                            `;
+                        }
+                        const isWin = s.pWins > s.oWins;
+                        const rowClass = isWin ? 'sched-row-win' : 'sched-row-loss';
+                        const resLetter = isWin ? 'W' : 'L';
+                        return `
+                            <tr class="${rowClass}">
+                                <td style="text-align:center; font-weight:bold;">${weekStr}</td>
+                                <td style="text-align:center; font-weight:bold;">${resLetter}</td>
+                                <td style="text-align:center;">${s.pWins}</td>
+                                <td style="text-align:center;">${s.oWins}</td>
+                                <td>${s.opponent}</td>
+                            </tr>
+                        `;
+                    }).join('');
 
                     const totals = {
                         timesBrought: pokemons.reduce((acc, m) => acc + m.timesBrought, 0) || 1,
@@ -1327,9 +1407,24 @@
                                             ${summaryTableRows}
                                         </tbody>
                                     </table>
-                                    <div style="padding:8px; text-align:center; font-weight:bold; font-size:11px; background:#f1f3f4; border-top:1px solid #bdc1c6;">
+                                    <div style="padding:8px; text-align:center; font-weight:bold; font-size:11px; background:#f1f3f4; border-top:1px solid #bdc1c6; border-bottom:1px solid #bdc1c6;">
                                         ${pokemons.length} Pokémon Used
                                     </div>
+                                    <div style="background:#202124; color:#fff; padding:6px; text-align:center; font-weight:bold; font-size:12px; border-top:1px solid #bdc1c6;">Weekly Schedule</div>
+                                    <table class="schedule-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 32px;"></th>
+                                                <th style="width: 24px;">R.</th>
+                                                <th style="width: 24px;">W</th>
+                                                <th style="width: 24px;">L</th>
+                                                <th>Opponent</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${scheduleRowsHtml}
+                                        </tbody>
+                                    </table>
                                 </div>
 
                                 <div style="grid-column: span 3; display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
