@@ -30,23 +30,45 @@
         header {
             background-color: var(--card-bg);
             border-bottom: 1px solid var(--border-color);
-            padding: 1rem 2rem;
+            padding: 0.8rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
             box-shadow: 0 1px 3px rgba(60,64,67,0.15);
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         header h1 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: #188038;
+        }
+
+        .header-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .header-filter-group label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-weight: bold;
         }
 
         .nav-back {
             color: var(--accent-blue);
             text-decoration: none;
             font-weight: bold;
+            font-size: 0.95rem;
         }
 
         .container {
@@ -55,38 +77,13 @@
             padding: 0 1rem;
         }
 
-        .filter-bar {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            padding: 1rem 1.5rem;
-            display: flex;
-            gap: 1.5rem;
-            align-items: center;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 0.3rem;
-        }
-
-        .filter-group label {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            font-weight: bold;
-        }
-
         select, input {
             background-color: #fff;
             color: var(--text-main);
             border: 1px solid var(--border-color);
             border-radius: 4px;
-            padding: 0.5rem 0.8rem;
-            font-size: 0.95rem;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.9rem;
         }
 
         .tabs-container {
@@ -529,31 +526,32 @@
 
     <header>
         <h1>Seasonal Analytics Hub</h1>
-        <a href="index.html" class="nav-back">&larr; Back to Main Hub</a>
-    </header>
-
-    <div class="container">
-        <div class="filter-bar">
-            <div class="filter-group">
+        
+        <div class="header-filters">
+            <div class="header-filter-group">
                 <label for="seasonSelect">Select Season:</label>
                 <select id="seasonSelect" onchange="loadSeasonalData()">
-                    <option value="">Loading seasons...</option>
+                    <option value="">Loading...</option>
                 </select>
             </div>
 
-            <div class="filter-group">
+            <div class="header-filter-group">
                 <label for="weekSelect">Filter Week:</label>
                 <select id="weekSelect" onchange="renderMatchesSheetUI()">
                     <option value="all">All Weeks</option>
                 </select>
             </div>
 
-            <div class="filter-group">
+            <div class="header-filter-group">
                 <label for="playerSearch">Search Player:</label>
                 <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="renderMatchesSheetUI(); renderPlayerdex();">
             </div>
         </div>
 
+        <a href="index.html" class="nav-back">&larr; Back to Main Hub</a>
+    </header>
+
+    <div class="container">
         <div class="tabs-container">
             <button class="tab-button active" onclick="switchTab('statdex')">Seasonal Statdex (Matches)</button>
             <button class="tab-button" onclick="switchTab('playerdex')">Seasonal Playerdex (Rosters & Stats)</button>
