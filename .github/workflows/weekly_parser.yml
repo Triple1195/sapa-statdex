@@ -3,6 +3,7 @@ name: Automated Replay Ingest
 on:
   schedule:
     - cron: '59 23 * * 0'
+    - cron: '59 23 * * 1' # Runs every Monday at 11:59 PM UTC
   workflow_dispatch:
 
 jobs:
