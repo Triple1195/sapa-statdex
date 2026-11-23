@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Draft League - Main Hub</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-blue: #38bdf8;
+            --accent-hover: #0284c7;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.5rem 2rem;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.2rem;
+            color: var(--accent-blue);
+        }
+
+        header p {
+            margin: 0.5rem 0 0;
+            color: var(--text-muted);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .grid-nav {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .nav-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: var(--text-main);
+            transition: transform 0.2s ease, border-color 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .nav-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-blue);
+        }
+
+        .nav-card h2 {
+            margin-top: 0;
+            color: var(--accent-blue);
+        }
+
+        .nav-card p {
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .card-footer {
+            margin-top: 1rem;
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+
+        .quick-stats-panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .quick-stats-panel h3 {
+            margin-top: 0;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Pokémon Draft League Central</h1>
+        <p>Automated Multi-Season Match Ingestion & Performance Analytics</p>
+    </header>
+
+    <div class="container">
+        <div class="grid-nav">
+            <!-- Seasonal Hub Link -->
+            <a href="seasonal.html" class="nav-card">
+                <div>
+                    <h2>Seasonal Hub</h2>
+                    <p>Explore seasonal match replays, weekly breakdowns, player rosters, and TVR/PVR metrics.</p>
+                </div>
+                <div class="card-footer">Open Seasonal Hub &rarr;</div>
+            </a>
+
+            <!-- All-Time League Rankings Link -->
+            <a href="league_rankings.html" class="nav-card">
+                <div>
+                    <h2>League Pokédex</h2>
+                    <p>Analyze global Pokémon performance metrics, win rates, and KO statistics across all seasons.</p>
+                </div>
+                <div class="card-footer">View League Rankings &rarr;</div>
+            </a>
+
+            <!-- Player Leaderboards Link -->
+            <a href="player_rankings.html" class="nav-card">
+                <div>
+                    <h2>Player Leaderboards</h2>
+                    <p>Track player Elo rankings, head-to-head records, and historical series win counts.</p>
+                </div>
+                <div class="card-footer">View Player Standings &rarr;</div>
+            </a>
+
+            <!-- Admin Link -->
+            <a href="admin.html" class="nav-card">
+                <div>
+                    <h2>Admin Portal</h2>
+                    <p

@@ -3,153 +3,1477 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokémon Draft League - Main Hub</title>
+    <title>Seasonal Analytics Hub - Pokémon Draft League</title>
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent-blue: #38bdf8;
-            --accent-hover: #0284c7;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border-color: #334155;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --accent-blue: #1a73e8;
+            --text-main: #202124;
+            --text-muted: #5f6368;
+            --border-color: #dadce0;
+            --grid-line: #e0e0e0;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
+            background-image: 
+                linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+                linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+            background-size: 100px 24px;
             color: var(--text-main);
             margin: 0;
             padding: 0;
         }
 
         header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
             background-color: var(--card-bg);
             border-bottom: 1px solid var(--border-color);
-            padding: 1.5rem 2rem;
-            text-align: center;
+            padding: 0.6rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(60,64,67,0.15);
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         header h1 {
             margin: 0;
-            font-size: 2.2rem;
-            color: var(--accent-blue);
+            font-size: 1.3rem;
+            color: #188038;
         }
 
-        header p {
-            margin: 0.5rem 0 0;
+        .header-center-group {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .header-filters {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .header-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .header-filter-group label {
+            font-size: 0.8rem;
             color: var(--text-muted);
+            font-weight: bold;
+        }
+
+        .header-tabs {
+            display: flex;
+            gap: 0.3rem;
+            background-color: #f1f3f4;
+            padding: 3px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .header-tab-button {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.35rem 0.8rem;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+
+        .header-tab-button.active {
+            background-color: #ffffff;
+            color: #188038;
+            box-shadow: 0 1px 2px rgba(60,64,67,0.15);
+        }
+
+        .nav-back {
+            color: var(--accent-blue);
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
         }
 
         .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1.5rem;
+            max-width: 1600px;
+            margin: 1.5rem auto;
+            padding: 0 1rem;
         }
 
-        .grid-nav {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 1.5rem;
-            margin-top: 2rem;
-        }
-
-        .nav-card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-            text-decoration: none;
+        select, input {
+            background-color: #fff;
             color: var(--text-main);
-            transition: transform 0.2s ease, border-color 0.2s ease;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.35rem 0.6rem;
+            font-size: 0.85rem;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Match Container & Sheet Theme */
+        .sheet-match-container {
+            background-color: #f1f3f4;
+            border: 1px solid #bdc1c6;
+            padding: 14px;
+            color: #000;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 12.5px;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3);
+        }
+
+        .sheet-match-inner {
+            min-width: 1350px;
+        }
+
+        .match-top-banner {
+            background: #fff;
+            border: 1px solid #bdc1c6;
+            padding: 10px 16px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 14px;
+            letter-spacing: 0.5px;
+        }
+
+        .sheet-scoreboard {
+            display: grid;
+            grid-template-columns: 620px 1fr 1fr 1fr;
+            gap: 14px;
+            margin-bottom: 14px;
+            align-items: stretch;
+        }
+
+        .score-header {
+            display: flex;
+            align-items: stretch;
+            background: #fff;
+            border: 1px solid #bdc1c6;
+            overflow: hidden;
+            height: 65px;
+        }
+
+        .player-banner-winner { 
+            background-color: #1a73e8; 
+            color: white; 
+            padding: 10px 14px; 
+            flex: 1; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-weight: bold;
+            font-size: 13px;
+        }
+        
+        .player-banner-loser { 
+            background-color: #d93025; 
+            color: white; 
+            padding: 10px 14px; 
+            flex: 1; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-weight: bold;
+            font-size: 13px;
+        }
+
+        .vs-divider { 
+            font-size: 15px; 
+            color: #000; 
+            background: #f1f3f4; 
+            padding: 0 14px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: bold;
+            border-left: 1px solid #bdc1c6;
+            border-right: 1px solid #bdc1c6;
+        }
+
+        .game-column-header {
+            background: #fff;
+            border: 1px solid #bdc1c6;
+            text-align: center;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            height: 65px;
+        }
+        .game-summary-header { font-weight: bold; background: #f1f3f4; border-bottom: 1px solid #bdc1c6; padding: 4px; font-size: 12px; }
+        .game-summary-winner { font-weight: bold; font-size: 12px; padding: 3px; }
+
+        .player-roster-card {
+            background: #fff;
+            border: 1px solid #bdc1c6;
+            height: 350px;
+            display: flex;
+            flex-direction: column;
         }
 
-        .nav-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--accent-blue);
-        }
-
-        .nav-card h2 {
-            margin-top: 0;
-            color: var(--accent-blue);
-        }
-
-        .nav-card p {
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        .card-footer {
-            margin-top: 1rem;
+        .roster-header {
+            background: #202124;
+            color: #fff;
+            padding: 6px 10px;
             font-weight: bold;
-            color: var(--accent-blue);
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
         }
 
-        .quick-stats-panel {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-top: 2rem;
+        .roster-mon-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            border-top: 1px solid #bdc1c6;
+            flex: 1;
         }
 
-        .quick-stats-panel h3 {
-            margin-top: 0;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 0.5rem;
+        .mon-summary-tile {
+            border-right: 1px solid #bdc1c6;
+            padding: 4px;
+            text-align: center;
+            font-size: 11px;
+            background: #fff;
+        }
+        .mon-summary-tile:last-child { border-right: none; }
+        .mon-sprite { width: 48px; height: 48px; object-fit: contain; }
+        .mon-name { font-weight: bold; font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mon-nickname { font-size: 10px; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px; }
+        
+        .stat-section-title { background: #f1f3f4; font-weight: bold; border-top: 1px solid #bdc1c6; border-bottom: 1px solid #bdc1c6; padding: 2px 3px; font-size: 11px; text-align: center; }
+        .stat-row { display: flex; justify-content: space-between; border-top: 1px dashed #e8eaed; padding: 2px 3px; font-size: 11px; }
+
+        .game-player-block {
+            background: #fff;
+            border: 1px solid #bdc1c6;
+            height: 350px;
+            display: flex;
+            flex-direction: column;
         }
 
-        footer {
+        .game-player-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            font-weight: bold;
+            border-bottom: 1px solid #bdc1c6;
+            font-size: 12px;
+        }
+        .status-winner { background-color: #1a73e8; color: white; }
+        .status-loser { background-color: #d93025; color: white; }
+
+        .game-mon-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 0;
+            background: #bdc1c6;
+            padding: 0;
+            flex: 1;
+        }
+
+        .game-mon-cell {
+            background: #fff;
+            border: 1px solid #bdc1c6;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1.2fr;
+            box-sizing: border-box;
+            height: 100%;
+            width: 100%;
+            font-size: 11px;
+        }
+
+        .cell-top-left {
+            grid-row: 1 / span 2;
+            grid-column: 1 / 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 2px;
+            border-right: 1px solid #bdc1c6;
+            border-bottom: 1px solid #bdc1c6;
+            box-sizing: border-box;
+        }
+        .cell-top-left.bg-faint { background-color: #fce8e6; }
+        .cell-top-left.bg-survived { background-color: #ffffff; }
+
+        .cell-sprite { width: 26px; height: 26px; object-fit: contain; }
+
+        .status-badge-sheets {
+            width: 100%;
+            text-align: center;
+            font-size: 8px;
+            font-weight: bold;
+            padding: 1px 0;
+            border-top: 1px solid #bdc1c6;
+        }
+        .status-badge-sheets.faint { background-color: #d93025; color: #ffffff; }
+        .status-badge-sheets.survived { background-color: #ffffff; color: #202124; }
+
+        .cell-row-kos {
+            grid-row: 1 / 2;
+            grid-column: 2 / 3;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 6px;
+            border-bottom: 1px solid #bdc1c6;
+            font-weight: bold;
+            background: #fff;
+        }
+
+        .cell-row-turns {
+            grid-row: 2 / 3;
+            grid-column: 2 / 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            line-height: 1.15;
+            padding: 0 4px;
+            border-bottom: 1px solid #bdc1c6;
+            background: #fff;
+            font-size: 10px;
+            text-align: center;
+        }
+
+        .cell-row-cause {
+            grid-row: 3 / 4;
+            grid-column: 1 / 3;
+            padding: 2px 4px;
+            font-size: 9px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 2px;
+            word-break: break-word;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        /* Playerdex Spreadsheet Layout Styles */
+        .playerdex-sheet-container {
+            background-color: #f1f3f4;
+            border: 1px solid #bdc1c6;
+            padding: 14px;
+            color: #000;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 12px;
+            margin-bottom: 2rem;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3);
+        }
+
+        .playerdex-grid {
+            display: grid;
+            grid-template-columns: 320px repeat(3, 1fr);
+            gap: 14px;
+            align-items: start;
+        }
+
+        .playerdex-sidebar {
+            background: #fff;
+            border: 1px solid #bdc1c6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .playerdex-sidebar-header {
+            background: #202124;
+            color: #fff;
+            padding: 8px 12px;
+            font-weight: bold;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        .playerdex-summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .playerdex-summary-table th, .playerdex-summary-table td {
+            border: 1px solid #bdc1c6;
+            padding: 4px 6px;
+            text-align: left;
+        }
+
+        .playerdex-summary-table th {
+            background: #f1f3f4;
+            font-weight: bold;
+        }
+
+        .pokemon-card-cell {
+            background: #fff;
+            border: 1px solid #bdc1c6;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pcard-body {
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            border-bottom: 1px solid #bdc1c6;
+        }
+
+        .pcard-left-col {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #bdc1c6;
+            background: #fafafa;
+        }
+
+        .pcard-sprite-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 4px;
+            border-bottom: 1px solid #bdc1c6;
+            text-align: center;
+        }
+
+        .pcard-sprite {
+            width: 48px;
+            height: 48px;
+            object-fit: contain;
+        }
+
+        .pcard-nicknames-box {
+            padding: 6px;
+            flex: 1;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pcard-info-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .pcard-info-table td {
+            border-bottom: 1px solid #bdc1c6;
+            padding: 4px 6px;
+        }
+
+        .pcard-info-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Stat Row Color-Coding Classes */
+        .stat-row-red { background-color: #f4c7c3; }
+        .stat-row-green { background-color: #b7e1cd; }
+        .stat-row-blue { background-color: #c9daf8; }
+
+        /* TVR Podium & O/U Highlight Classes */
+        .podium-gold { background-color: #fce8b2 !important; }
+        .podium-silver { background-color: #e8eaed !important; }
+        .podium-bronze { background-color: #f9cb9c !important; }
+        .ou-blue { background-color: #c9daf8; }
+        .ou-red { background-color: #f4c7c3; }
+
+        /* Schedule Table Styles */
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        .schedule-table th, .schedule-table td {
+            border: 1px solid #bdc1c6;
+            padding: 4px 5px;
+            text-align: left;
+        }
+
+        .schedule-table th {
+            background: #f1f3f4;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .sched-row-win { background-color: #c9daf8; }
+        .sched-row-loss { background-color: #f4c7c3; }
+
+        .status-msg {
+            color: var(--text-muted);
+            grid-column: 1 / -1;
             text-align: center;
             padding: 2rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            border-top: 1px solid var(--border-color);
-            margin-top: 4rem;
+        }
+
+        @media (max-width: 1200px) {
+            .playerdex-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Pokémon Draft League Central</h1>
-        <p>Automated Multi-Season Match Ingestion & Performance Analytics</p>
+        <h1>Seasonal Analytics Hub</h1>
+        
+        <div class="header-center-group">
+            <div class="header-tabs">
+                <button class="header-tab-button active" onclick="switchTab('statdex')">Statdex</button>
+                <button class="header-tab-button" onclick="switchTab('playerdex')">Playerdex</button>
+            </div>
+
+            <div class="header-filters">
+                <div class="header-filter-group">
+                    <label for="seasonSelect">Select Season:</label>
+                    <select id="seasonSelect" onchange="loadSeasonalData()">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+
+                <div class="header-filter-group">
+                    <label for="weekSelect">Filter Week:</label>
+                    <select id="weekSelect" onchange="renderMatchesSheetUI()">
+                        <option value="all">All Weeks</option>
+                    </select>
+                </div>
+
+                <div class="header-filter-group">
+                    <label for="playerSearch">Search Player:</label>
+                    <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="renderMatchesSheetUI(); renderPlayerdex();">
+                </div>
+            </div>
+        </div>
+
+        <!--<a href="index.html" class="nav-back">&larr; Back to Main Hub</a>-->
     </header>
 
     <div class="container">
-        <div class="grid-nav">
-            <!-- Seasonal Hub Link -->
-            <a href="seasonal.html" class="nav-card">
-                <div>
-                    <h2>Seasonal Hub</h2>
-                    <p>Explore seasonal match replays, weekly breakdowns, player rosters, and TVR/PVR metrics.</p>
-                </div>
-                <div class="card-footer">Open Seasonal Hub &rarr;</div>
-            </a>
+        <div id="statdex" class="tab-content active">
+            <div id="matchGrid">
+                <div class="status-msg">Loading seasonal data...</div>
+            </div>
+        </div>
 
-            <!-- All-Time League Rankings Link -->
-            <a href="league_rankings.html" class="nav-card">
-                <div>
-                    <h2>League Pokédex</h2>
-                    <p>Analyze global Pokémon performance metrics, win rates, and KO statistics across all seasons.</p>
-                </div>
-                <div class="card-footer">View League Rankings &rarr;</div>
-            </a>
+        <div id="playerdex" class="tab-content">
+            <div id="playerdexGrid">
+                <div class="status-msg">Loading playerdex data...</div>
+            </div>
+        </div>
+    </div>
 
-            <!-- Player Leaderboards Link -->
-            <a href="player_rankings.html" class="nav-card">
-                <div>
-                    <h2>Player Leaderboards</h2>
-                    <p>Track player Elo rankings, head-to-head records, and historical series win counts.</p>
-                </div>
-                <div class="card-footer">View Player Standings &rarr;</div>
-            </a>
+    <!-- Load external configuration and shared helpers -->
+    <script src="config.js"></script>
+    <script src="helper.js"></script>
 
-            <!-- Admin Link -->
-            <a href="admin.html" class="nav-card">
-                <div>
-                    <h2>Admin Portal</h2>
-                    <p
+    <script>
+        let rawMatches = [];
+        let rawStats = [];
+        let rawDraftCosts = {}; 
+        let totalSeasonBudget = 120; 
+        
+        window.playerAliasesMap = {}; 
+        window.displayToTagMap = {};   
+
+        window.addEventListener('DOMContentLoaded', () => { initApp(); });
+
+        // Helper function to resolve draft cost for alternate forms & regional variants
+        function getDraftCost(species, draftCosts) {
+            if (draftCosts[species] !== undefined) {
+                return Number(draftCosts[species]);
+            }
+            
+            if (species.includes('-Mega')) {
+                const base = species.replace('-Mega', '');
+                if (draftCosts[`Mega ${base}`] !== undefined) return Number(draftCosts[`Mega ${base}`]);
+                if (draftCosts[base] !== undefined) return Number(draftCosts[base]);
+            }
+            
+            if (species.includes('-Alola')) {
+                const base = species.replace('-Alola', '');
+                if (draftCosts[`Alolan ${base}`] !== undefined) return Number(draftCosts[`Alolan ${base}`]);
+            }
+
+            if (species.includes('-Galar')) {
+                const base = species.replace('-Galar', '');
+                if (draftCosts[`Galarian ${base}`] !== undefined) return Number(draftCosts[`Galarian ${base}`]);
+            }
+
+            if (species.includes('-Hisui')) {
+                const base = species.replace('-Hisui', '');
+                if (draftCosts[`Hisuian ${base}`] !== undefined) return Number(draftCosts[`Hisuian ${base}`]);
+            }
+
+            if (species.includes('-Paldea')) {
+                const base = species.replace('-Paldea', '');
+                if (draftCosts[`Paldean ${base}`] !== undefined) return Number(draftCosts[`Paldean ${base}`]);
+            }
+
+            return 0;
+        }
+
+        async function tursoQuery(statements) {
+            if (typeof TURSO_DB_URL === 'undefined' || typeof TURSO_READONLY_TOKEN === 'undefined' || TURSO_READONLY_TOKEN.includes("YOUR_READ_ONLY_TOKEN")) {
+                document.getElementById('matchGrid').innerHTML = '<div class="status-msg" style="color:#d93025;">Please configure your Turso read-only credentials in config.js.</div>';
+                return null;
+            }
+
+            const httpUrl = TURSO_DB_URL.replace('libsql://', 'https://');
+            const response = await fetch(`${httpUrl}/v2/pipeline`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${TURSO_READONLY_TOKEN}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    requests: statements.map(s => ({
+                        type: 'execute',
+                        stmt: { 
+                            sql: s.sql, 
+                            args: s.args ? s.args.map(arg => ({ type: typeof arg === 'number' ? 'integer' : 'text', value: String(arg) })) : [] 
+                        }
+                    }))
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Database query failed');
+            
+            return data.results.map(res => {
+                if (res.type === 'error') throw new Error(res.error.message);
+                const cols = res.response.result.cols.map(c => c.name);
+                return res.response.result.rows.map(row => {
+                    let obj = {};
+                    cols.forEach((col, idx) => { obj[col] = row[idx].value; });
+                    return obj;
+                });
+            });
+        }
+
+        async function initApp() {
+            try {
+                const aliasResult = await tursoQuery([{ sql: "SELECT display_name, showdown_tag FROM player_aliases" }]);
+                if (aliasResult && aliasResult[0]) {
+                    aliasResult[0].forEach(row => {
+                        const disp = (row.display_name || '').trim();
+                        const tag = (row.showdown_tag || '').trim();
+                        if (disp && tag) {
+                            window.playerAliasesMap[tag.toLowerCase()] = disp;
+                            window.displayToTagMap[disp.toLowerCase()] = tag;
+                        }
+                    });
+                }
+
+                const results = await tursoQuery([{ sql: "SELECT season FROM seasons ORDER BY season DESC" }]);
+                if (!results) return;
+
+                const seasons = results[0];
+                const seasonSelect = document.getElementById('seasonSelect');
+                seasonSelect.innerHTML = '';
+
+                if (!seasons || seasons.length === 0) {
+                    seasonSelect.innerHTML = '<option value="">No seasons found</option>';
+                    return;
+                }
+
+                seasons.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.season;
+                    opt.innerText = `Season ${s.season}`;
+                    seasonSelect.appendChild(opt);
+                });
+
+                loadSeasonalData();
+            } catch (err) {
+                console.error("Initialization error:", err);
+            }
+        }
+
+        async function loadSeasonalData() {
+            const season = document.getElementById('seasonSelect').value;
+            if (!season) return;
+
+            try {
+                const results = await tursoQuery([
+                    {
+                        sql: `SELECT m.match_id, m.conference, m.week, m.player_1, m.player_2, 
+                                     g.game_number, g.game_id, g.replay_url, g.winner, g.turns 
+                              FROM matches m 
+                              LEFT JOIN match_games g ON m.match_id = g.match_id 
+                              WHERE m.season = ? 
+                              ORDER BY m.week ASC, m.conference ASC, m.match_id ASC, g.game_number ASC`,
+                        args: [season]
+                    },
+                    {
+                        sql: `SELECT s.stat_id, s.game_id, s.player, s.pokemon, s.nickname, s.faint_type, s.faint_source, s.faint_move,
+                                     s.direct_kos, s.indirect_kos, s.self_kos, s.total_damage, s.direct_damage, s.indirect_damage,
+                                     s.hazard_damage, s.hits_taken, s.damage_taken, s.damage_healed, s.active_turns, s.survived, s.fainted, s.battle_won
+                              FROM match_pokemon_stats s
+                              JOIN match_games g ON s.game_id = g.game_id
+                              JOIN matches m ON g.match_id = m.match_id
+                              WHERE m.season = ?`,
+                        args: [season]
+                    },
+                    {
+                        sql: `SELECT pokemon_name, draft_cost FROM pokemon_draft_costs WHERE season = ?`,
+                        args: [season]
+                    },
+                    {
+                        sql: `SELECT total_draft_budget FROM seasons WHERE season = ?`,
+                        args: [season]
+                    }
+                ]);
+
+                if (!results) return;
+
+                rawMatches = results[0];
+                rawStats = results[1];
+                
+                rawDraftCosts = {};
+                if (results[2]) {
+                    results[2].forEach(row => {
+                        rawDraftCosts[row.pokemon_name] = Number(row.draft_cost || 0);
+                    });
+                }
+
+                if (results[3] && results[3][0] && results[3][0].total_draft_budget) {
+                    totalSeasonBudget = Number(results[3][0].total_draft_budget);
+                }
+
+                const weeks = [...new Set(rawMatches.map(m => m.week))].sort((a, b) => a - b);
+                const weekSelect = document.getElementById('weekSelect');
+                weekSelect.innerHTML = '<option value="all">All Weeks</option>';
+                weeks.forEach(w => {
+                    const opt = document.createElement('option');
+                    opt.value = w;
+                    opt.innerText = `Week ${w}`;
+                    weekSelect.appendChild(opt);
+                });
+
+                renderMatchesSheetUI();
+                renderPlayerdex();
+            } catch (err) {
+                console.error("Error loading seasonal data:", err);
+            }
+        }
+
+        function renderMatchesSheetUI() {
+            const weekFilter = document.getElementById('weekSelect').value;
+            const playerFilter = document.getElementById('playerSearch').value.toLowerCase();
+            const grid = document.getElementById('matchGrid');
+
+            const matchGroups = {};
+            
+            const sortedMatches = [...rawMatches].sort((a, b) => {
+                if (Number(a.week) !== Number(b.week)) return Number(a.week) - Number(b.week);
+                if (String(a.conference) !== String(b.conference)) return String(a.conference).localeCompare(String(b.conference));
+                return Number(a.match_id) - Number(b.match_id);
+            });
+
+            sortedMatches.forEach(m => {
+                const matchWeek = String(m.week);
+                const p1Display = getDisplayName(m.player_1);
+                const p2Display = getDisplayName(m.player_2);
+
+                const matchesWeek = (weekFilter === 'all' || matchWeek === weekFilter);
+                const matchesPlayer = (!playerFilter || p1Display.toLowerCase().includes(playerFilter) || p2Display.toLowerCase().includes(playerFilter));
+
+                if (matchesWeek && matchesPlayer) {
+                    if (!matchGroups[m.match_id]) {
+                        matchGroups[m.match_id] = { info: m, games: [] };
+                    }
+                    if (m.game_number) {
+                        matchGroups[m.match_id].games.push(m);
+                    }
+                }
+            });
+
+            const matchIds = Object.keys(matchGroups);
+            if (matchIds.length === 0) {
+                grid.innerHTML = '<div class="status-msg">No matches found matching filters.</div>';
+                return;
+            }
+
+            grid.innerHTML = matchIds.map(matchId => {
+                const match = matchGroups[matchId];
+                const info = match.info;
+                const games = match.games;
+
+                const p1Display = getDisplayName(info.player_1);
+                const p2Display = getDisplayName(info.player_2);
+
+                let p1Wins = 0;
+                let p2Wins = 0;
+                games.forEach(g => {
+                    const gWinnerDisp = getDisplayName(g.winner);
+                    if (gWinnerDisp.toLowerCase() === p1Display.toLowerCase()) p1Wins++;
+                    if (gWinnerDisp.toLowerCase() === p2Display.toLowerCase()) p2Wins++;
+                });
+
+                const p1IsSetWinner = p1Wins > p2Wins;
+                const p2IsSetWinner = p2Wins > p1Wins;
+
+                const p1HazardTotal = calculateTotalHazardDamage(info.player_1, games);
+                const p2HazardTotal = calculateTotalHazardDamage(info.player_2, games);
+
+                const gameHeadersHTML = [1, 2, 3].map(gNum => {
+                    const gameData = games.find(g => Number(g.game_number) === gNum);
+                    if (!gameData) {
+                        return `
+                            <div class="game-column-header">
+                                <div class="game-summary-header">Game ${gNum}</div>
+                                <div class="game-summary-winner" style="color:#5f6368; font-size:12px;">N/A</div>
+                            </div>
+                        `;
+                    }
+                    const winnerDisplay = getDisplayName(gameData.winner);
+                    return `
+                        <div class="game-column-header">
+                            <div class="game-summary-header">Game ${gNum}: ${gameData.turns || 0} Turns</div>
+                            <div class="game-summary-winner">${winnerDisplay ? `Winner: ${winnerDisplay}` : 'Pending'}</div>
+                            ${gameData.replay_url ? `<a href="${gameData.replay_url}" target="_blank" style="font-size:11px; margin-bottom:3px;">Replay Link</a>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                const p1GameBlocksHTML = [1, 2, 3].map(gNum => {
+                    const gameData = games.find(g => Number(g.game_number) === gNum);
+                    if (!gameData) {
+                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#5f6368; font-size:12px;">Game Not Played</div>`;
+                    }
+                    const winnerDisplay = getDisplayName(gameData.winner);
+                    const p1GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_1);
+                    const isP1Winner = winnerDisplay.toLowerCase() === p1Display.toLowerCase();
+
+                    return `
+                        <div class="game-player-block">
+                            <div class="game-player-header ${isP1Winner ? 'status-winner' : 'status-loser'}">
+                                <span>${p1Display}</span>
+                                <span>${p1GameHazards} Dmg</span>
+                            </div>
+                            <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, info.player_1)}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                const p2GameBlocksHTML = [1, 2, 3].map(gNum => {
+                    const gameData = games.find(g => Number(g.game_number) === gNum);
+                    if (!gameData) {
+                        return `<div class="game-player-block" style="display:flex; align-items:center; justify-content:center; color:#5f6368; font-size:12px;">Game Not Played</div>`;
+                    }
+                    const winnerDisplay = getDisplayName(gameData.winner);
+                    const p2GameHazards = calculateGameHazardDamage(gameData.game_id, info.player_2);
+                    const isP2Winner = winnerDisplay.toLowerCase() === p2Display.toLowerCase();
+
+                    return `
+                        <div class="game-player-block">
+                            <div class="game-player-header ${isP2Winner ? 'status-winner' : 'status-loser'}">
+                                <span>${p2Display}</span>
+                                <span>${p2GameHazards} Dmg</span>
+                            </div>
+                            <div class="game-mon-grid">${renderGameMonCells(gameData.game_id, info.player_2)}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="sheet-match-container">
+                        <div class="sheet-match-inner">
+                            <div class="match-top-banner">
+                                Week ${info.week} &mdash; ${info.conference ? 'Conference ' + info.conference : 'Main Conference'}
+                            </div>
+
+                            <div class="sheet-scoreboard">
+                                <div class="score-header">
+                                    <div class="${p1IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p1Display}</span> <span>${p1Wins}</span></div>
+                                    <span class="vs-divider">VS</span>
+                                    <div class="${p2IsSetWinner ? 'player-banner-winner' : 'player-banner-loser'}"><span>${p2Wins}</span> <span>${p2Display}</span></div>
+                                </div>
+                                ${gameHeadersHTML}
+                            </div>
+
+                            <div class="sheet-scoreboard" style="margin-bottom: 14px;">
+                                <div class="player-roster-card" style="margin-bottom: 0;">
+                                    <div class="roster-header"><span>Player: ${p1Display}</span> <span>${p1HazardTotal} Hazard Damage</span></div>
+                                    <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_1, games)}</div>
+                                </div>
+                                ${p1GameBlocksHTML}
+                            </div>
+
+                            <div class="sheet-scoreboard" style="margin-bottom: 0;">
+                                <div class="player-roster-card" style="margin-bottom: 0;">
+                                    <div class="roster-header"><span>Player: ${p2Display}</span> <span>${p2HazardTotal} Hazard Damage</span></div>
+                                    <div class="roster-mon-grid">${renderPlayerMonSummaries(info.player_2, games)}</div>
+                                </div>
+                                ${p2GameBlocksHTML}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function calculateTotalHazardDamage(rawPlayerName, games) {
+            const gameIds = games.map(g => String(g.game_id));
+            const showdownTag = getShowdownTag(rawPlayerName).toLowerCase();
+            const displayName = getDisplayName(rawPlayerName).toLowerCase();
+            
+            const playerStats = rawStats.filter(s => {
+                const statPlayer = (s.player || '').trim().toLowerCase();
+                return (statPlayer === showdownTag || statPlayer === displayName || getDisplayName(s.player).toLowerCase() === displayName) && gameIds.includes(String(s.game_id));
+            });
+
+            let total = 0;
+            playerStats.forEach(s => {
+                total += Number(s.hazard_damage || 0);
+            });
+            return total;
+        }
+
+        function renderPlayerMonSummaries(rawPlayerName, games) {
+            const gameIds = games.map(g => String(g.game_id));
+            const showdownTag = getShowdownTag(rawPlayerName).toLowerCase();
+            const displayName = getDisplayName(rawPlayerName).toLowerCase();
+            
+            const playerStats = rawStats.filter(s => {
+                const statPlayer = (s.player || '').trim().toLowerCase();
+                return (statPlayer === showdownTag || statPlayer === displayName || getDisplayName(s.player).toLowerCase() === displayName) && gameIds.includes(String(s.game_id));
+            });
+            
+            const aggregated = {};
+            playerStats.forEach(s => {
+                if (!aggregated[s.pokemon]) {
+                    aggregated[s.pokemon] = { 
+                        species: s.pokemon, 
+                        nickname: s.nickname || s.pokemon,
+                        directKos: 0, 
+                        indirectKos: 0, 
+                        teamKos: 0,
+                        totalDmg: 0,
+                        takenDmg: 0,
+                        healedDmg: 0,
+                        hitsTaken: 0
+                    };
+                }
+                aggregated[s.pokemon].directKos += Number(s.direct_kos || 0);
+                aggregated[s.pokemon].indirectKos += Number(s.indirect_kos || 0);
+                aggregated[s.pokemon].teamKos += Number(s.self_kos || 0);
+                aggregated[s.pokemon].totalDmg += Number(s.total_damage || 0);
+                aggregated[s.pokemon].takenDmg += Number(s.damage_taken || 0);
+                aggregated[s.pokemon].healedDmg += Number(s.damage_healed || 0);
+                aggregated[s.pokemon].hitsTaken += Number(s.hits_taken || 0);
+            });
+
+            const mons = Object.values(aggregated).slice(0, 6);
+            if (mons.length === 0) {
+                return '<div style="padding:10px; grid-column:span 6; text-align:center; background:#fff;">No Pokémon data logged</div>';
+            }
+
+            return mons.map(m => {
+                const spriteUrl = getSpriteUrl(m.species, 'gen5');
+
+                return `
+                    <div class="mon-summary-tile">
+                        <img src="${spriteUrl}" class="mon-sprite" onerror="handleImageError(this)" />
+                        <div class="mon-name">${m.species}</div>
+                        <div class="mon-nickname">${m.nickname}</div>
+                        <div class="stat-section-title">Knock Outs</div>
+                        <div class="stat-row"><span>Direct:</span> <strong>${m.directKos}</strong></div>
+                        <div class="stat-row"><span>Indirect:</span> <strong>${m.indirectKos}</strong></div>
+                        <div class="stat-row"><span>Team:</span> <strong>${m.teamKos}</strong></div>
+                        <div class="stat-section-title">Stats</div>
+                        <div class="stat-row"><span>Dealt:</span> <strong>${m.totalDmg}%</strong></div>
+                        <div class="stat-row"><span>Taken:</span> <strong>${m.takenDmg}%</strong></div>
+                        <div class="stat-row"><span>Healed:</span> <strong>${m.healedDmg}%</strong></div>
+                        <div class="stat-row"><span>Hits Taken:</span> <strong>${m.hitsTaken}</strong></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function calculateGameHazardDamage(gameId, rawPlayerName) {
+            const showdownTag = getShowdownTag(rawPlayerName).toLowerCase();
+            const displayName = getDisplayName(rawPlayerName).toLowerCase();
+
+            const gameStats = rawStats.filter(s => {
+                const statPlayer = (s.player || '').trim().toLowerCase();
+                return (statPlayer === showdownTag || statPlayer === displayName || getDisplayName(s.player).toLowerCase() === displayName) && String(s.game_id) === String(gameId);
+            });
+
+            let total = 0;
+            gameStats.forEach(s => {
+                total += Number(s.hazard_damage || 0);
+            });
+            return total;
+        }
+
+        function renderGameMonCells(gameId, rawPlayerName) {
+            const showdownTag = getShowdownTag(rawPlayerName).toLowerCase();
+            const displayName = getDisplayName(rawPlayerName).toLowerCase();
+
+            const gameStats = rawStats.filter(s => {
+                const statPlayer = (s.player || '').trim().toLowerCase();
+                return (statPlayer === showdownTag || statPlayer === displayName || getDisplayName(s.player).toLowerCase() === displayName) && String(s.game_id) === String(gameId);
+            });
+            const mons = gameStats.slice(0, 6);
+
+            if (mons.length === 0) {
+                return '<div style="padding:10px; grid-column:span 2; background:#fff; text-align:center;">No log stats</div>';
+            }
+
+            return mons.map(m => {
+                const isFainted = Number(m.survived) === 0;
+                const spriteType = isFainted ? 'monotone' : 'color';
+                const spriteUrl = getSpriteUrl(m.pokemon, spriteType);
+
+                const totalKos = Number(m.direct_kos || 0) + Number(m.indirect_kos || 0) + Number(m.self_kos || 0);
+                
+                let line1 = '';
+                let line2 = '';
+                if (isFainted) {
+                    const source = (m.faint_source && m.faint_source !== "N/A" && m.faint_source !== "Unknown") ? m.faint_source : '';
+                    const move = (m.faint_move && m.faint_move !== "Unknown") ? m.faint_move : '';
+                    line1 = source;
+                    line2 = move;
+                }
+
+                return `
+                    <div class="game-mon-cell">
+                        <div class="cell-top-left ${isFainted ? 'bg-faint' : 'bg-survived'}">
+                            <img src="${spriteUrl}" class="cell-sprite" onerror="handleImageError(this)" />
+                            <div class="status-badge-sheets ${isFainted ? 'faint' : 'survived'}">
+                                ${isFainted ? 'Fainted' : 'Survived'}
+                            </div>
+                        </div>
+
+                        <div class="cell-row-kos">
+                            <span>KOs:</span>
+                            <span>${totalKos}</span>
+                        </div>
+                        <div class="cell-row-turns">
+                            <strong>Active</strong> ${m.active_turns || 0} Turns
+                        </div>
+                        <div class="cell-row-cause">
+                            ${isFainted ? `<div><strong>${line1}</strong></div><div>${line2}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render Full Playerdex View Separated by Conference and Sorted by Record
+        function renderPlayerdex() {
+            const playerFilter = document.getElementById('playerSearch').value.toLowerCase();
+            const grid = document.getElementById('playerdexGrid');
+
+            // 1. Calculate Player Set & Game Records, and map players to conferences
+            const playerRecords = {};
+            const playerConferences = {};
+            const matchGroups = {};
+
+            rawMatches.forEach(m => {
+                if (!matchGroups[m.match_id]) {
+                    matchGroups[m.match_id] = { info: m, games: [] };
+                }
+                if (m.game_number) {
+                    matchGroups[m.match_id].games.push(m);
+                }
+            });
+
+            Object.values(matchGroups).forEach(matchObj => {
+                const info = matchObj.info;
+                const games = matchObj.games;
+                if (!info.player_1 || !info.player_2) return;
+
+                const p1 = getDisplayName(info.player_1);
+                const p2 = getDisplayName(info.player_2);
+                const conf = info.conference ? String(info.conference) : "Main";
+
+                playerConferences[p1] = conf;
+                playerConferences[p2] = conf;
+
+                if (!playerRecords[p1]) playerRecords[p1] = { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
+                if (!playerRecords[p2]) playerRecords[p2] = { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
+
+                let p1GameWins = 0;
+                let p2GameWins = 0;
+
+                games.forEach(g => {
+                    const winner = getDisplayName(g.winner);
+                    if (winner) {
+                        if (winner.toLowerCase() === p1.toLowerCase()) {
+                            p1GameWins++;
+                            playerRecords[p1].gameWins++;
+                            playerRecords[p2].gameLosses++;
+                        } else if (winner.toLowerCase() === p2.toLowerCase()) {
+                            p2GameWins++;
+                            playerRecords[p2].gameWins++;
+                            playerRecords[p1].gameLosses++;
+                        }
+                    }
+                });
+
+                if (games.length > 0) {
+                    if (p1GameWins > p2GameWins) {
+                        playerRecords[p1].setWins++;
+                        playerRecords[p2].setLosses++;
+                    } else if (p2GameWins > p1GameWins) {
+                        playerRecords[p2].setWins++;
+                        playerRecords[p1].setLosses++;
+                    }
+                }
+            });
+
+            // 2. Build player weekly schedules from rawMatches
+            const playerSchedules = {};
+            Object.values(matchGroups).forEach(matchObj => {
+                const info = matchObj.info;
+                const games = matchObj.games;
+                if (!info.player_1 || !info.player_2) return;
+
+                const p1 = getDisplayName(info.player_1);
+                const p2 = getDisplayName(info.player_2);
+                const weekNum = Number(info.week || 0);
+                if (!weekNum) return;
+
+                let p1Wins = 0;
+                let p2Wins = 0;
+                games.forEach(g => {
+                    const w = getDisplayName(g.winner);
+                    if (w.toLowerCase() === p1.toLowerCase()) p1Wins++;
+                    if (w.toLowerCase() === p2.toLowerCase()) p2Wins++;
+                });
+
+                const hasPlayed = games.length > 0 && (p1Wins > 0 || p2Wins > 0 || games.some(g => g.winner));
+
+                if (!playerSchedules[p1]) playerSchedules[p1] = [];
+                if (!playerSchedules[p2]) playerSchedules[p2] = [];
+
+                playerSchedules[p1].push({ week: weekNum, opponent: p2, pWins: p1Wins, oWins: p2Wins, played: hasPlayed });
+                playerSchedules[p2].push({ week: weekNum, opponent: p1, pWins: p2Wins, oWins: p1Wins, played: hasPlayed });
+            });
+
+            // 3. Group stats by player and collect all unique nicknames per pokemon
+            const playerMap = {};
+            rawStats.forEach(st => {
+                const dispName = getDisplayName(st.player);
+                if (!playerMap[dispName]) {
+                    playerMap[dispName] = { pokemon: {} };
+                }
+                if (!playerMap[dispName].pokemon[st.pokemon]) {
+                    playerMap[dispName].pokemon[st.pokemon] = {
+                        species: st.pokemon,
+                        nicknamesSet: new Set(),
+                        timesBrought: 0,
+                        battlesActive: 0,
+                        directKo: 0,
+                        indirectKo: 0,
+                        damageDealt: 0,
+                        damageDirect: 0,
+                        damageIndirect: 0,
+                        hitsTaken: 0,
+                        damageTaken: 0,
+                        damageHeal: 0,
+                        activeTurns: 0,
+                        survived: 0,
+                        fainted: 0,
+                        battleWon: 0
+                    };
+                }
+                const pObj = playerMap[dispName].pokemon[st.pokemon];
+                if (st.nickname && st.nickname.trim() !== "" && st.nickname !== st.pokemon) {
+                    pObj.nicknamesSet.add(st.nickname.trim());
+                }
+                pObj.timesBrought += 1;
+                pObj.battlesActive += 1;
+                pObj.directKo += Number(st.direct_kos || 0);
+                pObj.indirectKo += Number(st.indirect_kos || 0);
+                pObj.damageDealt += Number(st.total_damage || 0);
+                pObj.damageDirect += Number(st.direct_damage || 0);
+                pObj.damageIndirect += Number(st.indirect_damage || 0);
+                pObj.hitsTaken += Number(st.hits_taken || 0);
+                pObj.damageTaken += Number(st.damage_taken || 0);
+                pObj.damageHeal += Number(st.damage_healed || 0);
+                pObj.activeTurns += Number(st.active_turns || 0);
+                pObj.survived += Number(st.survived || 0);
+                pObj.fainted += Number(st.fainted || 0);
+                pObj.battleWon += Number(st.battle_won || 0);
+            });
+
+            // 4. Group players by Conference
+            const conferenceMap = {};
+            Object.keys(playerMap).forEach(player => {
+                if (playerFilter && !player.toLowerCase().includes(playerFilter)) return;
+                const conf = playerConferences[player] || "Main";
+                if (!conferenceMap[conf]) conferenceMap[conf] = [];
+                conferenceMap[conf].push(player);
+            });
+
+            const confKeys = Object.keys(conferenceMap).sort();
+            if (confKeys.length === 0) {
+                grid.innerHTML = '<div class="status-msg">No player records found for this season.</div>';
+                return;
+            }
+
+            // 5. Sort players within each conference by record
+            confKeys.forEach(conf => {
+                conferenceMap[conf].sort((a, b) => {
+                    const recA = playerRecords[a] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
+                    const recB = playerRecords[b] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
+                    if (recB.setWins !== recA.setWins) return recB.setWins - recA.setWins;
+                    if (recA.setLosses !== recB.setLosses) return recA.setLosses - recB.setLosses;
+                    return recB.gameWins - recA.gameWins;
+                });
+            });
+
+            // 6. Build HTML for each conference and its sorted players
+            grid.innerHTML = confKeys.map(conf => {
+                const playersInConf = conferenceMap[conf];
+                if (playersInConf.length === 0) return '';
+
+                const playerContainersHTML = playersInConf.map(player => {
+                    const playerData = playerMap[player];
+                    const pokemons = Object.values(playerData.pokemon);
+                    const rec = playerRecords[player] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
+                    const sched = playerSchedules[player] || [];
+                    sched.sort((a, b) => a.week - b.week);
+
+                    const scheduleRowsHtml = sched.map(s => {
+                        const weekStr = String(s.week).padStart(2, '0');
+                        if (!s.played) {
+                            return `
+                                <tr>
+                                    <td style="text-align:center; font-weight:bold;">${weekStr}</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td></td>
+                                    <td>${s.opponent}</td>
+                                </tr>
+                            `;
+                        }
+                        const isWin = s.pWins > s.oWins;
+                        const rowClass = isWin ? 'sched-row-win' : 'sched-row-loss';
+                        const resLetter = isWin ? 'W' : 'L';
+                        return `
+                            <tr class="${rowClass}">
+                                <td style="text-align:center; font-weight:bold;">${weekStr}</td>
+                                <td style="text-align:center; font-weight:bold;">${resLetter}</td>
+                                <td style="text-align:center;">${s.pWins}</td>
+                                <td style="text-align:center;">${s.oWins}</td>
+                                <td>${s.opponent}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    const totals = {
+                        timesBrought: pokemons.reduce((acc, m) => acc + m.timesBrought, 0) || 1,
+                        battlesActive: pokemons.reduce((acc, m) => acc + m.battlesActive, 0) || 1,
+                        directKo: pokemons.reduce((acc, m) => acc + m.directKo, 0) || 1,
+                        indirectKo: pokemons.reduce((acc, m) => acc + m.indirectKo, 0) || 1,
+                        damageDealt: pokemons.reduce((acc, m) => acc + m.damageDealt, 0) || 1,
+                        damageDirect: pokemons.reduce((acc, m) => acc + m.damageDirect, 0) || 1,
+                        damageIndirect: pokemons.reduce((acc, m) => acc + m.damageIndirect, 0) || 1,
+                        hitsTaken: pokemons.reduce((acc, m) => acc + m.hitsTaken, 0) || 1,
+                        damageTaken: pokemons.reduce((acc, m) => acc + m.damageTaken, 0) || 1,
+                        damageHeal: pokemons.reduce((acc, m) => acc + m.damageHeal, 0) || 1,
+                        activeTurns: pokemons.reduce((acc, m) => acc + m.activeTurns, 0) || 1,
+                        survived: pokemons.reduce((acc, m) => acc + m.survived, 0) || 1,
+                        battleWon: pokemons.reduce((acc, m) => acc + m.battleWon, 0) || 1
+                    };
+
+                    pokemons.forEach(m => {
+                        const shares = [
+                            m.timesBrought / totals.timesBrought,
+                            m.battlesActive / totals.battlesActive,
+                            m.directKo / totals.directKo,
+                            m.indirectKo / totals.indirectKo,
+                            m.damageDealt / totals.damageDealt,
+                            m.damageDirect / totals.damageDirect,
+                            m.damageIndirect / totals.damageIndirect,
+                            m.hitsTaken / totals.hitsTaken,
+                            m.damageTaken / totals.damageTaken,
+                            m.damageHeal / totals.damageHeal,
+                            m.activeTurns / totals.activeTurns,
+                            m.survived / totals.survived,
+                            m.battleWon / totals.battleWon
+                        ];
+                        m.tvr = (shares.reduce((a, b) => a + b, 0) / shares.length) * 100;
+
+                        const cost = getDraftCost(m.species, rawDraftCosts);
+                        m.pvr = (cost / totalSeasonBudget) * 100;
+                        m.ou = m.pvr > 0 ? m.tvr / m.pvr : 0;
+                    });
+
+                    pokemons.sort((a, b) => b.tvr - a.tvr);
+
+                    const summaryTableRows = pokemons.map((m, index) => {
+                        let rankClass = '';
+                        if (index === 0) rankClass = 'podium-gold';
+                        else if (index === 1) rankClass = 'podium-silver';
+                        else if (index === 2) rankClass = 'podium-bronze';
+
+                        const ouClass = m.ou > 1 ? 'ou-blue' : (m.ou < 1 ? 'ou-red' : '');
+
+                        return `
+                            <tr>
+                                <td class="${rankClass}">${m.species}</td>
+                                <td style="text-align:right;" class="${rankClass}">${m.tvr.toFixed(1)}%</td>
+                                <td style="text-align:right;" class="${rankClass}">${m.pvr.toFixed(1)}%</td>
+                                <td style="text-align:right;" class="${ouClass}">${m.ou.toFixed(2)}</td>
+                            </tr>
+                        `;
+                    }).join('');
+
+                    const pokemonCardsHTML = pokemons.map((m, idx) => {
+                        const spriteUrl = getSpriteUrl(m.species, 'color');
+                        const directAvg = m.battlesActive > 0 ? (m.directKo / m.battlesActive).toFixed(1) : '0.0';
+                        const indirectAvg = m.battlesActive > 0 ? (m.indirectKo / m.battlesActive).toFixed(1) : '0.0';
+                        const takenAvg = m.battlesActive > 0 ? (m.damageTaken / m.battlesActive).toFixed(1) : '0.0';
+                        const hitsAvg = m.battlesActive > 0 ? (m.hitsTaken / m.battlesActive).toFixed(1) : '0.0';
+                        const healedAvg = m.battlesActive > 0 ? (m.damageHeal / m.battlesActive).toFixed(1) : '0.0';
+                        const dealtAvg = m.battlesActive > 0 ? (m.damageDealt / m.battlesActive).toFixed(1) : '0.0';
+                        const dealtDirectAvg = m.battlesActive > 0 ? (m.damageDirect / m.battlesActive).toFixed(1) : '0.0';
+                        const dealtIndAvg = m.battlesActive > 0 ? (m.damageIndirect / m.battlesActive).toFixed(1) : '0.0';
+
+                        const nicknamesList = Array.from(m.nicknamesSet);
+                        const nicknamesHtml = nicknamesList.length > 0 
+                            ? nicknamesList.map(n => `<div style="font-size:10px; color:#5f6368; line-height:1.3; word-break:break-word; margin-bottom:2px;">&ldquo;${n}&rdquo;</div>`).join('')
+                            : `<div style="font-size:10px; color:#9aa0a6; font-style:italic;">None</div>`;
+
+                        return `
+                            <div class="pokemon-card-cell">
+                                <div style="background:#e5e7eb; padding:4px 8px; font-weight:bold; border-bottom:1px solid #bdc1c6; display:flex; justify-content:space-between;">
+                                    <span>Team Value Ratio</span>
+                                    <span>${m.tvr.toFixed(2)}%</span>
+                                </div>
+                                <div class="pcard-body">
+                                    <div class="pcard-left-col">
+                                        <div class="pcard-sprite-box">
+                                            <img src="${spriteUrl}" class="pcard-sprite" onerror="handleImageError(this)" />
+                                            <span style="font-size:11px; font-weight:bold; margin-top:4px; word-break:break-word;">${m.species}</span>
+                                        </div>
+                                        <div class="pcard-nicknames-box">
+                                            <div style="font-size:10px; font-weight:bold; color:#202124; margin-bottom:4px; border-bottom:1px solid #e0e0e0; padding-bottom:2px;">Nicknames</div>
+                                            ${nicknamesHtml}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <table class="pcard-info-table">
+                                            <tr><td></td><td>Total</td><td>Avg</td></tr>
+                                            <tr class="stat-row-red"><td>Direct KOs:</td><td>${m.directKo}</td><td>${directAvg}</td></tr>
+                                            <tr class="stat-row-green"><td>Indirect KOs:</td><td>${m.indirectKo}</td><td>${indirectAvg}</td></tr>
+                                            <tr class="stat-row-blue"><td>Damage Taken:</td><td>${m.damageTaken}</td><td>${takenAvg}</td></tr>
+                                            <tr class="stat-row-blue"><td>Hits Taken:</td><td>${m.hitsTaken}</td><td>${hitsAvg}</td></tr>
+                                            <tr class="stat-row-blue"><td>Damage Healed:</td><td>${m.damageHeal}</td><td>${healedAvg}</td></tr>
+                                            <tr><td>Total Dealt:</td><td>${m.damageDealt}</td><td>${dealtAvg}</td></tr>
+                                            <tr class="stat-row-red"><td>Direct Dealt:</td><td>${m.damageDirect}</td><td>${dealtDirectAvg}</td></tr>
+                                            <tr class="stat-row-green"><td>Indirect Dealt:</td><td>${m.damageIndirect}</td><td>${dealtIndAvg}</td></tr>
+                                        </table>
+                                        <table class="pcard-info-table" style="border-top:1px solid #bdc1c6;">
+                                            <tr><td>Battles:</td><td style="text-align:right;"><strong>${m.timesBrought}</strong></td></tr>
+                                            <tr><td>Active Battles:</td><td style="text-align:right;">${m.battlesActive} Battles</td></tr>
+                                            <tr><td>Survived Battles:</td><td style="text-align:right;">${m.survived} Battles</td></tr>
+                                            <tr><td>Won Battles:</td><td style="text-align:right;">${m.battleWon} Battles</td></tr>
+                                            <tr><td>Active Turns:</td><td style="text-align:right;">${m.activeTurns} Turns</td></tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    return `
+                        <div class="playerdex-sheet-container">
+                            <div class="match-top-banner" style="margin-bottom:14px; text-align:left; padding:8px 14px; display:flex; justify-content:space-between; align-items:center;">
+                                <span>Conference ${conf}</span>
+                                <span>Season Standings</span>
+                            </div>
+                            <div class="playerdex-grid">
+                                <div class="playerdex-sidebar">
+                                    <div class="playerdex-sidebar-header">${player}</div>
+                                    <div style="padding:10px; text-align:center; background:#fafafa; border-bottom:1px solid #bdc1c6;">
+                                        <div style="font-weight:bold; font-size:14px;">Record: ${rec.setWins}-${rec.setLosses} (${rec.gameWins}-${rec.gameLosses})</div>
+                                    </div>
+                                    <div style="background:#202124; color:#fff; padding:6px; text-align:center; font-weight:bold; font-size:12px;">Team Value Ratio</div>
+                                    <table class="playerdex-summary-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Pokemon</th>
+                                                <th style="text-align:right;">TVR</th>
+                                                <th style="text-align:right;">PVR</th>
+                                                <th style="text-align:right;">O/U</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${summaryTableRows}
+                                        </tbody>
+                                    </table>
+                                    <div style="padding:8px; text-align:center; font-weight:bold; font-size:11px; background:#f1f3f4; border-top:1px solid #bdc1c6; border-bottom:1px solid #bdc1c6;">
+                                        ${pokemons.length} Pokémon Used
+                                    </div>
+                                    <div style="background:#202124; color:#fff; padding:6px; text-align:center; font-weight:bold; font-size:12px; border-top:1px solid #bdc1c6;">Weekly Schedule</div>
+                                    <table class="schedule-table">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 32px;"></th>
+                                                <th style="width: 24px;">R.</th>
+                                                <th style="width: 24px;">W</th>
+                                                <th style="width: 24px;">L</th>
+                                                <th>Opponent</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${scheduleRowsHtml}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div style="grid-column: span 3; display:grid; grid-template-columns: repeat(3, 1fr); gap: 14px;">
+                                    ${pokemonCardsHTML}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <div style="margin-bottom: 2rem;">
+                        <h2 style="color: var(--text-main); border-bottom: 2px solid var(--border-color); padding-bottom: 0.5rem;">Conference ${conf} Standings</h2>
+                        ${playerContainersHTML}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.header-tab-button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+    </script>
+</body>
+</html>
