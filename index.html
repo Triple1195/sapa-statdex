@@ -532,68 +532,69 @@
                 grid-template-columns: 1fr;
             }
         }
+
         .conf-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
-    gap: 20px;
-    align-items: start;
-}
-.conf-panel {
-    background: var(--card-bg, #fff);
-    border: 1px solid #bdc1c6;
-    border-radius: 6px;
-    padding: 10px;
-    font-size: 11px;
-}
-.conf-header-row {
-    display: grid;
-    grid-template-columns: 1fr 1.3fr;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-.conf-banner {
-    background: #d1d5db;
-    color: #111827;
-    font-weight: 800;
-    font-size: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 8px;
-    border: 1px solid #9ca3af;
-}
-.conf-records-table, .conf-mini-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 10.5px;
-}
-.conf-records-table th, .conf-records-table td,
-.conf-mini-table th, .conf-mini-table td {
-    border: 1px solid #d1d5db;
-    padding: 2px 5px;
-}
-.conf-section-title {
-    background: #e5e7eb;
-    font-weight: 700;
-    text-align: center;
-    padding: 3px 6px;
-    border: 1px solid #9ca3af;
-    border-bottom: none;
-}
-.conf-two-col {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-.conf-bottom-grid {
-    display: grid;
-    grid-template-columns: 1.25fr 1fr;
-    gap: 8px;
-}
-.rank-1 { background: #fce8b2; font-weight: 700; }
-.rank-2 { background: #e8eaed; }
-.rank-3 { background: #f9cb9c; }
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(560px, 1fr));
+            gap: 20px;
+            align-items: start;
+        }
+        .conf-panel {
+            background: var(--card-bg, #fff);
+            border: 1px solid #bdc1c6;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 11px;
+        }
+        .conf-header-row {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .conf-banner {
+            background: #d1d5db;
+            color: #111827;
+            font-weight: 800;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            border: 1px solid #9ca3af;
+        }
+        .conf-records-table, .conf-mini-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10.5px;
+        }
+        .conf-records-table th, .conf-records-table td,
+        .conf-mini-table th, .conf-mini-table td {
+            border: 1px solid #d1d5db;
+            padding: 2px 5px;
+        }
+        .conf-section-title {
+            background: #e5e7eb;
+            font-weight: 700;
+            text-align: center;
+            padding: 3px 6px;
+            border: 1px solid #9ca3af;
+            border-bottom: none;
+        }
+        .conf-two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .conf-bottom-grid {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 8px;
+        }
+        .rank-1 { background: #fce8b2; font-weight: 700; }
+        .rank-2 { background: #e8eaed; }
+        .rank-3 { background: #f9cb9c; }
     </style>
 </head>
 <body>
@@ -603,9 +604,9 @@
         
         <div class="header-center-group">
             <div class="header-tabs">
-                <button class="header-tab-button active" onclick="switchTab('statdex')">Statdex</button>
-                <button class="header-tab-button" onclick="switchTab('playerdex')">Playerdex</button>
-                <button class="header-tab-button" onclick="switchTab('conference')">Conference Stats</button>
+                <button class="header-tab-button active" onclick="switchTab('statdex', this)">Statdex</button>
+                <button class="header-tab-button" onclick="switchTab('playerdex', this)">Playerdex</button>
+                <button class="header-tab-button" onclick="switchTab('conference', this)">Conference Stats</button>
             </div>
 
             <div class="header-filters">
@@ -625,7 +626,7 @@
 
                 <div class="header-filter-group">
                     <label for="playerSearch">Search Player:</label>
-                    <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="renderMatchesSheetUI(); renderPlayerdex();">
+                    <input type="text" id="playerSearch" placeholder="Type player name..." onkeyup="renderMatchesSheetUI(); renderPlayerdex(); renderConferenceStats();">
                 </div>
             </div>
         </div>
@@ -633,7 +634,7 @@
         <!--<a href="index.html" class="nav-back">&larr; Back to Main Hub</a>-->
     </header>
 
-<div class="container">
+    <div class="container">
         <div id="statdex" class="tab-content active">
             <div id="matchGrid">
                 <div class="status-msg">Loading seasonal data...</div>
@@ -672,7 +673,6 @@
         function getDraftCost(species, draftCosts) {
             if (!species) return 0;
 
-            // Build a case-insensitive, punctuation-normalized lookup map on first run
             if (!window._normalizedDraftCosts) {
                 window._normalizedDraftCosts = {};
                 for (const [key, val] of Object.entries(draftCosts)) {
@@ -690,15 +690,13 @@
                 return undefined;
             };
 
-            // 1. Direct / normalized match (handles case & hyphen differences)
             let cost = lookup(species);
             if (cost !== undefined) return cost;
 
-            // 2. Mega Evolutions (handles -Mega, -Mega-X, -Mega-Y -> "Mega Charizard X", "Charizard-Mega-X", or base "Charizard")
             if (species.includes('-Mega')) {
                 const parts = species.split('-Mega');
                 const base = parts[0];
-                const suffix = parts[1] ? parts[1].replace('-', ' ').trim() : ''; // e.g., "X" or "Y"
+                const suffix = parts[1] ? parts[1].replace('-', ' ').trim() : '';
 
                 const candidates = [
                     `Mega ${base}${suffix ? ' ' + suffix : ''}`,
@@ -711,7 +709,6 @@
                 }
             }
 
-            // 3. Regional Forms (Alola, Galar, Hisui, Paldea)
             const regionals = [
                 { tag: '-Alola', prefix: 'Alolan' },
                 { tag: '-Galar', prefix: 'Galarian' },
@@ -726,14 +723,12 @@
                 }
             }
 
-            // 4. Forces of Nature / Incarnate Forms (Thundurus, Landorus, Tornadus, Enamorus)
             const genies = ['Thundurus', 'Landorus', 'Tornadus', 'Enamorus'];
             if (genies.includes(species)) {
                 cost = lookup(`${species}-Incarnate`) ?? lookup(`${species} Incarnate`);
                 if (cost !== undefined) return cost;
             }
 
-            // 5. Fallback to base species name (handles cosmetic forms like Gastrodon-East -> Gastrodon, Vivillon-Polar -> Vivillon, etc.)
             if (species.includes('-')) {
                 const baseSpecies = species.split('-')[0];
                 cost = lookup(baseSpecies);
@@ -1194,12 +1189,10 @@
             }).join('');
         }
 
-       // Render Full Playerdex View Separated by Conference and Sorted by Record
         function renderPlayerdex() {
             const playerFilter = document.getElementById('playerSearch').value.toLowerCase();
             const grid = document.getElementById('playerdexGrid');
 
-            // 1. Calculate Player Set & Game Records, and map players to conferences
             const playerRecords = {};
             const playerConferences = {};
             const matchGroups = {};
@@ -1257,7 +1250,6 @@
                 }
             });
 
-            // 2. Build player weekly schedules from rawMatches
             const playerSchedules = {};
             Object.values(matchGroups).forEach(matchObj => {
                 const info = matchObj.info;
@@ -1286,7 +1278,6 @@
                 playerSchedules[p2].push({ week: weekNum, opponent: p1, pWins: p2Wins, oWins: p1Wins, played: hasPlayed });
             });
 
-            // 3. Group stats by player and collect all unique nicknames per pokemon
             const playerMap = {};
             rawStats.forEach(st => {
                 const dispName = getDisplayName(st.player);
@@ -1333,7 +1324,6 @@
                 pObj.battleWon += Number(st.battle_won || 0);
             });
 
-            // 3b. Merge base Pokémon stats into their corresponding Mega form per player
             Object.keys(playerMap).forEach(dispName => {
                 const monDict = playerMap[dispName].pokemon;
                 const allSpecies = Object.keys(monDict);
@@ -1375,7 +1365,6 @@
                 });
             });
 
-            // 4. Group players by Conference
             const conferenceMap = {};
             Object.keys(playerMap).forEach(player => {
                 if (playerFilter && !player.toLowerCase().includes(playerFilter)) return;
@@ -1390,7 +1379,6 @@
                 return;
             }
 
-            // 5. Sort players within each conference by record
             confKeys.forEach(conf => {
                 conferenceMap[conf].sort((a, b) => {
                     const recA = playerRecords[a] || { setWins: 0, setLosses: 0, gameWins: 0, gameLosses: 0 };
@@ -1401,7 +1389,6 @@
                 });
             });
 
-            // 6. Build HTML for each conference and its sorted players
             grid.innerHTML = confKeys.map(conf => {
                 const playersInConf = conferenceMap[conf];
                 if (playersInConf.length === 0) return '';
@@ -1440,7 +1427,6 @@
                         `;
                     }).join('');
 
-                    // A. Weighted Team Share (TVR) totals & active weight normalization
                     const teamTotals = {
                         directKo: pokemons.reduce((acc, m) => acc + m.directKo, 0),
                         damageDirect: pokemons.reduce((acc, m) => acc + m.damageDirect, 0),
@@ -1470,7 +1456,6 @@
                         0
                     ) || 1;
 
-                    // B. Per-battle efficiency (BER) raw calculation
                     pokemons.forEach(m => {
                         const games = m.timesBrought || 1;
                         const kosPerGame = (m.directKo + m.indirectKo) / games;
@@ -1490,7 +1475,6 @@
 
                     const totalRawEfficiency = pokemons.reduce((acc, m) => acc + m.rawEfficiency, 0) || 1;
 
-                    // C. Finalize TVR, BER, PVR, and Volume / Efficiency O/U ratios
                     pokemons.forEach(m => {
                         let weightedShare = 0;
                         tvrWeights.forEach(item => {
@@ -1533,7 +1517,7 @@
                         `;
                     }).join('');
 
-                    const pokemonCardsHTML = pokemons.map((m, idx) => {
+                    const pokemonCardsHTML = pokemons.map((m) => {
                         const spriteUrl = getSpriteUrl(m.species, 'color');
                         const directAvg = m.battlesActive > 0 ? (m.directKo / m.battlesActive).toFixed(1) : '0.0';
                         const indirectAvg = m.battlesActive > 0 ? (m.indirectKo / m.battlesActive).toFixed(1) : '0.0';
@@ -1655,424 +1639,522 @@
                 `;
             }).join('');
         }
-function renderConferenceStats() {
-    const container = document.getElementById('conferenceStatsGrid');
-    if (!container) return;
 
-    // 1. Group matches & games by conference
-    const matchGroups = {};
-    rawMatches.forEach(m => {
-        if (!matchGroups[m.match_id]) {
-            matchGroups[m.match_id] = { info: m, games: [] };
-        }
-        if (m.game_number) {
-            matchGroups[m.match_id].games.push(m);
-        }
-    });
+        function renderConferenceStats() {
+            const container = document.getElementById('conferenceStatsGrid');
+            if (!container) return;
 
-    const confData = {};
-    const playerToConf = {};
-    const playerWL = {};
+            const playerFilter = (document.getElementById('playerSearch')?.value || '').toLowerCase();
 
-    const ensureConf = (conf) => {
-        if (!confData[conf]) {
-            confData[conf] = {
-                name: conf,
-                longestGame: null,
-                shortestGame: null,
-                players: new Set(),
-                mons: {}
-            };
-        }
-        return confData[conf];
-    };
-
-    Object.values(matchGroups).forEach(({ info, games }) => {
-        if (!info.player_1 || !info.player_2) return;
-        const p1 = getDisplayName(info.player_1);
-        const p2 = getDisplayName(info.player_2);
-        const conf = info.conference ? String(info.conference) : 'Main';
-        const cObj = ensureConf(conf);
-
-        playerToConf[p1] = conf;
-        playerToConf[p2] = conf;
-        cObj.players.add(p1);
-        cObj.players.add(p2);
-
-        if (!playerWL[p1]) playerWL[p1] = { w: 0, l: 0 };
-        if (!playerWL[p2]) playerWL[p2] = { w: 0, l: 0 };
-
-        games.forEach(g => {
-            const w = getDisplayName(g.winner);
-            if (w) {
-                if (w.toLowerCase() === p1.toLowerCase()) {
-                    playerWL[p1].w++;
-                    playerWL[p2].l++;
-                } else if (w.toLowerCase() === p2.toLowerCase()) {
-                    playerWL[p2].w++;
-                    playerWL[p1].l++;
+            // 1. Group matches & games by conference
+            const matchGroups = {};
+            rawMatches.forEach(m => {
+                if (!matchGroups[m.match_id]) {
+                    matchGroups[m.match_id] = { info: m, games: [] };
                 }
+                if (m.game_number) {
+                    matchGroups[m.match_id].games.push(m);
+                }
+            });
+
+            const confData = {};
+            const playerToConf = {};
+            const playerWL = {};
+
+            const ensureConf = (conf) => {
+                if (!confData[conf]) {
+                    confData[conf] = {
+                        name: conf,
+                        longestGame: null,
+                        shortestGame: null,
+                        players: new Set(),
+                        mons: {}
+                    };
+                }
+                return confData[conf];
+            };
+
+            Object.values(matchGroups).forEach(({ info, games }) => {
+                if (!info.player_1 || !info.player_2) return;
+                const p1 = getDisplayName(info.player_1);
+                const p2 = getDisplayName(info.player_2);
+                const conf = info.conference ? String(info.conference) : 'Main';
+                const cObj = ensureConf(conf);
+
+                playerToConf[p1] = conf;
+                playerToConf[p2] = conf;
+                cObj.players.add(p1);
+                cObj.players.add(p2);
+
+                if (!playerWL[p1]) playerWL[p1] = { w: 0, l: 0 };
+                if (!playerWL[p2]) playerWL[p2] = { w: 0, l: 0 };
+
+                games.forEach(g => {
+                    const w = getDisplayName(g.winner);
+                    if (w) {
+                        if (w.toLowerCase() === p1.toLowerCase()) {
+                            playerWL[p1].w++;
+                            playerWL[p2].l++;
+                        } else if (w.toLowerCase() === p2.toLowerCase()) {
+                            playerWL[p2].w++;
+                            playerWL[p1].l++;
+                        }
+                    }
+
+                    const turns = Number(g.turns ?? g.total_turns ?? g.turn_count ?? 0);
+                    if (turns > 0) {
+                        const label = `Wk ${info.week || '?'} - ${p1} Vs. ${p2} (G${g.game_number})`;
+                        if (!cObj.longestGame || turns > cObj.longestGame.turns) {
+                            cObj.longestGame = { turns, label };
+                        }
+                        if (!cObj.shortestGame || turns < cObj.shortestGame.turns) {
+                            cObj.shortestGame = { turns, label };
+                        }
+                    }
+                });
+            });
+
+            // 2. Aggregate Pokémon & player stats per conference
+            rawStats.forEach(st => {
+                const player = getDisplayName(st.player);
+                const conf = playerToConf[player] || 'Main';
+                const cObj = ensureConf(conf);
+                cObj.players.add(player);
+
+                const key = `${player}__${st.pokemon}`;
+                if (!cObj.mons[key]) {
+                    cObj.mons[key] = {
+                        player,
+                        species: st.pokemon,
+                        brought: 0,
+                        directKo: 0,
+                        indirectKo: 0,
+                        totalDmg: 0,
+                        directDmg: 0,
+                        indirectDmg: 0,
+                        hazardDmg: 0,
+                        otherIndirectDmg: 0,
+                        takenDmg: 0,
+                        hitsTaken: 0,
+                        healedDmg: 0,
+                        survived: 0,
+                        battleWon: 0,
+                        turns: 0
+                    };
+                }
+
+                const m = cObj.mons[key];
+                const indDmg = Number(st.indirect_damage || 0);
+                const hasExplicitHazard =
+                    st.hazard_damage !== undefined &&
+                    st.hazard_damage !== null &&
+                    String(st.hazard_damage).trim() !== '';
+                const hazDmg = hasExplicitHazard ? Number(st.hazard_damage || 0) : indDmg;
+                const otherInd = hasExplicitHazard ? Math.max(0, indDmg - hazDmg) : 0;
+
+                m.brought += 1;
+                m.directKo += Number(st.direct_kos || 0);
+                m.indirectKo += Number(st.indirect_kos || 0);
+                m.totalDmg += Number(st.total_damage || 0);
+                m.directDmg += Number(st.direct_damage || 0);
+                m.indirectDmg += indDmg;
+                m.hazardDmg += hazDmg;
+                m.otherIndirectDmg += otherInd;
+                m.takenDmg += Number(st.damage_taken || 0);
+                m.hitsTaken += Number(st.hits_taken || 0);
+                m.healedDmg += Number(st.damage_healed || 0);
+                m.survived += Number(st.survived || 0);
+                m.battleWon += Number(st.battle_won || 0);
+                m.turns += Number(st.active_turns || 0);
+            });
+
+            const confList = Object.values(confData).sort((a, b) => a.name.localeCompare(b.name));
+            if (confList.length === 0) {
+                container.innerHTML = '<div class="status-msg">No conference statistics available yet.</div>';
+                return;
             }
 
-            const turns = Number(g.turns ?? g.total_turns ?? g.turn_count ?? 0);
-            if (turns > 0) {
-                const label = `Wk ${info.week || '?'} - ${p1} Vs. ${p2} (G${g.game_number})`;
-                if (!cObj.longestGame || turns > cObj.longestGame.turns) {
-                    cObj.longestGame = { turns, label };
-                }
-                if (!cObj.shortestGame || turns < cObj.shortestGame.turns) {
-                    cObj.shortestGame = { turns, label };
-                }
-            }
-        });
-    });
+            const rankCls = (i) => (i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '');
 
-    // 2. Aggregate Pokémon & player stats per conference
-    rawStats.forEach(st => {
-        const player = getDisplayName(st.player);
-        const conf = playerToConf[player] || 'Main';
-        const cObj = ensureConf(conf);
-        cObj.players.add(player);
+            const tvrWeights = [
+                { key: 'directKo', weight: 0.15 },
+                { key: 'directDmg', weight: 0.15 },
+                { key: 'battleWon', weight: 0.15 },
+                { key: 'survived', weight: 0.15 },
+                { key: 'healedDmg', weight: 0.05 },
+                { key: 'turns', weight: 0.10 },
+                { key: 'indirectKo', weight: 0.05 },
+                { key: 'indirectDmg', weight: 0.05 },
+                { key: 'brought', weight: 0.15 }
+            ];
 
-        const key = `${player}__${st.pokemon}`;
-        if (!cObj.mons[key]) {
-            cObj.mons[key] = {
-                player,
-                species: st.pokemon,
-                brought: 0,
-                directKo: 0,
-                indirectKo: 0,
-                totalDmg: 0,
-                directDmg: 0,
-                indirectDmg: 0,
-                hazardDmg: 0,
-                otherIndirectDmg: 0,
-                takenDmg: 0,
-                hitsTaken: 0,
-                healedDmg: 0,
-                survived: 0,
-                turns: 0
-            };
-        }
+            container.innerHTML = confList.map((c) => {
+                const mons = Object.values(c.mons);
+                const playerTotalsMap = {};
 
-        const m = cObj.mons[key];
-        const indDmg = Number(st.indirect_damage || 0);
-        const hasExplicitHazard =
-            st.hazard_damage !== undefined &&
-            st.hazard_damage !== null &&
-            String(st.hazard_damage).trim() !== '';
-        const hazDmg = hasExplicitHazard ? Number(st.hazard_damage || 0) : indDmg;
-        const otherInd = hasExplicitHazard ? Math.max(0, indDmg - hazDmg) : 0;
+                c.players.forEach(p => {
+                    playerTotalsMap[p] = {
+                        player: p,
+                        totalDmg: 0,
+                        hazardDmg: 0,
+                        turns: 0,
+                        battles: 0,
+                        w: (playerWL[p] && playerWL[p].w) || 0,
+                        l: (playerWL[p] && playerWL[p].l) || 0
+                    };
+                });
 
-        m.brought += 1;
-        m.directKo += Number(st.direct_kos || 0);
-        m.indirectKo += Number(st.indirect_kos || 0);
-        m.totalDmg += Number(st.total_damage || 0);
-        m.directDmg += Number(st.direct_damage || 0);
-        m.indirectDmg += indDmg;
-        m.hazardDmg += hazDmg;
-        m.otherIndirectDmg += otherInd;
-        m.takenDmg += Number(st.damage_taken || 0);
-        m.hitsTaken += Number(st.hits_taken || 0);
-        m.healedDmg += Number(st.damage_healed || 0);
-        m.survived += Number(st.survived || 0);
-        m.turns += Number(st.active_turns || 0);
-    });
+                mons.forEach(m => {
+                    if (!playerTotalsMap[m.player]) {
+                        playerTotalsMap[m.player] = {
+                            player: m.player,
+                            totalDmg: 0,
+                            hazardDmg: 0,
+                            turns: 0,
+                            battles: 0,
+                            w: (playerWL[m.player] && playerWL[m.player].w) || 0,
+                            l: (playerWL[m.player] && playerWL[m.player].l) || 0
+                        };
+                    }
+                    playerTotalsMap[m.player].totalDmg += m.totalDmg;
+                    playerTotalsMap[m.player].hazardDmg += m.hazardDmg;
+                    playerTotalsMap[m.player].turns += m.turns;
+                    playerTotalsMap[m.player].battles = Math.max(playerTotalsMap[m.player].battles, m.brought);
+                });
 
-    const confList = Object.values(confData).sort((a, b) => a.name.localeCompare(b.name));
-    if (confList.length === 0) {
-        container.innerHTML = '<div class="status-msg">No conference statistics available yet.</div>';
-        return;
-    }
+                // Compute TVR and Team O/U per player roster
+                const monsByPlayer = {};
+                mons.forEach(m => {
+                    if (!monsByPlayer[m.player]) monsByPlayer[m.player] = [];
+                    monsByPlayer[m.player].push(m);
+                });
 
-    const rankCls = (i) => (i === 0 ? 'rank-1' : i === 1 ? 'rank-2' : i === 2 ? 'rank-3' : '');
+                Object.values(monsByPlayer).forEach(pMons => {
+                    const totals = {};
+                    tvrWeights.forEach(w => {
+                        totals[w.key] = pMons.reduce((sum, item) => sum + Number(item[w.key] || 0), 0);
+                    });
 
-    container.innerHTML = confList.map((c) => {
-        const mons = Object.values(c.mons);
-        const playerTotalsMap = {};
+                    const activeWeightSum = tvrWeights.reduce(
+                        (sum, item) => sum + (totals[item.key] > 0 ? item.weight : 0),
+                        0
+                    ) || 1;
 
-        c.players.forEach(p => {
-            playerTotalsMap[p] = {
-                player: p,
-                totalDmg: 0,
-                hazardDmg: 0,
-                turns: 0,
-                battles: 0,
-                w: (playerWL[p] && playerWL[p].w) || 0,
-                l: (playerWL[p] && playerWL[p].l) || 0
-            };
-        });
+                    pMons.forEach(m => {
+                        let weightedShare = 0;
+                        tvrWeights.forEach(item => {
+                            if (totals[item.key] > 0) {
+                                weightedShare += (item.weight / activeWeightSum) * (Number(m[item.key] || 0) / totals[item.key]);
+                            }
+                        });
+                        m.tvr = weightedShare * 100;
+                        const cost = typeof getDraftCost === 'function' ? getDraftCost(m.species, rawDraftCosts) : 0;
+                        m.pvr = totalSeasonBudget > 0 ? (cost / totalSeasonBudget) * 100 : 0;
+                        m.teamOu = m.pvr > 0 ? m.tvr / m.pvr : 0;
+                    });
+                });
 
-        mons.forEach(m => {
-            if (!playerTotalsMap[m.player]) {
-                playerTotalsMap[m.player] = {
-                    player: m.player,
-                    totalDmg: 0,
-                    hazardDmg: 0,
-                    turns: 0,
-                    battles: 0,
-                    w: (playerWL[m.player] && playerWL[m.player].w) || 0,
-                    l: (playerWL[m.player] && playerWL[m.player].l) || 0
-                };
-            }
-            playerTotalsMap[m.player].totalDmg += m.totalDmg;
-            playerTotalsMap[m.player].hazardDmg += m.hazardDmg;
-            playerTotalsMap[m.player].turns += m.turns;
-            playerTotalsMap[m.player].battles = Math.max(playerTotalsMap[m.player].battles, m.brought);
-        });
+                const playerRows = Object.values(playerTotalsMap).map(pt => ({
+                    ...pt,
+                    avgHazard: pt.battles > 0 ? pt.hazardDmg / pt.battles : 0,
+                    avgTurns: pt.battles > 0 ? pt.turns / pt.battles : 0
+                }));
 
-        const playerRows = Object.values(playerTotalsMap).map(pt => ({
-            ...pt,
-            avgHazard: pt.battles > 0 ? pt.hazardDmg / pt.battles : 0,
-            avgTurns: pt.battles > 0 ? pt.turns / pt.battles : 0
-        }));
+                const confTotalHazard = playerRows.reduce((s, r) => s + r.hazardDmg, 0) || 1;
 
-        const confTotalHazard = playerRows.reduce((s, r) => s + r.hazardDmg, 0) || 1;
+                const filteredMons = playerFilter
+                    ? mons.filter(m => m.player.toLowerCase().includes(playerFilter))
+                    : mons;
 
-        // Top 5 Leaderboards
-        const topOffensive = [...mons]
-            .sort((a, b) => (b.directKo + b.indirectKo) - (a.directKo + a.indirectKo) || b.totalDmg - a.totalDmg)
-            .slice(0, 5);
+                const filteredPlayerRows = playerFilter
+                    ? playerRows.filter(r => r.player.toLowerCase().includes(playerFilter))
+                    : playerRows;
 
-        const topDefensive = [...mons]
-            .sort((a, b) => b.takenDmg - a.takenDmg)
-            .slice(0, 5);
+                // Top 5 Leaderboards
+                const topOffensive = [...filteredMons]
+                    .sort((a, b) => (b.directKo + b.indirectKo) - (a.directKo + a.indirectKo) || b.totalDmg - a.totalDmg)
+                    .slice(0, 5);
 
-        const topDirectDamage = [...mons]
-            .sort((a, b) => b.directDmg - a.directDmg || b.directKo - a.directKo)
-            .slice(0, 5);
+                const topDefensive = [...filteredMons]
+                    .sort((a, b) => b.takenDmg - a.takenDmg)
+                    .slice(0, 5);
 
-        const topTankiest = [...mons]
-            .sort((a, b) => (b.takenDmg + b.healedDmg) - (a.takenDmg + a.healedDmg) || b.survived - a.survived)
-            .slice(0, 5);
+                const topDirectDamage = [...filteredMons]
+                    .sort((a, b) => b.directDmg - a.directDmg || b.directKo - a.directKo)
+                    .slice(0, 5);
 
-        const topHazardMons = [...mons]
-            .sort((a, b) => b.hazardDmg - a.hazardDmg)
-            .slice(0, 5);
+                const topTankiest = [...filteredMons]
+                    .sort((a, b) => (b.takenDmg + b.healedDmg) - (a.takenDmg + a.healedDmg) || b.survived - a.survived)
+                    .slice(0, 5);
 
-        const topIndirectMons = [...mons]
-            .sort((a, b) => b.indirectDmg - a.indirectDmg)
-            .slice(0, 5);
+                const topHazardMons = [...filteredMons]
+                    .sort((a, b) => b.hazardDmg - a.hazardDmg)
+                    .slice(0, 5);
 
-        const hazardStandings = [...playerRows].sort((a, b) => b.hazardDmg - a.hazardDmg);
-        const turnStandings = [...playerRows].sort((a, b) => b.turns - a.turns);
+                const topIndirectMons = [...filteredMons]
+                    .sort((a, b) => b.indirectDmg - a.indirectDmg)
+                    .slice(0, 5);
 
-        const highestAvgTurn = [...playerRows].sort((a, b) => b.avgTurns - a.avgTurns)[0];
-        const lowestAvgTurn = [...playerRows].filter(r => r.battles > 0).sort((a, b) => a.avgTurns - b.avgTurns)[0];
+                const topTeamOuMons = [...filteredMons]
+                    .filter(m => (m.pvr || 0) > 0)
+                    .sort((a, b) => (b.teamOu || 0) - (a.teamOu || 0) || (b.tvr || 0) - (a.tvr || 0))
+                    .slice(0, 5);
 
-        const mostBrought = [...mons].sort((a, b) => b.brought - a.brought)[0];
-        const leastBrought = [...mons].filter(m => m.brought > 0).sort((a, b) => a.brought - b.brought)[0];
-        const oneTimeCount = mons.filter(m => m.brought === 1).length;
+                const hazardStandings = [...filteredPlayerRows].sort((a, b) => b.hazardDmg - a.hazardDmg);
+                const turnStandings = [...filteredPlayerRows].sort((a, b) => b.turns - a.turns);
 
-        return `
-            <div class="conf-panel">
-                <div class="conf-header-row">
-                    <div class="conf-banner">--- ${c.name} ---</div>
-                    <table class="conf-records-table">
-                        <tr>
-                            <td style="font-weight:700; width:64px;">Longest:</td>
-                            <td style="width:56px; text-align:right;">${c.longestGame ? `${c.longestGame.turns} Turns` : '-'}</td>
-                            <td>${c.longestGame ? c.longestGame.label : ''}</td>
-                        </tr>
-                        <tr>
-                            <td style="font-weight:700;">Shortest:</td>
-                            <td style="text-align:right;">${c.shortestGame ? `${c.shortestGame.turns} Turns` : '-'}</td>
-                            <td>${c.shortestGame ? c.shortestGame.label : ''}</td>
-                        </tr>
-                    </table>
-                </div>
+                const highestAvgTurn = [...filteredPlayerRows].sort((a, b) => b.avgTurns - a.avgTurns)[0];
+                const lowestAvgTurn = [...filteredPlayerRows].filter(r => r.battles > 0).sort((a, b) => a.avgTurns - b.avgTurns)[0];
 
-                <div class="conf-two-col">
-                    <div>
-                        <div class="conf-section-title">Offensive Pokémon</div>
-                        <table class="conf-mini-table">
-                            <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">KOs</th><th style="text-align:right;">Damage</th></tr></thead>
-                            <tbody>
-                                ${topOffensive.map((m, i) => `
-                                    <tr class="${rankCls(i)}">
-                                        <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
-                                        <td style="text-align:right;">${m.directKo + m.indirectKo}</td>
-                                        <td style="text-align:right;">${m.totalDmg}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div>
-                        <div class="conf-section-title">Defensive Pokémon</div>
-                        <table class="conf-mini-table">
-                            <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">Surv</th><th style="text-align:right;">Hits</th><th style="text-align:right;">Taken</th><th style="text-align:right;">Healed</th></tr></thead>
-                            <tbody>
-                                ${topDefensive.map((m, i) => `
-                                    <tr class="${rankCls(i)}">
-                                        <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
-                                        <td style="text-align:right;">${m.survived}</td>
-                                        <td style="text-align:right;">${m.hitsTaken}</td>
-                                        <td style="text-align:right;">${m.takenDmg}</td>
-                                        <td style="text-align:right;">${m.healedDmg}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                const mostBrought = [...filteredMons].sort((a, b) => b.brought - a.brought)[0];
+                const leastBrought = [...filteredMons].filter(m => m.brought > 0).sort((a, b) => a.brought - b.brought)[0];
+                const oneTimeCount = filteredMons.filter(m => m.brought === 1).length;
 
-                <div class="conf-two-col">
-                    <div>
-                        <div class="conf-section-title">Direct Damage Leaders</div>
-                        <table class="conf-mini-table">
-                            <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">Direct Dmg</th><th style="text-align:right;">Avg/Battle</th><th style="text-align:right;">Dir KOs</th></tr></thead>
-                            <tbody>
-                                ${topDirectDamage.map((m, i) => {
-                                    const avgDir = m.brought > 0 ? (m.directDmg / m.brought).toFixed(1) : '0.0';
-                                    return `
-                                        <tr class="${rankCls(i)}">
-                                            <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
-                                            <td style="text-align:right;">${m.directDmg}</td>
-                                            <td style="text-align:right;">${avgDir}</td>
-                                            <td style="text-align:right;">${m.directKo}</td>
-                                        </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div>
-                        <div class="conf-section-title">Tankiest Pokémon</div>
-                        <table class="conf-mini-table">
-                            <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">Taken</th><th style="text-align:right;">Healed</th><th style="text-align:right;">Surv</th></tr></thead>
-                            <tbody>
-                                ${topTankiest.map((m, i) => `
-                                    <tr class="${rankCls(i)}">
-                                        <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
-                                        <td style="text-align:right;">${m.takenDmg}</td>
-                                        <td style="text-align:right;">${m.healedDmg}</td>
-                                        <td style="text-align:right;">${m.survived}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="conf-two-col">
-                    <div>
-                        <div class="conf-section-title">Most Hazard Damage</div>
-                        <table class="conf-mini-table">
-                            <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">Damage</th><th style="text-align:right;">Team Ratio</th></tr></thead>
-                            <tbody>
-                                ${topHazardMons.map((m, i) => {
-                                    const pTot = (playerTotalsMap[m.player] && playerTotalsMap[m.player].totalDmg) || 1;
-                                    const ratio = Math.round((m.totalDmg / pTot) * 100);
-                                    return `
-                                        <tr class="${rankCls(i)}">
-                                            <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
-                                            <td style="text-align:right;">${m.hazardDmg}</td>
-                                            <td style="text-align:right;">${ratio}%</td>
-                                        </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div>
-                        <div class="conf-section-title">Best Indirect Damaging Pokémon</div>
-                        <table class="conf-mini-table">
-                            <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">KOs</th><th style="text-align:right;">Total</th><th style="text-align:right;">Hazard</th><th style="text-align:right;">Other</th></tr></thead>
-                            <tbody>
-                                ${topIndirectMons.map((m, i) => `
-                                    <tr class="${rankCls(i)}">
-                                        <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
-                                        <td style="text-align:right;">${m.indirectKo}</td>
-                                        <td style="text-align:right;">${m.indirectDmg}</td>
-                                        <td style="text-align:right;">${m.hazardDmg}</td>
-                                        <td style="text-align:right;">${m.otherIndirectDmg}</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="conf-bottom-grid">
-                    <div>
-                        <div class="conf-section-title">Hazard Damage</div>
-                        <table class="conf-mini-table">
-                            <thead><tr><th></th><th>Player</th><th style="text-align:right;">Total</th><th style="text-align:right;">Average</th><th style="text-align:center;">W - L</th><th style="text-align:right;">% Total Damage</th></tr></thead>
-                            <tbody>
-                                ${hazardStandings.map((r, i) => {
-                                    const pct = ((r.hazardDmg / confTotalHazard) * 100).toFixed(2);
-                                    return `
-                                        <tr class="${rankCls(i)}">
-                                            <td>${i + 1}</td><td>${r.player}</td>
-                                            <td style="text-align:right;">${r.hazardDmg}</td>
-                                            <td style="text-align:right;">${r.avgHazard.toFixed(2)}</td>
-                                            <td style="text-align:center;">${r.w} - ${r.l}</td>
-                                            <td style="text-align:right;">${pct}%</td>
-                                        </tr>
-                                    `;
-                                }).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div style="display:flex; flex-direction:column; gap:8px;">
-                        <div>
-                            <div class="conf-section-title">Game Turn Totals</div>
-                            <table class="conf-mini-table">
-                                <thead><tr><th></th><th>Player</th><th style="text-align:right;">Turns</th><th style="text-align:right;">Average</th><th style="text-align:right;">Battles</th></tr></thead>
-                                <tbody>
-                                    ${turnStandings.map((r, i) => `
-                                        <tr class="${rankCls(i)}">
-                                            <td>${i + 1}</td><td>${r.player}</td>
-                                            <td style="text-align:right;">${r.turns}</td>
-                                            <td style="text-align:right;">${Math.round(r.avgTurns)}</td>
-                                            <td style="text-align:right;">${r.battles}</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
+                return `
+                    <div class="conf-panel">
+                        <div class="conf-header-row">
+                            <div class="conf-banner">--- ${c.name} ---</div>
+                            <table class="conf-records-table">
+                                <tr>
+                                    <td style="font-weight:700; width:64px;">Longest:</td>
+                                    <td style="width:56px; text-align:right;">${c.longestGame ? `${c.longestGame.turns} Turns` : '-'}</td>
+                                    <td>${c.longestGame ? c.longestGame.label : ''}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-weight:700;">Shortest:</td>
+                                    <td style="text-align:right;">${c.shortestGame ? `${c.shortestGame.turns} Turns` : '-'}</td>
+                                    <td>${c.shortestGame ? c.shortestGame.label : ''}</td>
+                                </tr>
                             </table>
                         </div>
 
-                        <table class="conf-mini-table">
-                            <thead><tr><th colspan="2" style="text-align:left;">Highest Average Turns</th><th style="text-align:right;">Average</th></tr></thead>
-                            <tbody>
-                                <tr><td>${highestAvgTurn ? highestAvgTurn.player : '-'}</td><td>${highestAvgTurn ? highestAvgTurn.turns : 0}</td><td style="text-align:right;">${highestAvgTurn ? Math.round(highestAvgTurn.avgTurns) : 0}</td></tr>
-                            </tbody>
-                        </table>
+                        <div class="conf-two-col">
+                            <div>
+                                <div class="conf-section-title">Offensive Pokémon</div>
+                                <table class="conf-mini-table">
+                                    <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">KOs</th><th style="text-align:right;">Damage</th></tr></thead>
+                                    <tbody>
+                                        ${topOffensive.map((m, i) => `
+                                            <tr class="${rankCls(i)}">
+                                                <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
+                                                <td style="text-align:right;">${m.directKo + m.indirectKo}</td>
+                                                <td style="text-align:right;">${m.totalDmg}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div>
+                                <div class="conf-section-title">Defensive Pokémon</div>
+                                <table class="conf-mini-table">
+                                    <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">Surv</th><th style="text-align:right;">Hits</th><th style="text-align:right;">Taken</th><th style="text-align:right;">Healed</th></tr></thead>
+                                    <tbody>
+                                        ${topDefensive.map((m, i) => `
+                                            <tr class="${rankCls(i)}">
+                                                <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
+                                                <td style="text-align:right;">${m.survived}</td>
+                                                <td style="text-align:right;">${m.hitsTaken}</td>
+                                                <td style="text-align:right;">${m.takenDmg}</td>
+                                                <td style="text-align:right;">${m.healedDmg}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                        <table class="conf-mini-table">
-                            <thead><tr><th colspan="2" style="text-align:left;">Lowest Average Turns</th><th style="text-align:right;">Average</th></tr></thead>
-                            <tbody>
-                                <tr><td>${lowestAvgTurn ? lowestAvgTurn.player : '-'}</td><td>${lowestAvgTurn ? lowestAvgTurn.turns : 0}</td><td style="text-align:right;">${lowestAvgTurn ? Math.round(lowestAvgTurn.avgTurns) : 0}</td></tr>
-                            </tbody>
-                        </table>
+                        <div class="conf-two-col">
+                            <div>
+                                <div class="conf-section-title">Direct Damage Leaders</div>
+                                <table class="conf-mini-table">
+                                    <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">Direct Dmg</th><th style="text-align:right;">Avg/Battle</th><th style="text-align:right;">Dir KOs</th></tr></thead>
+                                    <tbody>
+                                        ${topDirectDamage.map((m, i) => {
+                                            const avgDir = m.brought > 0 ? (m.directDmg / m.brought).toFixed(1) : '0.0';
+                                            return `
+                                                <tr class="${rankCls(i)}">
+                                                    <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
+                                                    <td style="text-align:right;">${m.directDmg}</td>
+                                                    <td style="text-align:right;">${avgDir}</td>
+                                                    <td style="text-align:right;">${m.directKo}</td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div>
+                                <div class="conf-section-title">Tankiest Pokémon</div>
+                                <table class="conf-mini-table">
+                                    <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">Taken</th><th style="text-align:right;">Healed</th><th style="text-align:right;">Surv</th></tr></thead>
+                                    <tbody>
+                                        ${topTankiest.map((m, i) => `
+                                            <tr class="${rankCls(i)}">
+                                                <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
+                                                <td style="text-align:right;">${m.takenDmg}</td>
+                                                <td style="text-align:right;">${m.healedDmg}</td>
+                                                <td style="text-align:right;">${m.survived}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                        <table class="conf-mini-table">
-                            <thead><tr><th>Most Brought Pokémon</th><th style="text-align:right;">Brought</th><th style="text-align:right;">1 time</th></tr></thead>
-                            <tbody>
-                                <tr><td>${mostBrought ? `${mostBrought.player} (${mostBrought.species})` : '-'}</td><td style="text-align:right;">${mostBrought ? mostBrought.brought : 0}</td><td style="text-align:right;">${oneTimeCount}</td></tr>
-                            </tbody>
-                        </table>
+                        <div class="conf-two-col">
+                            <div>
+                                <div class="conf-section-title">Most Hazard Damage</div>
+                                <table class="conf-mini-table">
+                                    <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">Damage</th><th style="text-align:right;">Team Ratio</th></tr></thead>
+                                    <tbody>
+                                        ${topHazardMons.map((m, i) => {
+                                            const pTot = (playerTotalsMap[m.player] && playerTotalsMap[m.player].totalDmg) || 1;
+                                            const ratio = Math.round((m.totalDmg / pTot) * 100);
+                                            return `
+                                                <tr class="${rankCls(i)}">
+                                                    <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
+                                                    <td style="text-align:right;">${m.hazardDmg}</td>
+                                                    <td style="text-align:right;">${ratio}%</td>
+                                                </tr>
+                                            `;
+                                        }).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div>
+                                <div class="conf-section-title">Best Indirect Damaging Pokémon</div>
+                                <table class="conf-mini-table">
+                                    <thead><tr><th></th><th>Player</th><th>Pokémon</th><th style="text-align:right;">KOs</th><th style="text-align:right;">Total</th><th style="text-align:right;">Hazard</th><th style="text-align:right;">Other</th></tr></thead>
+                                    <tbody>
+                                        ${topIndirectMons.map((m, i) => `
+                                            <tr class="${rankCls(i)}">
+                                                <td>${i + 1}</td><td>${m.player}</td><td>${m.species}</td>
+                                                <td style="text-align:right;">${m.indirectKo}</td>
+                                                <td style="text-align:right;">${m.indirectDmg}</td>
+                                                <td style="text-align:right;">${m.hazardDmg}</td>
+                                                <td style="text-align:right;">${m.otherIndirectDmg}</td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
 
-                        <table class="conf-mini-table">
-                            <thead><tr><th>Least Brought Pokémon</th><th style="text-align:right;">Brought</th><th style="text-align:right;">1 time</th></tr></thead>
-                            <tbody>
-                                <tr><td>${leastBrought ? `${leastBrought.player} (${leastBrought.species})` : '-'}</td><td style="text-align:right;">${leastBrought ? leastBrought.brought : 0}</td><td style="text-align:right;">${oneTimeCount}</td></tr>
-                            </tbody>
-                        </table>
+                        <div class="conf-bottom-grid">
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <div>
+                                    <div class="conf-section-title">Hazard Damage</div>
+                                    <table class="conf-mini-table">
+                                        <thead><tr><th></th><th>Player</th><th style="text-align:right;">Total</th><th style="text-align:right;">Average</th><th style="text-align:center;">W - L</th><th style="text-align:right;">% Total Damage</th></tr></thead>
+                                        <tbody>
+                                            ${hazardStandings.map((r, i) => {
+                                                const pct = ((r.hazardDmg / confTotalHazard) * 100).toFixed(2);
+                                                return `
+                                                    <tr class="${rankCls(i)}">
+                                                        <td>${i + 1}</td><td>${r.player}</td>
+                                                        <td style="text-align:right;">${r.hazardDmg}</td>
+                                                        <td style="text-align:right;">${r.avgHazard.toFixed(2)}</td>
+                                                        <td style="text-align:center;">${r.w} - ${r.l}</td>
+                                                        <td style="text-align:right;">${pct}%</td>
+                                                    </tr>
+                                                `;
+                                            }).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div>
+                                    <div class="conf-section-title">Best Team Value (Team O/U)</div>
+                                    <table class="conf-mini-table">
+                                        <thead>
+                                            <tr>
+                                                <th></th>
+                                                <th>Player</th>
+                                                <th>Pokémon</th>
+                                                <th style="text-align:right;">Team O/U</th>
+                                                <th style="text-align:right;">Team %</th>
+                                                <th style="text-align:right;">Draft %</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${topTeamOuMons.map((m, i) => `
+                                                <tr class="${rankCls(i)}">
+                                                    <td>${i + 1}</td>
+                                                    <td>${m.player}</td>
+                                                    <td>${m.species}</td>
+                                                    <td style="text-align:right;">${(m.teamOu || 0).toFixed(2)}x</td>
+                                                    <td style="text-align:right;">${(m.tvr || 0).toFixed(1)}%</td>
+                                                    <td style="text-align:right;">${(m.pvr || 0).toFixed(1)}%</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <div>
+                                    <div class="conf-section-title">Game Turn Totals</div>
+                                    <table class="conf-mini-table">
+                                        <thead><tr><th></th><th>Player</th><th style="text-align:right;">Turns</th><th style="text-align:right;">Average</th><th style="text-align:right;">Battles</th></tr></thead>
+                                        <tbody>
+                                            ${turnStandings.map((r, i) => `
+                                                <tr class="${rankCls(i)}">
+                                                    <td>${i + 1}</td><td>${r.player}</td>
+                                                    <td style="text-align:right;">${r.turns}</td>
+                                                    <td style="text-align:right;">${Math.round(r.avgTurns)}</td>
+                                                    <td style="text-align:right;">${r.battles}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <table class="conf-mini-table">
+                                    <thead><tr><th colspan="2" style="text-align:left;">Highest Average Turns</th><th style="text-align:right;">Average</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>${highestAvgTurn ? highestAvgTurn.player : '-'}</td><td>${highestAvgTurn ? highestAvgTurn.turns : 0}</td><td style="text-align:right;">${highestAvgTurn ? Math.round(highestAvgTurn.avgTurns) : 0}</td></tr>
+                                    </tbody>
+                                </table>
+
+                                <table class="conf-mini-table">
+                                    <thead><tr><th colspan="2" style="text-align:left;">Lowest Average Turns</th><th style="text-align:right;">Average</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>${lowestAvgTurn ? lowestAvgTurn.player : '-'}</td><td>${lowestAvgTurn ? lowestAvgTurn.turns : 0}</td><td style="text-align:right;">${lowestAvgTurn ? Math.round(lowestAvgTurn.avgTurns) : 0}</td></tr>
+                                    </tbody>
+                                </table>
+
+                                <table class="conf-mini-table">
+                                    <thead><tr><th>Most Brought Pokémon</th><th style="text-align:right;">Brought</th><th style="text-align:right;">1 time</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>${mostBrought ? `${mostBrought.player} (${mostBrought.species})` : '-'}</td><td style="text-align:right;">${mostBrought ? mostBrought.brought : 0}</td><td style="text-align:right;">${oneTimeCount}</td></tr>
+                                    </tbody>
+                                </table>
+
+                                <table class="conf-mini-table">
+                                    <thead><tr><th>Least Brought Pokémon</th><th style="text-align:right;">Brought</th><th style="text-align:right;">1 time</th></tr></thead>
+                                    <tbody>
+                                        <tr><td>${leastBrought ? `${leastBrought.player} (${leastBrought.species})` : '-'}</td><td style="text-align:right;">${leastBrought ? leastBrought.brought : 0}</td><td style="text-align:right;">${oneTimeCount}</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-        function switchTab(tabId) {
+                `;
+            }).join('');
+        }
+
+        function switchTab(tabId, btnEl) {
             document.querySelectorAll('.header-tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
-            event.target.classList.add('active');
+            if (btnEl) {
+                btnEl.classList.add('active');
+            } else if (window.event && window.event.target) {
+                window.event.target.classList.add('active');
+            }
             document.getElementById(tabId).classList.add('active');
+
             if (tabId === 'conference') {
                 renderConferenceStats();
             }
