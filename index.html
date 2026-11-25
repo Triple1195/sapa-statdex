@@ -599,36 +599,76 @@
 
         window.addEventListener('DOMContentLoaded', () => { initApp(); });
 
-        // Helper function to resolve draft cost for alternate forms & regional variants
+        // Helper function to resolve draft cost for alternate forms, Megas, regional & cosmetic variants
         function getDraftCost(species, draftCosts) {
-            if (draftCosts[species] !== undefined) {
-                return Number(draftCosts[species]);
+            if (!species) return 0;
+
+            // Build a case-insensitive, punctuation-normalized lookup map on first run
+            if (!window._normalizedDraftCosts) {
+                window._normalizedDraftCosts = {};
+                for (const [key, val] of Object.entries(draftCosts)) {
+                    const normKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                    window._normalizedDraftCosts[normKey] = Number(val);
+                }
             }
-            
+
+            const lookup = (name) => {
+                if (draftCosts[name] !== undefined) return Number(draftCosts[name]);
+                const norm = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (window._normalizedDraftCosts[norm] !== undefined) {
+                    return window._normalizedDraftCosts[norm];
+                }
+                return undefined;
+            };
+
+            // 1. Direct / normalized match (handles case & hyphen differences)
+            let cost = lookup(species);
+            if (cost !== undefined) return cost;
+
+            // 2. Mega Evolutions (handles -Mega, -Mega-X, -Mega-Y -> "Mega Charizard X", "Charizard-Mega-X", or base "Charizard")
             if (species.includes('-Mega')) {
-                const base = species.replace('-Mega', '');
-                if (draftCosts[`Mega ${base}`] !== undefined) return Number(draftCosts[`Mega ${base}`]);
-                if (draftCosts[base] !== undefined) return Number(draftCosts[base]);
-            }
-            
-            if (species.includes('-Alola')) {
-                const base = species.replace('-Alola', '');
-                if (draftCosts[`Alolan ${base}`] !== undefined) return Number(draftCosts[`Alolan ${base}`]);
+                const parts = species.split('-Mega');
+                const base = parts[0];
+                const suffix = parts[1] ? parts[1].replace('-', ' ').trim() : ''; // e.g., "X" or "Y"
+
+                const candidates = [
+                    `Mega ${base}${suffix ? ' ' + suffix : ''}`,
+                    `${base}-Mega${suffix ? '-' + suffix : ''}`,
+                    base
+                ];
+                for (const c of candidates) {
+                    cost = lookup(c);
+                    if (cost !== undefined) return cost;
+                }
             }
 
-            if (species.includes('-Galar')) {
-                const base = species.replace('-Galar', '');
-                if (draftCosts[`Galarian ${base}`] !== undefined) return Number(draftCosts[`Galarian ${base}`]);
+            // 3. Regional Forms (Alola, Galar, Hisui, Paldea)
+            const regionals = [
+                { tag: '-Alola', prefix: 'Alolan' },
+                { tag: '-Galar', prefix: 'Galarian' },
+                { tag: '-Hisui', prefix: 'Hisuian' },
+                { tag: '-Paldea', prefix: 'Paldean' }
+            ];
+            for (const r of regionals) {
+                if (species.includes(r.tag)) {
+                    const base = species.replace(r.tag, '');
+                    cost = lookup(`${r.prefix} ${base}`) ?? lookup(`${base}${r.tag}`) ?? lookup(base);
+                    if (cost !== undefined) return cost;
+                }
             }
 
-            if (species.includes('-Hisui')) {
-                const base = species.replace('-Hisui', '');
-                if (draftCosts[`Hisuian ${base}`] !== undefined) return Number(draftCosts[`Hisuian ${base}`]);
+            // 4. Forces of Nature / Incarnate Forms (Thundurus, Landorus, Tornadus, Enamorus)
+            const genies = ['Thundurus', 'Landorus', 'Tornadus', 'Enamorus'];
+            if (genies.includes(species)) {
+                cost = lookup(`${species}-Incarnate`) ?? lookup(`${species} Incarnate`);
+                if (cost !== undefined) return cost;
             }
 
-            if (species.includes('-Paldea')) {
-                const base = species.replace('-Paldea', '');
-                if (draftCosts[`Paldean ${base}`] !== undefined) return Number(draftCosts[`Paldean ${base}`]);
+            // 5. Fallback to base species name (handles cosmetic forms like Gastrodon-East -> Gastrodon, Vivillon-Polar -> Vivillon, etc.)
+            if (species.includes('-')) {
+                const baseSpecies = species.split('-')[0];
+                cost = lookup(baseSpecies);
+                if (cost !== undefined) return cost;
             }
 
             return 0;
@@ -752,6 +792,7 @@
                 rawStats = results[1];
                 
                 rawDraftCosts = {};
+                window._normalizedDraftCosts = null;
                 if (results[2]) {
                     results[2].forEach(row => {
                         rawDraftCosts[row.pokemon_name] = Number(row.draft_cost || 0);
