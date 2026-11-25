@@ -884,6 +884,7 @@
 
                 renderMatchesSheetUI();
                 renderPlayerdex();
+                renderConferenceStats();
             } catch (err) {
                 console.error("Error loading seasonal data:", err);
             }
@@ -1756,8 +1757,12 @@
 
         const m = cObj.mons[key];
         const indDmg = Number(st.indirect_damage || 0);
-        const hazDmg = st.hazard_damage !== undefined ? Number(st.hazard_damage || 0) : indDmg;
-        const otherInd = st.hazard_damage !== undefined ? Math.max(0, indDmg - hazDmg) : 0;
+        const hasExplicitHazard =
+            st.hazard_damage !== undefined &&
+            st.hazard_damage !== null &&
+            String(st.hazard_damage).trim() !== '';
+        const hazDmg = hasExplicitHazard ? Number(st.hazard_damage || 0) : indDmg;
+        const otherInd = hasExplicitHazard ? Math.max(0, indDmg - hazDmg) : 0;
 
         m.brought += 1;
         m.directKo += Number(st.direct_kos || 0);
@@ -2024,6 +2029,9 @@
 
             event.target.classList.add('active');
             document.getElementById(tabId).classList.add('active');
+            if (tabId === 'conference') {
+                renderConferenceStats();
+            }
         }
     </script>
 </body>
