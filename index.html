@@ -1940,78 +1940,9 @@
                 const highestAvgTurn = [...filteredPlayerRows].sort((a, b) => b.avgTurns - a.avgTurns)[0];
                 const lowestAvgTurn = [...filteredPlayerRows].filter(r => r.battles > 0).sort((a, b) => a.avgTurns - b.avgTurns)[0];
 
-                // Compute brought sets per player (a set counts as brought if any of the player's Pokémon was brought in any game of that match)
-                const setsByPlayer = {};
-                Object.values(matchGroups).forEach(({ info, games }) => {
-                    if (!info.player_1 || !info.player_2) return;
-                    const conf = info.conference ? String(info.conference) : 'Main';
-                    if (conf !== c.name) return;
-
-                    const gameIdsInSet = new Set(games.map(g => String(g.game_id)));
-                    [info.player_1, info.player_2].forEach(rawP => {
-                        const pDisp = getDisplayName(rawP);
-                        if (!setsByPlayer[pDisp]) setsByPlayer[pDisp] = new Set();
-                        rawStats.forEach(st => {
-                            if (gameIdsInSet.has(String(st.game_id)) && getDisplayName(st.player).toLowerCase() === pDisp.toLowerCase()) {
-                                setsByPlayer[pDisp].add(String(info.match_id));
-                            }
-                        });
-                    });
-                });
-
-                // Count how many distinct sets each player's Pokémon (after base-to-Mega merge) was brought to
-                const playerBroughtSummaries = [];
-                Object.entries(c.monsByPlayer).forEach(([player, pMonDict]) => {
-                    if (playerFilter && !player.toLowerCase().includes(playerFilter)) return;
-                    const pMons = Object.values(pMonDict);
-                    let totalPokemonBrought = 0;
-                    let oneSetPokemonCount = 0;
-
-                    pMons.forEach(m => {
-                        const setsForMon = new Set();
-                        const matchSpecies = (statSp) => {
-                            if (statSp === m.species) return true;
-                            if (m.species.includes('-Mega')) {
-                                const baseSp = m.species.split('-Mega')[0];
-                                const hasOtherMega = pMons.some(other => other !== m && other.species.includes('-Mega') && other.species.startsWith(baseSp + '-Mega'));
-                                if (statSp === baseSp && !hasOtherMega) return true;
-                            }
-                            return false;
-                        };
-
-                        Object.values(matchGroups).forEach(({ info, games }) => {
-                            const conf = info.conference ? String(info.conference) : 'Main';
-                            if (conf !== c.name) return;
-                            const gameIdsInSet = new Set(games.map(g => String(g.game_id)));
-                            const broughtInThisSet = rawStats.some(st =>
-                                gameIdsInSet.has(String(st.game_id)) &&
-                                getDisplayName(st.player).toLowerCase() === player.toLowerCase() &&
-                                matchSpecies(st.pokemon)
-                            );
-                            if (broughtInThisSet) {
-                                setsForMon.add(String(info.match_id));
-                            }
-                        });
-
-                        const distinctSets = setsForMon.size;
-                        totalPokemonBrought += distinctSets;
-                        if (distinctSets === 1) {
-                            oneSetPokemonCount += 1;
-                        }
-                    });
-
-                    const totalSetsPlayed = (setsByPlayer[player] && setsByPlayer[player].size) || 0;
-                    playerBroughtSummaries.push({
-                        player,
-                        totalPokemonBrought,
-                        oneSetPokemonCount,
-                        totalSetsPlayed
-                    });
-                });
-
-                const mostBroughtPlayer = [...playerBroughtSummaries].sort((a, b) => b.totalPokemonBrought - a.totalPokemonBrought)[0];
-                const leastBroughtPlayer = [...playerBroughtSummaries].filter(p => p.totalSetsPlayed > 0).sort((a, b) => a.totalPokemonBrought - b.totalPokemonBrought)[0];
-                const totalOneSetMons = playerBroughtSummaries.reduce((sum, p) => sum + p.oneSetPokemonCount, 0);
+                const mostBrought = [...filteredMons].sort((a, b) => b.brought - a.brought)[0];
+                const leastBrought = [...filteredMons].filter(m => m.brought > 0).sort((a, b) => a.brought - b.brought)[0];
+                const oneTimeCount = filteredMons.filter(m => m.brought === 1).length;
 
                 return `
                     <div class="conf-panel">
@@ -2228,16 +2159,16 @@
                                 </table>
 
                                 <table class="conf-mini-table">
-                                    <thead><tr><th>Most Brought Pokémon</th><th style="text-align:right;">Brought</th><th style="text-align:right;">1 Time</th></tr></thead>
+                                    <thead><tr><th>Most Brought Pokémon</th><th style="text-align:right;">Brought</th><th style="text-align:right;">1 time</th></tr></thead>
                                     <tbody>
-                                        <tr><td>${mostBroughtPlayer ? mostBroughtPlayer.player : '-'}</td><td style="text-align:right;">${mostBroughtPlayer ? mostBroughtPlayer.totalPokemonBrought : 0}</td><td style="text-align:right;">${totalOneSetMons}</td></tr>
+                                        <tr><td>${mostBrought ? `${mostBrought.player} (${mostBrought.species})` : '-'}</td><td style="text-align:right;">${mostBrought ? mostBrought.brought : 0}</td><td style="text-align:right;">${oneTimeCount}</td></tr>
                                     </tbody>
                                 </table>
 
                                 <table class="conf-mini-table">
-                                    <thead><tr><th>Least Brought Pokémon</th><th style="text-align:right;">Brought</th><th style="text-align:right;">1 Time</th></tr></thead>
+                                    <thead><tr><th>Least Brought Pokémon</th><th style="text-align:right;">Brought</th><th style="text-align:right;">1 time</th></tr></thead>
                                     <tbody>
-                                        <tr><td>${leastBroughtPlayer ? leastBroughtPlayer.player : '-'}</td><td style="text-align:right;">${leastBroughtPlayer ? leastBroughtPlayer.totalPokemonBrought : 0}</td><td style="text-align:right;">${totalOneSetMons}</td></tr>
+                                        <tr><td>${leastBrought ? `${leastBrought.player} (${leastBrought.species})` : '-'}</td><td style="text-align:right;">${leastBrought ? leastBrought.brought : 0}</td><td style="text-align:right;">${oneTimeCount}</td></tr>
                                     </tbody>
                                 </table>
                             </div>
