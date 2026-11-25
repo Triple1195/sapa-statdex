@@ -1124,7 +1124,7 @@
             }).join('');
         }
 
-        // Render Full Playerdex View Separated by Conference and Sorted by Record
+       // Render Full Playerdex View Separated by Conference and Sorted by Record
         function renderPlayerdex() {
             const playerFilter = document.getElementById('playerSearch').value.toLowerCase();
             const grid = document.getElementById('playerdexGrid');
@@ -1304,6 +1304,7 @@
                     delete monDict[baseSp];
                 });
             });
+
             // 4. Group players by Conference
             const conferenceMap = {};
             Object.keys(playerMap).forEach(player => {
@@ -1369,43 +1370,74 @@
                         `;
                     }).join('');
 
-                    const totals = {
-                        timesBrought: pokemons.reduce((acc, m) => acc + m.timesBrought, 0) || 1,
-                        battlesActive: pokemons.reduce((acc, m) => acc + m.battlesActive, 0) || 1,
-                        directKo: pokemons.reduce((acc, m) => acc + m.directKo, 0) || 1,
-                        indirectKo: pokemons.reduce((acc, m) => acc + m.indirectKo, 0) || 1,
-                        damageDealt: pokemons.reduce((acc, m) => acc + m.damageDealt, 0) || 1,
-                        damageDirect: pokemons.reduce((acc, m) => acc + m.damageDirect, 0) || 1,
-                        damageIndirect: pokemons.reduce((acc, m) => acc + m.damageIndirect, 0) || 1,
-                        hitsTaken: pokemons.reduce((acc, m) => acc + m.hitsTaken, 0) || 1,
-                        damageTaken: pokemons.reduce((acc, m) => acc + m.damageTaken, 0) || 1,
-                        damageHeal: pokemons.reduce((acc, m) => acc + m.damageHeal, 0) || 1,
-                        activeTurns: pokemons.reduce((acc, m) => acc + m.activeTurns, 0) || 1,
-                        survived: pokemons.reduce((acc, m) => acc + m.survived, 0) || 1,
-                        battleWon: pokemons.reduce((acc, m) => acc + m.battleWon, 0) || 1
+                    // A. Weighted Team Share (TVR) totals & active weight normalization
+                    const teamTotals = {
+                        directKo: pokemons.reduce((acc, m) => acc + m.directKo, 0),
+                        damageDirect: pokemons.reduce((acc, m) => acc + m.damageDirect, 0),
+                        battleWon: pokemons.reduce((acc, m) => acc + m.battleWon, 0),
+                        survived: pokemons.reduce((acc, m) => acc + m.survived, 0),
+                        damageHeal: pokemons.reduce((acc, m) => acc + m.damageHeal, 0),
+                        activeTurns: pokemons.reduce((acc, m) => acc + m.activeTurns, 0),
+                        indirectKo: pokemons.reduce((acc, m) => acc + m.indirectKo, 0),
+                        damageIndirect: pokemons.reduce((acc, m) => acc + m.damageIndirect, 0),
+                        timesBrought: pokemons.reduce((acc, m) => acc + m.timesBrought, 0)
                     };
 
+                    const tvrWeights = [
+                        { key: 'directKo', weight: 0.15 },
+                        { key: 'damageDirect', weight: 0.15 },
+                        { key: 'battleWon', weight: 0.15 },
+                        { key: 'survived', weight: 0.15 },
+                        { key: 'damageHeal', weight: 0.05 },
+                        { key: 'activeTurns', weight: 0.10 },
+                        { key: 'indirectKo', weight: 0.05 },
+                        { key: 'damageIndirect', weight: 0.05 },
+                        { key: 'timesBrought', weight: 0.15 }
+                    ];
+
+                    const activeWeightSum = tvrWeights.reduce(
+                        (sum, item) => sum + (teamTotals[item.key] > 0 ? item.weight : 0),
+                        0
+                    ) || 1;
+
+                    // B. Per-battle efficiency (BER) raw calculation
                     pokemons.forEach(m => {
-                        const shares = [
-                            m.timesBrought / totals.timesBrought,
-                            m.battlesActive / totals.battlesActive,
-                            m.directKo / totals.directKo,
-                            m.indirectKo / totals.indirectKo,
-                            m.damageDealt / totals.damageDealt,
-                            m.damageDirect / totals.damageDirect,
-                            m.damageIndirect / totals.damageIndirect,
-                            m.hitsTaken / totals.hitsTaken,
-                            m.damageTaken / totals.damageTaken,
-                            m.damageHeal / totals.damageHeal,
-                            m.activeTurns / totals.activeTurns,
-                            m.survived / totals.survived,
-                            m.battleWon / totals.battleWon
-                        ];
-                        m.tvr = (shares.reduce((a, b) => a + b, 0) / shares.length) * 100;
+                        const games = m.timesBrought || 1;
+                        const kosPerGame = (m.directKo + m.indirectKo) / games;
+                        const netDmgPerGame = Math.max(
+                            0,
+                            (m.damageDirect + m.damageIndirect + m.damageHeal - m.damageTaken) / games
+                        );
+                        const winRate = m.battleWon / games;
+                        const survivalRate = m.survived / games;
+
+                        m.rawEfficiency =
+                            0.35 * (kosPerGame / 1.5) +
+                            0.25 * (netDmgPerGame / 150) +
+                            0.25 * winRate +
+                            0.15 * survivalRate;
+                    });
+
+                    const totalRawEfficiency = pokemons.reduce((acc, m) => acc + m.rawEfficiency, 0) || 1;
+
+                    // C. Finalize TVR, BER, PVR, and Volume / Efficiency O/U ratios
+                    pokemons.forEach(m => {
+                        let weightedShare = 0;
+                        tvrWeights.forEach(item => {
+                            if (teamTotals[item.key] > 0) {
+                                const w = item.weight / activeWeightSum;
+                                weightedShare += w * (m[item.key] / teamTotals[item.key]);
+                            }
+                        });
+
+                        m.tvr = weightedShare * 100;
+                        m.ber = (m.rawEfficiency / totalRawEfficiency) * 100;
 
                         const cost = getDraftCost(m.species, rawDraftCosts);
                         m.pvr = (cost / totalSeasonBudget) * 100;
-                        m.ou = m.pvr > 0 ? m.tvr / m.pvr : 0;
+
+                        m.ouVolume = m.pvr > 0 ? m.tvr / m.pvr : 0;
+                        m.ouEfficiency = m.pvr > 0 ? m.ber / m.pvr : 0;
                     });
 
                     pokemons.sort((a, b) => b.tvr - a.tvr);
@@ -1416,14 +1448,17 @@
                         else if (index === 1) rankClass = 'podium-silver';
                         else if (index === 2) rankClass = 'podium-bronze';
 
-                        const ouClass = m.ou > 1 ? 'ou-blue' : (m.ou < 1 ? 'ou-red' : '');
+                        const volOuClass = m.ouVolume > 1 ? 'ou-blue' : (m.ouVolume < 1 ? 'ou-red' : '');
+                        const effOuClass = m.ouEfficiency > 1 ? 'ou-blue' : (m.ouEfficiency < 1 ? 'ou-red' : '');
 
                         return `
                             <tr>
-                                <td class="${rankClass}">${m.species}</td>
-                                <td style="text-align:right;" class="${rankClass}">${m.tvr.toFixed(1)}%</td>
-                                <td style="text-align:right;" class="${rankClass}">${m.pvr.toFixed(1)}%</td>
-                                <td style="text-align:right;" class="${ouClass}">${m.ou.toFixed(2)}</td>
+                                <td class="${rankClass}" style="padding:3px 4px; font-size:10.5px;">${m.species}</td>
+                                <td style="text-align:right; padding:3px 4px; font-size:10.5px;" class="${rankClass}">${m.tvr.toFixed(1)}%</td>
+                                <td style="text-align:right; padding:3px 4px; font-size:10.5px;" class="${rankClass}">${m.ber.toFixed(1)}%</td>
+                                <td style="text-align:right; padding:3px 4px; font-size:10.5px;" class="${rankClass}">${m.pvr.toFixed(1)}%</td>
+                                <td style="text-align:right; padding:3px 4px; font-size:10.5px;" class="${volOuClass}">${m.ouVolume.toFixed(2)}</td>
+                                <td style="text-align:right; padding:3px 4px; font-size:10.5px;" class="${effOuClass}">${m.ouEfficiency.toFixed(2)}</td>
                             </tr>
                         `;
                     }).join('');
@@ -1446,9 +1481,9 @@
 
                         return `
                             <div class="pokemon-card-cell">
-                                <div style="background:#e5e7eb; padding:4px 8px; font-weight:bold; border-bottom:1px solid #bdc1c6; display:flex; justify-content:space-between;">
-                                    <span>Team Value Ratio</span>
-                                    <span>${m.tvr.toFixed(2)}%</span>
+                                <div style="background:#e5e7eb; padding:4px 8px; font-weight:bold; border-bottom:1px solid #bdc1c6; display:flex; justify-content:space-between; font-size:11px;">
+                                    <span>TVR: ${m.tvr.toFixed(1)}% (${m.ouVolume.toFixed(2)}x)</span>
+                                    <span>BER: ${m.ber.toFixed(1)}% (${m.ouEfficiency.toFixed(2)}x)</span>
                                 </div>
                                 <div class="pcard-body">
                                     <div class="pcard-left-col">
@@ -1502,10 +1537,12 @@
                                     <table class="playerdex-summary-table">
                                         <thead>
                                             <tr>
-                                                <th>Pokemon</th>
-                                                <th style="text-align:right;">TVR</th>
-                                                <th style="text-align:right;">PVR</th>
-                                                <th style="text-align:right;">O/U</th>
+                                                <th style="padding:3px 4px; font-size:10.5px;">Mon</th>
+                                                <th style="text-align:right; padding:3px 4px; font-size:10.5px;">TVR</th>
+                                                <th style="text-align:right; padding:3px 4px; font-size:10.5px;">BER</th>
+                                                <th style="text-align:right; padding:3px 4px; font-size:10.5px;">PVR</th>
+                                                <th style="text-align:right; padding:3px 4px; font-size:10.5px;">Vol</th>
+                                                <th style="text-align:right; padding:3px 4px; font-size:10.5px;">Eff</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1547,14 +1584,6 @@
                     </div>
                 `;
             }).join('');
-        }
-
-        function switchTab(tabId) {
-            document.querySelectorAll('.header-tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-
-            event.target.classList.add('active');
-            document.getElementById(tabId).classList.add('active');
         }
     </script>
 </body>
