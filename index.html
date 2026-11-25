@@ -1263,6 +1263,47 @@
                 pObj.battleWon += Number(st.battle_won || 0);
             });
 
+            // 3b. Merge base Pokémon stats into their corresponding Mega form per player
+            Object.keys(playerMap).forEach(dispName => {
+                const monDict = playerMap[dispName].pokemon;
+                const allSpecies = Object.keys(monDict);
+
+                const megaSpeciesList = allSpecies.filter(sp => sp.includes('-Mega'));
+
+                const baseToMegas = {};
+                megaSpeciesList.forEach(megaSp => {
+                    const baseSp = megaSp.split('-Mega')[0];
+                    if (!baseToMegas[baseSp]) baseToMegas[baseSp] = [];
+                    baseToMegas[baseSp].push(megaSp);
+                });
+
+                Object.entries(baseToMegas).forEach(([baseSp, megas]) => {
+                    if (!monDict[baseSp]) return;
+
+                    megas.sort();
+                    const targetMega = megas[0];
+                    const baseObj = monDict[baseSp];
+                    const megaObj = monDict[targetMega];
+
+                    baseObj.nicknamesSet.forEach(nick => megaObj.nicknamesSet.add(nick));
+                    megaObj.timesBrought += baseObj.timesBrought;
+                    megaObj.battlesActive += baseObj.battlesActive;
+                    megaObj.directKo += baseObj.directKo;
+                    megaObj.indirectKo += baseObj.indirectKo;
+                    megaObj.damageDealt += baseObj.damageDealt;
+                    megaObj.damageDirect += baseObj.damageDirect;
+                    megaObj.damageIndirect += baseObj.damageIndirect;
+                    megaObj.hitsTaken += baseObj.hitsTaken;
+                    megaObj.damageTaken += baseObj.damageTaken;
+                    megaObj.damageHeal += baseObj.damageHeal;
+                    megaObj.activeTurns += baseObj.activeTurns;
+                    megaObj.survived += baseObj.survived;
+                    megaObj.fainted += baseObj.fainted;
+                    megaObj.battleWon += baseObj.battleWon;
+
+                    delete monDict[baseSp];
+                });
+            });
             // 4. Group players by Conference
             const conferenceMap = {};
             Object.keys(playerMap).forEach(player => {
