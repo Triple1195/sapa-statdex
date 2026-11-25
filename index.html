@@ -738,6 +738,65 @@
             return 0;
         }
 
+        // Merges base form stats into Mega form stats ONLY when the player owns/has a Mega form entry
+        function mergeBaseIntoMegaForPlayer(monDict) {
+            const allSpecies = Object.keys(monDict);
+            const megaSpeciesList = allSpecies.filter(sp => sp.includes('-Mega'));
+
+            const baseToMegas = {};
+            megaSpeciesList.forEach(megaSp => {
+                const baseSp = megaSp.split('-Mega')[0];
+                if (!baseToMegas[baseSp]) baseToMegas[baseSp] = [];
+                baseToMegas[baseSp].push(megaSp);
+            });
+
+            Object.entries(baseToMegas).forEach(([baseSp, megas]) => {
+                if (!monDict[baseSp]) return;
+
+                megas.sort();
+                const targetMega = megas[0];
+                const baseObj = monDict[baseSp];
+                const megaObj = monDict[targetMega];
+
+                if (baseObj.nicknamesSet && megaObj.nicknamesSet) {
+                    baseObj.nicknamesSet.forEach(nick => megaObj.nicknamesSet.add(nick));
+                }
+
+                megaObj.timesBrought = (megaObj.timesBrought || 0) + (baseObj.timesBrought || 0);
+                megaObj.brought = (megaObj.brought || 0) + (baseObj.brought || 0);
+                megaObj.battlesActive = (megaObj.battlesActive || 0) + (baseObj.battlesActive || 0);
+
+                megaObj.directKo = (megaObj.directKo || 0) + (baseObj.directKo || 0);
+                megaObj.indirectKo = (megaObj.indirectKo || 0) + (baseObj.indirectKo || 0);
+
+                megaObj.damageDealt = (megaObj.damageDealt || 0) + (baseObj.damageDealt || 0);
+                megaObj.damageDirect = (megaObj.damageDirect || 0) + (baseObj.damageDirect || 0);
+                megaObj.damageIndirect = (megaObj.damageIndirect || 0) + (baseObj.damageIndirect || 0);
+
+                megaObj.totalDmg = (megaObj.totalDmg || 0) + (baseObj.totalDmg || 0);
+                megaObj.directDmg = (megaObj.directDmg || 0) + (baseObj.directDmg || 0);
+                megaObj.indirectDmg = (megaObj.indirectDmg || 0) + (baseObj.indirectDmg || 0);
+                megaObj.hazardDmg = (megaObj.hazardDmg || 0) + (baseObj.hazardDmg || 0);
+                megaObj.otherIndirectDmg = (megaObj.otherIndirectDmg || 0) + (baseObj.otherIndirectDmg || 0);
+
+                megaObj.hitsTaken = (megaObj.hitsTaken || 0) + (baseObj.hitsTaken || 0);
+                megaObj.damageTaken = (megaObj.damageTaken || 0) + (baseObj.damageTaken || 0);
+                megaObj.takenDmg = (megaObj.takenDmg || 0) + (baseObj.takenDmg || 0);
+
+                megaObj.damageHeal = (megaObj.damageHeal || 0) + (baseObj.damageHeal || 0);
+                megaObj.healedDmg = (megaObj.healedDmg || 0) + (baseObj.healedDmg || 0);
+
+                megaObj.activeTurns = (megaObj.activeTurns || 0) + (baseObj.activeTurns || 0);
+                megaObj.turns = (megaObj.turns || 0) + (baseObj.turns || 0);
+
+                megaObj.survived = (megaObj.survived || 0) + (baseObj.survived || 0);
+                megaObj.fainted = (megaObj.fainted || 0) + (baseObj.fainted || 0);
+                megaObj.battleWon = (megaObj.battleWon || 0) + (baseObj.battleWon || 0);
+
+                delete monDict[baseSp];
+            });
+        }
+
         async function tursoQuery(statements) {
             if (typeof TURSO_DB_URL === 'undefined' || typeof TURSO_READONLY_TOKEN === 'undefined' || TURSO_READONLY_TOKEN.includes("YOUR_READ_ONLY_TOKEN")) {
                 document.getElementById('matchGrid').innerHTML = '<div class="status-msg" style="color:#d93025;">Please configure your Turso read-only credentials in config.js.</div>';
@@ -1325,44 +1384,7 @@
             });
 
             Object.keys(playerMap).forEach(dispName => {
-                const monDict = playerMap[dispName].pokemon;
-                const allSpecies = Object.keys(monDict);
-
-                const megaSpeciesList = allSpecies.filter(sp => sp.includes('-Mega'));
-
-                const baseToMegas = {};
-                megaSpeciesList.forEach(megaSp => {
-                    const baseSp = megaSp.split('-Mega')[0];
-                    if (!baseToMegas[baseSp]) baseToMegas[baseSp] = [];
-                    baseToMegas[baseSp].push(megaSp);
-                });
-
-                Object.entries(baseToMegas).forEach(([baseSp, megas]) => {
-                    if (!monDict[baseSp]) return;
-
-                    megas.sort();
-                    const targetMega = megas[0];
-                    const baseObj = monDict[baseSp];
-                    const megaObj = monDict[targetMega];
-
-                    baseObj.nicknamesSet.forEach(nick => megaObj.nicknamesSet.add(nick));
-                    megaObj.timesBrought += baseObj.timesBrought;
-                    megaObj.battlesActive += baseObj.battlesActive;
-                    megaObj.directKo += baseObj.directKo;
-                    megaObj.indirectKo += baseObj.indirectKo;
-                    megaObj.damageDealt += baseObj.damageDealt;
-                    megaObj.damageDirect += baseObj.damageDirect;
-                    megaObj.damageIndirect += baseObj.damageIndirect;
-                    megaObj.hitsTaken += baseObj.hitsTaken;
-                    megaObj.damageTaken += baseObj.damageTaken;
-                    megaObj.damageHeal += baseObj.damageHeal;
-                    megaObj.activeTurns += baseObj.activeTurns;
-                    megaObj.survived += baseObj.survived;
-                    megaObj.fainted += baseObj.fainted;
-                    megaObj.battleWon += baseObj.battleWon;
-
-                    delete monDict[baseSp];
-                });
+                mergeBaseIntoMegaForPlayer(playerMap[dispName].pokemon);
             });
 
             const conferenceMap = {};
@@ -1668,7 +1690,7 @@
                         longestGame: null,
                         shortestGame: null,
                         players: new Set(),
-                        mons: {}
+                        monsByPlayer: {}
                     };
                 }
                 return confData[conf];
@@ -1714,19 +1736,24 @@
                 });
             });
 
-            // 2. Aggregate Pokémon & player stats per conference
+            // 2. Aggregate Pokémon stats per player within each conference
             rawStats.forEach(st => {
                 const player = getDisplayName(st.player);
                 const conf = playerToConf[player] || 'Main';
                 const cObj = ensureConf(conf);
                 cObj.players.add(player);
 
-                const key = `${player}__${st.pokemon}`;
-                if (!cObj.mons[key]) {
-                    cObj.mons[key] = {
+                if (!cObj.monsByPlayer[player]) {
+                    cObj.monsByPlayer[player] = {};
+                }
+                const pMonDict = cObj.monsByPlayer[player];
+
+                if (!pMonDict[st.pokemon]) {
+                    pMonDict[st.pokemon] = {
                         player,
                         species: st.pokemon,
                         brought: 0,
+                        timesBrought: 0,
                         directKo: 0,
                         indirectKo: 0,
                         totalDmg: 0,
@@ -1743,7 +1770,7 @@
                     };
                 }
 
-                const m = cObj.mons[key];
+                const m = pMonDict[st.pokemon];
                 const indDmg = Number(st.indirect_damage || 0);
                 const hasExplicitHazard =
                     st.hazard_damage !== undefined &&
@@ -1753,6 +1780,7 @@
                 const otherInd = hasExplicitHazard ? Math.max(0, indDmg - hazDmg) : 0;
 
                 m.brought += 1;
+                m.timesBrought += 1;
                 m.directKo += Number(st.direct_kos || 0);
                 m.indirectKo += Number(st.indirect_kos || 0);
                 m.totalDmg += Number(st.total_damage || 0);
@@ -1766,6 +1794,13 @@
                 m.survived += Number(st.survived || 0);
                 m.battleWon += Number(st.battle_won || 0);
                 m.turns += Number(st.active_turns || 0);
+            });
+
+            // 2b. Merge base form stats into Mega form stats per player if the player has a Mega form
+            Object.values(confData).forEach(cObj => {
+                Object.keys(cObj.monsByPlayer).forEach(player => {
+                    mergeBaseIntoMegaForPlayer(cObj.monsByPlayer[player]);
+                });
             });
 
             const confList = Object.values(confData).sort((a, b) => a.name.localeCompare(b.name));
@@ -1789,7 +1824,6 @@
             ];
 
             container.innerHTML = confList.map((c) => {
-                const mons = Object.values(c.mons);
                 const playerTotalsMap = {};
 
                 c.players.forEach(p => {
@@ -1804,32 +1838,29 @@
                     };
                 });
 
-                mons.forEach(m => {
-                    if (!playerTotalsMap[m.player]) {
-                        playerTotalsMap[m.player] = {
-                            player: m.player,
+                // Compute TVR and Team O/U per player roster after base-to-Mega merge
+                Object.entries(c.monsByPlayer).forEach(([player, pMonDict]) => {
+                    const pMons = Object.values(pMonDict);
+
+                    if (!playerTotalsMap[player]) {
+                        playerTotalsMap[player] = {
+                            player,
                             totalDmg: 0,
                             hazardDmg: 0,
                             turns: 0,
                             battles: 0,
-                            w: (playerWL[m.player] && playerWL[m.player].w) || 0,
-                            l: (playerWL[m.player] && playerWL[m.player].l) || 0
+                            w: (playerWL[player] && playerWL[player].w) || 0,
+                            l: (playerWL[player] && playerWL[player].l) || 0
                         };
                     }
-                    playerTotalsMap[m.player].totalDmg += m.totalDmg;
-                    playerTotalsMap[m.player].hazardDmg += m.hazardDmg;
-                    playerTotalsMap[m.player].turns += m.turns;
-                    playerTotalsMap[m.player].battles = Math.max(playerTotalsMap[m.player].battles, m.brought);
-                });
 
-                // Compute TVR and Team O/U per player roster
-                const monsByPlayer = {};
-                mons.forEach(m => {
-                    if (!monsByPlayer[m.player]) monsByPlayer[m.player] = [];
-                    monsByPlayer[m.player].push(m);
-                });
+                    pMons.forEach(m => {
+                        playerTotalsMap[player].totalDmg += m.totalDmg;
+                        playerTotalsMap[player].hazardDmg += m.hazardDmg;
+                        playerTotalsMap[player].turns += m.turns;
+                        playerTotalsMap[player].battles = Math.max(playerTotalsMap[player].battles, m.brought);
+                    });
 
-                Object.values(monsByPlayer).forEach(pMons => {
                     const totals = {};
                     tvrWeights.forEach(w => {
                         totals[w.key] = pMons.reduce((sum, item) => sum + Number(item[w.key] || 0), 0);
@@ -1853,6 +1884,8 @@
                         m.teamOu = m.pvr > 0 ? m.tvr / m.pvr : 0;
                     });
                 });
+
+                const mons = Object.values(c.monsByPlayer).flatMap(dict => Object.values(dict));
 
                 const playerRows = Object.values(playerTotalsMap).map(pt => ({
                     ...pt,
