@@ -1463,7 +1463,7 @@
                         `;
                     }).join('');
 
-                  const pokemonCardsHTML = pokemons.map((m, idx) => {
+                    const pokemonCardsHTML = pokemons.map((m, idx) => {
                         const spriteUrl = getSpriteUrl(m.species, 'color');
                         const directAvg = m.battlesActive > 0 ? (m.directKo / m.battlesActive).toFixed(1) : '0.0';
                         const indirectAvg = m.battlesActive > 0 ? (m.indirectKo / m.battlesActive).toFixed(1) : '0.0';
@@ -1482,8 +1482,8 @@
                         return `
                             <div class="pokemon-card-cell">
                                 <div style="background:#e5e7eb; padding:4px 8px; font-weight:bold; border-bottom:1px solid #bdc1c6; display:flex; justify-content:space-between; font-size:11px;">
-                                    <span title="Team Value Rating & Team O/U">Team: ${m.tvr.toFixed(1)}% (${m.ouVolume.toFixed(2)}x)</span>
-                                    <span title="Battle Value Rating & Battle O/U">Battle: ${m.ber.toFixed(1)}% (${m.ouEfficiency.toFixed(2)}x)</span>
+                                    <span>TVR: ${m.tvr.toFixed(1)}% (${m.ouVolume.toFixed(2)}x)</span>
+                                    <span>BER: ${m.ber.toFixed(1)}% (${m.ouEfficiency.toFixed(2)}x)</span>
                                 </div>
                                 <div class="pcard-body">
                                     <div class="pcard-left-col">
@@ -1520,7 +1520,7 @@
                             </div>
                         `;
                     }).join('');
-                    
+
                     return `
                         <div class="playerdex-sheet-container">
                             <div class="match-top-banner" style="margin-bottom:14px; text-align:left; padding:8px 14px; display:flex; justify-content:space-between; align-items:center;">
